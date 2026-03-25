@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { getMoodColorClass, getMoodEmoji, getMoodLabel, PERIOD_LABELS, PERIOD_COLORS, getConsumptionLabel, cn } from "@/lib/utils";
 import type { MoodEntry, LunarPhase } from "@workspace/api-client-react";
@@ -87,6 +87,9 @@ export function MoodDialog({ isOpen, onClose, date, entries = [], lunarPhase, co
               </div>
             )}
           </div>
+          <DialogDescription className="sr-only">
+            Enregistrer vos statistiques pour cette journée
+          </DialogDescription>
         </DialogHeader>
 
         <div className="py-4 space-y-6">
