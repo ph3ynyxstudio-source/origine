@@ -76,6 +76,7 @@ artifacts-monorepo/
 - Push notification reminders at 8am, 1pm, 8pm (expo-notifications, mobile) — bilingual (EN/FR), with toggle in settings
 - Notification toggle on Home screen settings + login gear panel; permission-aware (reverts if denied)
 - Dark celestial themed UI
+- **Play Store ready**: EAS Build configured (development/preview/production profiles), adaptive icon, splash screen, Android permissions
 
 ## Key Files
 
