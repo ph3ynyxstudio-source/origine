@@ -207,25 +207,21 @@ function computePhaseJD(k: number): number {
   return JDE;
 }
 
-function findNearestNewMoonK(jd: number): number {
+function findPreviousNewMoonK(jd: number): number {
   const year = 2000 + (jd - 2451545.0) / 365.25;
-  const k0 = Math.round((year - 2000) * 12.3685);
-  let bestK = k0;
-  let bestDist = Math.abs(computePhaseJD(k0) - jd);
-  for (const offset of [-1, 1]) {
-    const kk = k0 + offset;
-    const dist = Math.abs(computePhaseJD(kk) - jd);
-    if (dist < bestDist) {
-      bestK = kk;
-      bestDist = dist;
-    }
+  let k = Math.floor((year - 2000) * 12.3685);
+  while (computePhaseJD(k + 1) <= jd) {
+    k++;
   }
-  return bestK;
+  while (computePhaseJD(k) > jd) {
+    k--;
+  }
+  return k;
 }
 
 export function getLunarPhase(date: Date): LunarPhaseInfo {
   const jd = dateToJD(date);
-  const k = findNearestNewMoonK(jd);
+  const k = findPreviousNewMoonK(jd);
 
   const jdNew = computePhaseJD(k);
   const jdFQ = computePhaseJD(k + 0.25);
