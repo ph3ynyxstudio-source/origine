@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMoods } from "@/contexts/MoodContext";
 import { getLunarPhase } from "@/lib/lunar";
 import { useTranslation, getPhaseTranslationKey, type Language } from "@/lib/i18n";
+import { getNotificationsEnabled, setNotificationsEnabled } from "@/lib/notifications";
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 import GlowingMoon from "@/components/GlowingMoon";
@@ -33,12 +34,25 @@ export default function HomeScreen() {
   const { t, language, setLanguage } = useTranslation();
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [notifEnabled, setNotifEnabled] = useState(true);
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
       router.replace("/login");
     }
   }, [user, isAuthLoading]);
+
+  useEffect(() => {
+    getNotificationsEnabled().then(setNotifEnabled);
+  }, []);
+
+  const handleToggleNotif = async () => {
+    const newVal = !notifEnabled;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setNotifEnabled(newVal);
+    const result = await setNotificationsEnabled(newVal, language);
+    setNotifEnabled(result);
+  };
 
   const todayPhase = useMemo(() => {
     return getLunarPhase(new Date());
@@ -64,9 +78,13 @@ export default function HomeScreen() {
     router.replace("/login");
   };
 
-  const toggleLang = (lang: Language) => {
+  const toggleLang = async (lang: Language) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setLanguage(lang);
+    if (notifEnabled) {
+      const { scheduleReminders } = await import("@/lib/notifications");
+      scheduleReminders(lang).catch(console.warn);
+    }
   };
 
   const handleDevSeed = async () => {
@@ -203,6 +221,23 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>{t("notifications")}</Text>
+          <Pressable
+            onPress={handleToggleNotif}
+            style={[styles.notifToggle, notifEnabled && styles.notifToggleActive]}
+          >
+            <Ionicons
+              name={notifEnabled ? "notifications" : "notifications-off-outline"}
+              size={18}
+              color={notifEnabled ? Colors.dark.primaryLight : Colors.dark.textMuted}
+            />
+            <Text style={[styles.notifText, notifEnabled && styles.notifTextActive]}>
+              {notifEnabled ? t("notificationsOn") : t("notificationsOff")}
+            </Text>
+            <View style={[styles.notifDot, notifEnabled && styles.notifDotActive]} />
+          </Pressable>
+        </View>
 
         {__DEV__ && (
           <View style={styles.devSection}>
@@ -354,6 +389,39 @@ const styles = StyleSheet.create({
   },
   langTextActive: {
     color: Colors.dark.primaryLight,
+  },
+  notifToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(37, 43, 69, 0.8)",
+    backgroundColor: "rgba(22, 27, 48, 0.6)",
+  },
+  notifToggleActive: {
+    borderColor: Colors.dark.primary,
+    backgroundColor: "rgba(124, 106, 250, 0.1)",
+  },
+  notifText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    color: Colors.dark.textMuted,
+  },
+  notifTextActive: {
+    color: Colors.dark.primaryLight,
+  },
+  notifDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "rgba(37, 43, 69, 0.8)",
+  },
+  notifDotActive: {
+    backgroundColor: "#22C55E",
   },
   buttonPressed: {
     opacity: 0.85,

@@ -17,7 +17,6 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MoodProvider } from "@/contexts/MoodContext";
 import { I18nProvider } from "@/lib/i18n";
-import { scheduleReminders } from "@/lib/notifications";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -60,10 +59,6 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
-
-  useEffect(() => {
-    scheduleReminders().catch(console.warn);
-  }, []);
 
   if (!fontsLoaded && !fontError) return null;
 

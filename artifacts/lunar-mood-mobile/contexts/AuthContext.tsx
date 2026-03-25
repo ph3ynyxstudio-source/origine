@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setBaseUrl } from "@workspace/api-client-react";
+import { scheduleReminders } from "@/lib/notifications";
+import type { Language } from "@/lib/i18n";
+
+async function getStoredLanguage(): Promise<Language> {
+  const saved = await AsyncStorage.getItem("app_language");
+  return (saved === "fr" ? "fr" : "en");
+}
 
 setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
 
@@ -59,6 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userData = await fetchUser(savedToken);
           if (userData) {
             setUser(userData);
+            const lang = await getStoredLanguage();
+            scheduleReminders(lang).catch(console.warn);
           } else {
             await AsyncStorage.removeItem("auth_token");
             setToken(null);
@@ -92,6 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser({ id: data.id, username: data.username, consumptionLabel: null });
     const userData = await fetchUser(data.token);
     if (userData) setUser(userData);
+    const lang = await getStoredLanguage();
+    scheduleReminders(lang).catch(console.warn);
   };
 
   const register = async (username: string, password: string) => {
@@ -112,6 +123,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser({ id: data.id, username: data.username, consumptionLabel: null });
     const userData = await fetchUser(data.token);
     if (userData) setUser(userData);
+    const lang = await getStoredLanguage();
+    scheduleReminders(lang).catch(console.warn);
   };
 
   const logout = async () => {

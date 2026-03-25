@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation, type Language } from "@/lib/i18n";
+import { getNotificationsEnabled, setNotificationsEnabled } from "@/lib/notifications";
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 import GlowingMoon from "@/components/GlowingMoon";
@@ -125,6 +126,19 @@ export default function LoginScreen() {
   const [showSettings, setShowSettings] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [notifEnabled, setNotifEnabled] = useState(true);
+
+  useEffect(() => {
+    getNotificationsEnabled().then(setNotifEnabled);
+  }, []);
+
+  const handleToggleNotif = async () => {
+    const newVal = !notifEnabled;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setNotifEnabled(newVal);
+    const result = await setNotificationsEnabled(newVal, language);
+    setNotifEnabled(result);
+  };
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) {
@@ -274,6 +288,22 @@ export default function LoginScreen() {
                 <Text style={[styles.langText, language === "fr" && styles.langTextActive]}>Fran\u00e7ais</Text>
               </Pressable>
             </View>
+
+            <Text style={styles.settingsSectionLabel}>{t("notifications")}</Text>
+            <Pressable
+              onPress={handleToggleNotif}
+              style={[styles.notifToggle, notifEnabled && styles.notifToggleActive]}
+            >
+              <Ionicons
+                name={notifEnabled ? "notifications" : "notifications-off-outline"}
+                size={18}
+                color={notifEnabled ? Colors.dark.primaryLight : Colors.dark.textMuted}
+              />
+              <Text style={[styles.notifText, notifEnabled && styles.notifTextActive]}>
+                {notifEnabled ? t("notificationsOn") : t("notificationsOff")}
+              </Text>
+              <View style={[styles.notifDot, notifEnabled && styles.notifDotActive]} />
+            </Pressable>
 
             {__DEV__ && (
               <>
@@ -503,6 +533,39 @@ const styles = StyleSheet.create({
   },
   langTextActive: {
     color: Colors.dark.primaryLight,
+  },
+  notifToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(37, 43, 69, 0.8)",
+    backgroundColor: "rgba(22, 27, 48, 0.6)",
+  },
+  notifToggleActive: {
+    borderColor: Colors.dark.primary,
+    backgroundColor: "rgba(124, 106, 250, 0.1)",
+  },
+  notifText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+    color: Colors.dark.textMuted,
+  },
+  notifTextActive: {
+    color: Colors.dark.primaryLight,
+  },
+  notifDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "rgba(37, 43, 69, 0.8)",
+  },
+  notifDotActive: {
+    backgroundColor: "#22C55E",
   },
   devSectionLabel: {
     fontSize: 12,

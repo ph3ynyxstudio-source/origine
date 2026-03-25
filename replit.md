@@ -73,7 +73,8 @@ artifacts-monorepo/
 - Calendar shows 3 colored dots per day (amber=morning, blue=afternoon, violet=evening)
 - Legend below calendar explains period colors and consumption type
 - Stats endpoint aggregates mood data by lunar phase server-side
-- Push notification reminders at 8am, 1pm, 8pm (expo-notifications, mobile)
+- Push notification reminders at 8am, 1pm, 8pm (expo-notifications, mobile) — bilingual (EN/FR), with toggle in settings
+- Notification toggle on Home screen settings + login gear panel; permission-aware (reverts if denied)
 - Dark celestial themed UI
 
 ## Key Files
