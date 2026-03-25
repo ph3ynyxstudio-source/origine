@@ -111,6 +111,8 @@ const translations = {
     devEntries: "entries created",
     devEntriesDeleted: "entries deleted",
     devConfirmClear: "Are you sure? This will delete ALL your mood data.",
+    consumptionTracking: "Consumption Tracking",
+    consumptionTrackingDesc: "Show the consumption section in mood entries",
   },
   fr: {
     home: "Accueil",
@@ -217,6 +219,8 @@ const translations = {
     devEntries: "entr\u00e9es cr\u00e9\u00e9es",
     devEntriesDeleted: "entr\u00e9es supprim\u00e9es",
     devConfirmClear: "\u00cates-vous s\u00fbr ? Cela supprimera TOUTES vos donn\u00e9es d'humeur.",
+    consumptionTracking: "Suivi de consommation",
+    consumptionTrackingDesc: "Afficher la section consommation dans les saisies d'humeur",
   },
 } as const;
 

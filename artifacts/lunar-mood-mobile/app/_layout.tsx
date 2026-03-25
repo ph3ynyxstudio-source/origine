@@ -16,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MoodProvider } from "@/contexts/MoodContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 import { I18nProvider } from "@/lib/i18n";
 
 SplashScreen.preventAutoHideAsync();
@@ -40,6 +41,14 @@ function RootLayoutNav() {
           sheetAllowedDetents: [0.85],
           sheetGrabberVisible: true,
           contentStyle: { backgroundColor: "rgba(19, 23, 41, 0.85)" },
+        }}
+      />
+      <Stack.Screen
+        name="settings"
+        options={{
+          presentation: "modal",
+          animation: "slide_from_bottom",
+          contentStyle: { backgroundColor: "#0B0E1A" },
         }}
       />
     </Stack>
@@ -69,11 +78,13 @@ export default function RootLayout() {
           <I18nProvider>
             <AuthProvider>
               <MoodProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                  <KeyboardProvider>
-                    <RootLayoutNav />
-                  </KeyboardProvider>
-                </GestureHandlerRootView>
+                <SettingsProvider>
+                  <GestureHandlerRootView style={{ flex: 1 }}>
+                    <KeyboardProvider>
+                      <RootLayoutNav />
+                    </KeyboardProvider>
+                  </GestureHandlerRootView>
+                </SettingsProvider>
               </MoodProvider>
             </AuthProvider>
           </I18nProvider>

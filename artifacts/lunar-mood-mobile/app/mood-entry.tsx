@@ -13,6 +13,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useMoods, type MoodEntry } from "@/contexts/MoodContext";
+import { useSettings } from "@/contexts/SettingsContext";
 import { getMoodColor } from "@/lib/lunar";
 import { useTranslation, getMoodTranslationKey, getConsumptionTranslationKey } from "@/lib/i18n";
 import Colors from "@/constants/colors";
@@ -46,6 +47,7 @@ export default function MoodEntryScreen() {
   }>();
 
   const { moods, createMood, updateMood, deleteMood, fetchMoods } = useMoods();
+  const { consumptionTrackingEnabled } = useSettings();
   const { t, language } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState<"morning" | "afternoon" | "evening">(getCurrentPeriod());
   const [selectedMood, setSelectedMood] = useState<number>(0);
@@ -232,27 +234,31 @@ export default function MoodEntryScreen() {
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>{t("conso")}</Text>
-        <View style={styles.consumptionRow}>
-          {[0, 1, 2, 3, 4, 5].map((c) => {
-            const isSelected = consumption === c;
-            return (
-              <Pressable
-                key={c}
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setConsumption(c); }}
-                style={[
-                  styles.consumptionOption,
-                  isSelected && { borderColor: "#F59E0B", backgroundColor: "rgba(245, 158, 11, 0.2)" },
-                ]}
-              >
-                <Text style={[styles.consumptionValue, isSelected && { color: "#FCD34D" }]}>{c}</Text>
-                <Text style={[styles.consumptionLabel, isSelected && { color: "#FCD34D" }]}>
-                  {t(getConsumptionTranslationKey(c))}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {consumptionTrackingEnabled && (
+          <>
+            <Text style={styles.sectionTitle}>{t("conso")}</Text>
+            <View style={styles.consumptionRow}>
+              {[0, 1, 2, 3, 4, 5].map((c) => {
+                const isSelected = consumption === c;
+                return (
+                  <Pressable
+                    key={c}
+                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setConsumption(c); }}
+                    style={[
+                      styles.consumptionOption,
+                      isSelected && { borderColor: "#F59E0B", backgroundColor: "rgba(245, 158, 11, 0.2)" },
+                    ]}
+                  >
+                    <Text style={[styles.consumptionValue, isSelected && { color: "#FCD34D" }]}>{c}</Text>
+                    <Text style={[styles.consumptionLabel, isSelected && { color: "#FCD34D" }]}>
+                      {t(getConsumptionTranslationKey(c))}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        )}
 
         <Text style={styles.sectionTitle}>{t("noteOptional")}</Text>
         <TextInput
