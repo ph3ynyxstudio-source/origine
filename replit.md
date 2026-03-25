@@ -57,6 +57,8 @@ artifacts-monorepo/
 - `PATCH /api/user/profile` — Update user profile (consumptionLabel)
 - `GET /api/lunar/phases` — Get lunar phases for a month/year
 - `GET /api/stats` — Get aggregated stats (mood/energy/consumption by lunar phase + monthly trends)
+- `POST /api/dev/seed` — Generate ~180 test mood entries over 60 days (dev only, requires auth)
+- `DELETE /api/dev/seed` — Clear all mood data for authenticated user (dev only, requires auth)
 - `GET /api/healthz` — Health check
 
 ## Features
@@ -96,6 +98,7 @@ artifacts-monorepo/
 - `artifacts/lunar-mood-mobile/app/login.tsx` — Login/register screen
 - `artifacts/lunar-mood-mobile/app/mood-entry.tsx` — Mood entry form with period/emotion/energy/consumption
 - `artifacts/api-server/src/routes/stats.ts` — Stats aggregation endpoint
+- `artifacts/api-server/src/routes/dev.ts` — Dev seed/clear endpoints (gated behind NODE_ENV !== production)
 - `artifacts/lunar-mood/src/pages/dashboard.tsx` — Web dashboard with 3-dot calendar and legend
 - `artifacts/lunar-mood/src/components/calendar/mood-dialog.tsx` — Web mood entry dialog with all 3 stats
 - `artifacts/lunar-mood/src/components/layout/sidebar.tsx` — Sidebar with stats and consumption label settings

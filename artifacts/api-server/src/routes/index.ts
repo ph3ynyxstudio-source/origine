@@ -5,6 +5,7 @@ import moodsRouter from "./moods";
 import lunarRouter from "./lunar";
 import usersRouter from "./users";
 import statsRouter from "./stats";
+import devRouter from "./dev";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(moodsRouter);
 router.use(lunarRouter);
 router.use(usersRouter);
 router.use(statsRouter);
+router.use(devRouter);
 
 export default router;
