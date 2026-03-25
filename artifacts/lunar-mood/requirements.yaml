@@ -1,0 +1,16 @@
+packages:
+  "framer-motion": "For ethereal page transitions and calendar pop-in animations"
+  "date-fns": "For complex calendar grid generation and date formatting"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility to merge tailwind classes without style conflicts"
+  "lucide-react": "Beautiful consistent icons"
+
+images:
+  - path: "artifacts/lunar-mood/public/images/celestial-bg.png"
+    description: "A dark, ethereal abstract background with deep indigo, silver stardust, and soft glowing lunar elements. Minimalist and calming."
+    aspect_ratio: "16:9"
+
+notes:
+  - "Using generated React Query hooks from @workspace/api-client-react"
+  - "API endpoints return raw data, React Query handles caching"
+  - "Authentication relies on cookie sessions. /api/auth/me returns 401 if not logged in."
