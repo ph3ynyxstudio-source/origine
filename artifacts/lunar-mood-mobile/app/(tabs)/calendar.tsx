@@ -116,7 +116,7 @@ export default function CalendarScreen() {
         date: dateStr,
         phaseEmoji: phase?.emoji || "",
         phaseLabel: phase ? t(getPhaseTranslationKey(phase.phase)) : "",
-        consumptionLabel: user?.consumptionLabel || "Coffee",
+        consumptionLabel: "Conso",
       },
     });
   };
@@ -258,7 +258,7 @@ export default function CalendarScreen() {
           </View>
           <View style={styles.consumptionLabelRow}>
             <Text style={styles.consumptionLabelText}>
-              {t("consumption")} : {user?.consumptionLabel || "Coffee"}
+              {t("conso")}
             </Text>
           </View>
         </View>

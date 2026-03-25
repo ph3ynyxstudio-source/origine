@@ -143,8 +143,6 @@ export default function MoodEntryScreen() {
     ]);
   };
 
-  const cLabel = params.consumptionLabel || "Coffee";
-
   return (
     <View style={styles.container}>
       <CosmicBackground variant="sheet" starCount={50} />
@@ -234,7 +232,7 @@ export default function MoodEntryScreen() {
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>{cLabel}</Text>
+        <Text style={styles.sectionTitle}>{t("conso")}</Text>
         <View style={styles.consumptionRow}>
           {[0, 1, 2, 3, 4, 5].map((c) => {
             const isSelected = consumption === c;

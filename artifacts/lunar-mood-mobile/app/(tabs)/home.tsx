@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   StyleSheet,
   ScrollView,
@@ -24,32 +23,14 @@ import CosmicBackground from "@/components/CosmicBackground";
 import GlowingMoon from "@/components/GlowingMoon";
 import SwipeableTabView from "@/components/SwipeableTabView";
 
-import type { TranslationKey } from "@/lib/i18n";
-
 const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
-
-interface SuggestionItem {
-  defaultLabel: string;
-  translationKey: TranslationKey;
-}
-
-const SUGGESTIONS: SuggestionItem[] = [
-  { defaultLabel: "Coffee", translationKey: "coffee" },
-  { defaultLabel: "Tobacco", translationKey: "tobacco" },
-  { defaultLabel: "Sugar", translationKey: "sugar" },
-  { defaultLabel: "Alcohol", translationKey: "alcohol" },
-  { defaultLabel: "Snacks", translationKey: "snacks" },
-];
 
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { user, isLoading: isAuthLoading, logout, updateConsumptionLabel } = useAuth();
+  const { user, isLoading: isAuthLoading, logout } = useAuth();
   const { moods, clearMoods, fetchMoods } = useMoods();
   const { t, language, setLanguage } = useTranslation();
-  const [label, setLabel] = useState(user?.consumptionLabel || "Coffee");
-  const [isSaving, setIsSaving] = useState(false);
-  const [labelDirty, setLabelDirty] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
 
@@ -58,12 +39,6 @@ export default function HomeScreen() {
       router.replace("/login");
     }
   }, [user, isAuthLoading]);
-
-  useEffect(() => {
-    if (user?.consumptionLabel) {
-      setLabel(user.consumptionLabel);
-    }
-  }, [user?.consumptionLabel]);
 
   const todayPhase = useMemo(() => {
     return getLunarPhase(new Date());
@@ -87,24 +62,6 @@ export default function HomeScreen() {
     clearMoods();
     await logout();
     router.replace("/login");
-  };
-
-  const handleSaveLabel = async () => {
-    if (!label.trim()) {
-      Alert.alert(t("errorEmptyCategory"));
-      return;
-    }
-    setIsSaving(true);
-    try {
-      await updateConsumptionLabel(label.trim());
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setLabelDirty(false);
-    } catch (e: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert(t("errorUpdateFailed"), e.message || "");
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const toggleLang = (lang: Language) => {
@@ -246,51 +203,6 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>{t("consumptionCategory")}</Text>
-          <Text style={styles.description}>{t("consumptionDescription")}</Text>
-          <TextInput
-            style={styles.input}
-            value={label}
-            onChangeText={(v) => { setLabel(v); setLabelDirty(true); }}
-            placeholder={t("consumptionPlaceholder")}
-            placeholderTextColor={Colors.dark.textMuted}
-          />
-          <View style={styles.suggestions}>
-            {SUGGESTIONS.map((s) => {
-              const localizedName = t(s.translationKey);
-              const isActive = label === localizedName;
-              return (
-                <Pressable
-                  key={s.defaultLabel}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setLabel(localizedName);
-                    setLabelDirty(true);
-                  }}
-                  style={[styles.suggestionChip, isActive && styles.suggestionChipActive]}
-                >
-                  <Text style={[styles.suggestionText, isActive && styles.suggestionTextActive]}>
-                    {localizedName}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          {labelDirty && (
-            <Pressable
-              style={({ pressed }) => [styles.saveButton, pressed && styles.buttonPressed, isSaving && styles.buttonDisabled]}
-              onPress={handleSaveLabel}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <ActivityIndicator color="#FFF" size="small" />
-              ) : (
-                <Text style={styles.saveText}>{t("save")}</Text>
-              )}
-            </Pressable>
-          )}
-        </View>
 
         {__DEV__ && (
           <View style={styles.devSection}>
@@ -418,13 +330,6 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  description: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    color: Colors.dark.textMuted,
-    marginBottom: 12,
-    lineHeight: 18,
-  },
   langRow: {
     flexDirection: "row",
     gap: 10,
@@ -449,55 +354,6 @@ const styles = StyleSheet.create({
   },
   langTextActive: {
     color: Colors.dark.primaryLight,
-  },
-  input: {
-    backgroundColor: "rgba(22, 27, 48, 0.6)",
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: "rgba(37, 43, 69, 0.8)",
-    padding: 14,
-    color: Colors.dark.text,
-    fontSize: 15,
-    fontFamily: "Inter_500Medium",
-    marginBottom: 12,
-  },
-  suggestions: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 4,
-  },
-  suggestionChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: "rgba(37, 43, 69, 0.8)",
-    backgroundColor: "rgba(22, 27, 48, 0.6)",
-  },
-  suggestionChipActive: {
-    borderColor: Colors.dark.primary,
-    backgroundColor: "rgba(124, 106, 250, 0.15)",
-  },
-  suggestionText: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-    color: Colors.dark.textMuted,
-  },
-  suggestionTextActive: {
-    color: Colors.dark.primaryLight,
-  },
-  saveButton: {
-    backgroundColor: Colors.dark.primary,
-    borderRadius: 14,
-    height: 48,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 12,
-    shadowColor: "#7C6AFA",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
   },
   buttonPressed: {
     opacity: 0.85,
