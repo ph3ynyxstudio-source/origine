@@ -25,6 +25,7 @@ import {
   startOfWeek,
   endOfWeek,
 } from "date-fns";
+import { fr } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMoods } from "@/contexts/MoodContext";
 import { getMonthPhases } from "@/lib/lunar";
@@ -163,7 +164,7 @@ export default function CalendarScreen() {
             <Ionicons name="chevron-back" size={24} color={Colors.dark.text} />
           </Pressable>
           <Text style={styles.monthTitle}>
-            {format(currentMonth, "MMMM yyyy")}
+            {format(currentMonth, "MMMM yyyy", { locale: language === "fr" ? fr : undefined })}
           </Text>
           <Pressable onPress={handleNextMonth} style={styles.navBtn}>
             <Ionicons name="chevron-forward" size={24} color={Colors.dark.text} />

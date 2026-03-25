@@ -8,6 +8,7 @@ import {
   Dimensions,
   RefreshControl,
 } from "react-native";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BarChart, LineChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -74,12 +75,18 @@ const CHART_CONFIG = {
 
 export default function StatsScreen() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { t } = useTranslation();
   const [stats, setStats] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const screenWidth = Dimensions.get("window").width - 64;
+
+  useEffect(() => {
+    if (!isAuthLoading && !user) {
+      router.replace("/login");
+    }
+  }, [user, isAuthLoading]);
 
   const fetchStats = useCallback(async () => {
     try {

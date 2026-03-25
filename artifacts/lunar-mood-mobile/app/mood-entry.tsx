@@ -17,6 +17,7 @@ import { getMoodColor } from "@/lib/lunar";
 import { useTranslation, getMoodTranslationKey, getConsumptionTranslationKey } from "@/lib/i18n";
 import Colors from "@/constants/colors";
 import { format, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
 import CosmicBackground from "@/components/CosmicBackground";
 
 const MOOD_ICONS: Record<number, keyof typeof Ionicons.glyphMap> = {
@@ -45,7 +46,7 @@ export default function MoodEntryScreen() {
   }>();
 
   const { moods, createMood, updateMood, deleteMood, fetchMoods } = useMoods();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState<"morning" | "afternoon" | "evening">(getCurrentPeriod());
   const [selectedMood, setSelectedMood] = useState<number>(0);
   const [energy, setEnergy] = useState<number>(50);
@@ -63,7 +64,8 @@ export default function MoodEntryScreen() {
   );
 
   const dateObj = params.date ? parseISO(params.date) : new Date();
-  const formattedDate = format(dateObj, "EEEE, MMMM d, yyyy");
+  const dateLocale = language === "fr" ? fr : undefined;
+  const formattedDate = format(dateObj, "EEEE, MMMM d, yyyy", { locale: dateLocale });
   const monthNum = dateObj.getMonth() + 1;
   const yearNum = dateObj.getFullYear();
   const dateStr = params.date || format(new Date(), "yyyy-MM-dd");

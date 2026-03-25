@@ -5,8 +5,8 @@ import { router, useSegments } from "expo-router";
 import * as Haptics from "expo-haptics";
 
 const TAB_ORDER = ["home", "calendar", "stats"] as const;
-const SWIPE_THRESHOLD = 50;
-const VELOCITY_THRESHOLD = 400;
+const SWIPE_THRESHOLD = 80;
+const VELOCITY_THRESHOLD = 600;
 
 interface SwipeableTabViewProps {
   children: React.ReactNode;
@@ -37,8 +37,8 @@ export default function SwipeableTabView({ children }: SwipeableTabViewProps) {
   );
 
   const panGesture = Gesture.Pan()
-    .activeOffsetX([-20, 20])
-    .failOffsetY([-15, 15])
+    .activeOffsetX([-30, 30])
+    .failOffsetY([-20, 20])
     .onEnd((event) => {
       const { translationX, velocityX } = event;
       const passedThreshold = Math.abs(translationX) > SWIPE_THRESHOLD;
