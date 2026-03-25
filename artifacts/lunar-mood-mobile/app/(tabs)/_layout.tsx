@@ -103,8 +103,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 48,
     borderRadius: 28,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(124, 106, 250, 0.12)",
+    borderWidth: 0.5,
+    borderColor: "rgba(124, 106, 250, 0.06)",
   },
   tabBarInner: {
     flexDirection: "row",
