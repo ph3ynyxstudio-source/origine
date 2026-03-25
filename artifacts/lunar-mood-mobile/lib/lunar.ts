@@ -284,27 +284,29 @@ export function getLunarPhase(date: Date): LunarPhaseInfo {
   const illumination =
     Math.round(((1 - Math.cos(2 * Math.PI * fraction)) / 2) * 100) / 100;
 
-  const HALF_DAY = 0.5;
+  const mid1 = (jdNew + jdFQ) / 2;
+  const mid2 = (jdFQ + jdFull) / 2;
+  const mid3 = (jdFull + jdLQ) / 2;
+  const mid4 = (jdLQ + jdNextNew) / 2;
+
   let key: string;
 
-  if (Math.abs(jd - jdNew) <= 1) {
+  if (jd < mid1) {
     key = "new_moon";
-  } else if (jd < jdFQ - HALF_DAY) {
+  } else if (jd < jdFQ) {
     key = "waxing_crescent";
-  } else if (Math.abs(jd - jdFQ) <= HALF_DAY) {
+  } else if (jd < mid2) {
     key = "first_quarter";
-  } else if (jd < jdFull - 1) {
+  } else if (jd < jdFull) {
     key = "waxing_gibbous";
-  } else if (Math.abs(jd - jdFull) <= 1) {
+  } else if (jd < mid3) {
     key = "full_moon";
-  } else if (jd < jdLQ - HALF_DAY) {
+  } else if (jd < jdLQ) {
     key = "waning_gibbous";
-  } else if (Math.abs(jd - jdLQ) <= HALF_DAY) {
+  } else if (jd < mid4) {
     key = "last_quarter";
-  } else if (jd < jdNextNew - 1) {
-    key = "waning_crescent";
   } else {
-    key = "new_moon";
+    key = "waning_crescent";
   }
 
   const info = PHASE_MAP[key];

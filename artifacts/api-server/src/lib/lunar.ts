@@ -235,33 +235,33 @@ export function getLunarPhase(date: Date): LunarPhaseInfo {
   const illumination =
     Math.round(((1 - Math.cos(2 * Math.PI * fraction)) / 2) * 100) / 100;
 
-  const HALF_DAY = 0.5;
+  const mid1 = (jdNew + jdFQ) / 2;
+  const mid2 = (jdFQ + jdFull) / 2;
+  const mid3 = (jdFull + jdLQ) / 2;
+  const mid4 = (jdLQ + jdNextNew) / 2;
 
-  if (Math.abs(jd - jdNew) <= 1) {
-    return { phase: "new_moon", illumination, emoji: "\uD83C\uDF11" };
+  let phase: string;
+  let emoji: string;
+
+  if (jd < mid1) {
+    phase = "new_moon"; emoji = "\uD83C\uDF11";
+  } else if (jd < jdFQ) {
+    phase = "waxing_crescent"; emoji = "\uD83C\uDF12";
+  } else if (jd < mid2) {
+    phase = "first_quarter"; emoji = "\uD83C\uDF13";
+  } else if (jd < jdFull) {
+    phase = "waxing_gibbous"; emoji = "\uD83C\uDF14";
+  } else if (jd < mid3) {
+    phase = "full_moon"; emoji = "\uD83C\uDF15";
+  } else if (jd < jdLQ) {
+    phase = "waning_gibbous"; emoji = "\uD83C\uDF16";
+  } else if (jd < mid4) {
+    phase = "last_quarter"; emoji = "\uD83C\uDF17";
+  } else {
+    phase = "waning_crescent"; emoji = "\uD83C\uDF18";
   }
-  if (jd < jdFQ - HALF_DAY) {
-    return { phase: "waxing_crescent", illumination, emoji: "\uD83C\uDF12" };
-  }
-  if (Math.abs(jd - jdFQ) <= HALF_DAY) {
-    return { phase: "first_quarter", illumination, emoji: "\uD83C\uDF13" };
-  }
-  if (jd < jdFull - 1) {
-    return { phase: "waxing_gibbous", illumination, emoji: "\uD83C\uDF14" };
-  }
-  if (Math.abs(jd - jdFull) <= 1) {
-    return { phase: "full_moon", illumination, emoji: "\uD83C\uDF15" };
-  }
-  if (jd < jdLQ - HALF_DAY) {
-    return { phase: "waning_gibbous", illumination, emoji: "\uD83C\uDF16" };
-  }
-  if (Math.abs(jd - jdLQ) <= HALF_DAY) {
-    return { phase: "last_quarter", illumination, emoji: "\uD83C\uDF17" };
-  }
-  if (jd < jdNextNew - 1) {
-    return { phase: "waning_crescent", illumination, emoji: "\uD83C\uDF18" };
-  }
-  return { phase: "new_moon", illumination, emoji: "\uD83C\uDF11" };
+
+  return { phase, illumination, emoji };
 }
 
 export function getMonthPhases(
