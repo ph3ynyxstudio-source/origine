@@ -38,7 +38,7 @@ function RootLayoutNav() {
           presentation: "formSheet",
           sheetAllowedDetents: [0.65],
           sheetGrabberVisible: true,
-          contentStyle: { backgroundColor: "#131729" },
+          contentStyle: { backgroundColor: "rgba(19, 23, 41, 0.85)" },
         }}
       />
     </Stack>

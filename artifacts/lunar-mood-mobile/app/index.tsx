@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMoods } from "@/contexts/MoodContext";
 import { getMonthPhases, getMoodColor, getMoodLabel } from "@/lib/lunar";
 import Colors from "@/constants/colors";
+import CosmicBackground from "@/components/CosmicBackground";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -127,6 +128,7 @@ export default function CalendarScreen() {
   if (isAuthLoading) {
     return (
       <View style={[styles.container, styles.center]}>
+        <CosmicBackground starCount={60} />
         <ActivityIndicator size="large" color={Colors.dark.primary} />
       </View>
     );
@@ -136,6 +138,7 @@ export default function CalendarScreen() {
 
   return (
     <View style={styles.container}>
+      <CosmicBackground starCount={80} />
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={{
@@ -156,9 +159,10 @@ export default function CalendarScreen() {
           <View>
             <Text style={styles.greeting}>Hello, {user.username}</Text>
             {todayPhase && (
-              <Text style={styles.phaseText}>
-                {todayPhase.emoji} {todayPhase.label}
-              </Text>
+              <View style={styles.phaseRow}>
+                <Text style={styles.phaseEmoji}>{todayPhase.emoji}</Text>
+                <Text style={styles.phaseText}>{todayPhase.label}</Text>
+              </View>
             )}
           </View>
           <Pressable onPress={handleLogout} style={styles.logoutBtn}>
@@ -244,7 +248,7 @@ export default function CalendarScreen() {
                     </Text>
 
                     {phase && isCurrentMonth && (
-                      <Text style={styles.phaseEmoji}>{phase.emoji}</Text>
+                      <Text style={styles.calPhaseEmoji}>{phase.emoji}</Text>
                     )}
 
                     {entry && (
@@ -305,20 +309,36 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: "Inter_700Bold",
     color: Colors.dark.text,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  phaseRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 4,
+  },
+  phaseEmoji: {
+    fontSize: 16,
+    textShadowColor: Colors.dark.moon,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   phaseText: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
     color: Colors.dark.textSecondary,
-    marginTop: 4,
   },
   logoutBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: "rgba(19, 23, 41, 0.6)",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(37, 43, 69, 0.6)",
   },
   statsRow: {
     flexDirection: "row",
@@ -327,12 +347,12 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: "rgba(19, 23, 41, 0.55)",
     borderRadius: 16,
     padding: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: Colors.dark.border,
+    borderColor: "rgba(37, 43, 69, 0.6)",
   },
   statValue: {
     fontSize: 22,
@@ -355,23 +375,26 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: "rgba(19, 23, 41, 0.55)",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: Colors.dark.border,
+    borderColor: "rgba(37, 43, 69, 0.6)",
   },
   monthTitle: {
     fontSize: 20,
     fontFamily: "Inter_600SemiBold",
     color: Colors.dark.text,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   calendarCard: {
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: "rgba(19, 23, 41, 0.5)",
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.dark.border,
+    borderColor: "rgba(37, 43, 69, 0.6)",
     marginBottom: 16,
   },
   weekHeader: {
@@ -412,9 +435,13 @@ const styles = StyleSheet.create({
     opacity: 0.25,
   },
   dayCellToday: {
-    backgroundColor: "rgba(124, 106, 250, 0.12)",
+    backgroundColor: "rgba(124, 106, 250, 0.15)",
     borderWidth: 1,
-    borderColor: "rgba(124, 106, 250, 0.3)",
+    borderColor: "rgba(124, 106, 250, 0.35)",
+    shadowColor: "#7C6AFA",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   dayCellPressed: {
     backgroundColor: "rgba(255, 255, 255, 0.05)",
@@ -431,20 +458,23 @@ const styles = StyleSheet.create({
     color: Colors.dark.primaryLight,
     fontFamily: "Inter_700Bold",
   },
-  phaseEmoji: {
+  calPhaseEmoji: {
     fontSize: 16,
   },
   moodDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
   },
   legendCard: {
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: "rgba(19, 23, 41, 0.55)",
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.dark.border,
+    borderColor: "rgba(37, 43, 69, 0.6)",
   },
   legendTitle: {
     fontSize: 14,
@@ -464,6 +494,9 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
   },
   legendLabel: {
     fontSize: 11,

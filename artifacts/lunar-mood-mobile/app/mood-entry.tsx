@@ -16,6 +16,7 @@ import { useMoods } from "@/contexts/MoodContext";
 import { getMoodColor, getMoodLabel } from "@/lib/lunar";
 import Colors from "@/constants/colors";
 import { format, parseISO } from "date-fns";
+import CosmicBackground from "@/components/CosmicBackground";
 
 const MOOD_ICONS: Record<number, keyof typeof Ionicons.glyphMap> = {
   1: "sad-outline",
@@ -103,94 +104,100 @@ export default function MoodEntryScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.dateText}>{formattedDate}</Text>
-        {params.phaseEmoji ? (
-          <View style={styles.phaseRow}>
-            <Text style={styles.phaseEmoji}>{params.phaseEmoji}</Text>
-            <Text style={styles.phaseLabel}>{params.phaseLabel}</Text>
-          </View>
-        ) : null}
-      </View>
+      <CosmicBackground variant="sheet" starCount={50} />
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.dateText}>{formattedDate}</Text>
+          {params.phaseEmoji ? (
+            <View style={styles.phaseRow}>
+              <Text style={styles.phaseEmoji}>{params.phaseEmoji}</Text>
+              <Text style={styles.phaseLabel}>{params.phaseLabel}</Text>
+            </View>
+          ) : null}
+        </View>
 
-      <Text style={styles.sectionTitle}>How are you feeling?</Text>
-      <View style={styles.moodRow}>
-        {[1, 2, 3, 4, 5].map((level) => (
-          <Pressable
-            key={level}
-            onPress={() => handleMoodSelect(level)}
-            style={[
-              styles.moodOption,
-              selectedMood === level && {
-                backgroundColor: getMoodColor(level) + "20",
-                borderColor: getMoodColor(level),
-              },
-            ]}
-          >
-            <Ionicons
-              name={MOOD_ICONS[level]}
-              size={28}
-              color={
-                selectedMood === level
-                  ? getMoodColor(level)
-                  : Colors.dark.textMuted
-              }
-            />
-            <Text
-              style={[
-                styles.moodLabel,
-                selectedMood === level && { color: getMoodColor(level) },
-              ]}
-            >
-              {getMoodLabel(level)}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+        <Text style={styles.sectionTitle}>How are you feeling?</Text>
+        <View style={styles.moodRow}>
+          {[1, 2, 3, 4, 5].map((level) => {
+            const isSelected = selectedMood === level;
+            return (
+              <Pressable
+                key={level}
+                onPress={() => handleMoodSelect(level)}
+                style={[
+                  styles.moodOption,
+                  isSelected && {
+                    backgroundColor: getMoodColor(level) + "20",
+                    borderColor: getMoodColor(level),
+                    shadowColor: getMoodColor(level),
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.4,
+                    shadowRadius: 10,
+                  },
+                ]}
+              >
+                <Ionicons
+                  name={MOOD_ICONS[level]}
+                  size={28}
+                  color={isSelected ? getMoodColor(level) : Colors.dark.textMuted}
+                />
+                <Text
+                  style={[
+                    styles.moodLabel,
+                    isSelected && { color: getMoodColor(level) },
+                  ]}
+                >
+                  {getMoodLabel(level)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
-      <Text style={styles.sectionTitle}>Note (optional)</Text>
-      <TextInput
-        style={styles.noteInput}
-        placeholder="Write about your day..."
-        placeholderTextColor={Colors.dark.textMuted}
-        value={note}
-        onChangeText={setNote}
-        multiline
-        numberOfLines={3}
-        textAlignVertical="top"
-      />
+        <Text style={styles.sectionTitle}>Note (optional)</Text>
+        <TextInput
+          style={styles.noteInput}
+          placeholder="Write about your day..."
+          placeholderTextColor={Colors.dark.textMuted}
+          value={note}
+          onChangeText={setNote}
+          multiline
+          numberOfLines={3}
+          textAlignVertical="top"
+        />
 
-      <View style={styles.actions}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.saveButton,
-            pressed && styles.buttonPressed,
-            isSubmitting && styles.buttonDisabled,
-          ]}
-          onPress={handleSave}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#FFF" size="small" />
-          ) : (
-            <Text style={styles.saveText}>
-              {isEditing ? "Update" : "Save"} Mood
-            </Text>
-          )}
-        </Pressable>
-
-        {isEditing && (
+        <View style={styles.actions}>
           <Pressable
             style={({ pressed }) => [
-              styles.deleteButton,
+              styles.saveButton,
               pressed && styles.buttonPressed,
+              isSubmitting && styles.buttonDisabled,
             ]}
-            onPress={handleDelete}
+            onPress={handleSave}
+            disabled={isSubmitting}
           >
-            <Ionicons name="trash-outline" size={18} color={Colors.dark.mood1} />
-            <Text style={styles.deleteText}>Delete</Text>
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFF" size="small" />
+            ) : (
+              <Text style={styles.saveText}>
+                {isEditing ? "Update" : "Save"} Mood
+              </Text>
+            )}
           </Pressable>
-        )}
+
+          {isEditing && (
+            <Pressable
+              style={({ pressed }) => [
+                styles.deleteButton,
+                pressed && styles.buttonPressed,
+              ]}
+              onPress={handleDelete}
+            >
+              <Ionicons name="trash-outline" size={18} color={Colors.dark.mood1} />
+              <Text style={styles.deleteText}>Delete</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -200,6 +207,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.dark.surface,
+  },
+  content: {
+    flex: 1,
     padding: 24,
   },
   header: {
@@ -210,6 +220,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "Inter_600SemiBold",
     color: Colors.dark.text,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   phaseRow: {
     flexDirection: "row",
@@ -219,6 +232,9 @@ const styles = StyleSheet.create({
   },
   phaseEmoji: {
     fontSize: 20,
+    textShadowColor: Colors.dark.moon,
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   phaseLabel: {
     fontSize: 14,
@@ -245,8 +261,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: Colors.dark.border,
-    backgroundColor: Colors.dark.card,
+    borderColor: "rgba(37, 43, 69, 0.8)",
+    backgroundColor: "rgba(22, 27, 48, 0.6)",
     gap: 4,
   },
   moodLabel: {
@@ -255,10 +271,10 @@ const styles = StyleSheet.create({
     color: Colors.dark.textMuted,
   },
   noteInput: {
-    backgroundColor: Colors.dark.card,
+    backgroundColor: "rgba(22, 27, 48, 0.6)",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: Colors.dark.border,
+    borderColor: "rgba(37, 43, 69, 0.8)",
     padding: 16,
     color: Colors.dark.text,
     fontSize: 15,
@@ -275,6 +291,10 @@ const styles = StyleSheet.create({
     height: 52,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#7C6AFA",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
   },
   buttonPressed: {
     opacity: 0.85,

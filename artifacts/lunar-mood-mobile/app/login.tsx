@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   ScrollView,
+  Animated,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,6 +17,94 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/contexts/AuthContext";
 import Colors from "@/constants/colors";
+import CosmicBackground from "@/components/CosmicBackground";
+import GlowingMoon from "@/components/GlowingMoon";
+
+interface FloatingParticle {
+  x: number;
+  startY: number;
+  size: number;
+  duration: number;
+  delay: number;
+  opacity: number;
+}
+
+function generateParticles(count: number): FloatingParticle[] {
+  const particles: FloatingParticle[] = [];
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * 100,
+      startY: Math.random() * 100,
+      size: Math.random() * 3 + 1,
+      duration: Math.random() * 6000 + 4000,
+      delay: Math.random() * 4000,
+      opacity: Math.random() * 0.4 + 0.1,
+    });
+  }
+  return particles;
+}
+
+const FloatingParticleView = React.memo(({ particle }: { particle: FloatingParticle }) => {
+  const translateY = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(particle.opacity)).current;
+
+  useEffect(() => {
+    const moveAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.delay(particle.delay),
+        Animated.timing(translateY, {
+          toValue: -30,
+          duration: particle.duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: particle.duration,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    const fadeAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.delay(particle.delay + 500),
+        Animated.timing(opacityAnim, {
+          toValue: particle.opacity * 0.2,
+          duration: particle.duration * 0.8,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: particle.opacity,
+          duration: particle.duration * 0.8,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    moveAnimation.start();
+    fadeAnimation.start();
+    return () => {
+      moveAnimation.stop();
+      fadeAnimation.stop();
+    };
+  }, []);
+
+  return (
+    <Animated.View
+      style={{
+        position: "absolute",
+        left: `${particle.x}%`,
+        top: `${particle.startY}%`,
+        width: particle.size,
+        height: particle.size,
+        borderRadius: particle.size / 2,
+        backgroundColor: "rgba(155, 139, 255, 0.6)",
+        opacity: opacityAnim,
+        transform: [{ translateY }],
+      }}
+    />
+  );
+});
+
+const particles = generateParticles(Platform.OS === "web" ? 8 : 12);
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -63,117 +152,119 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 40),
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 40),
-          },
-        ]}
-        keyboardShouldPersistTaps="handled"
+    <View style={styles.container}>
+      <CosmicBackground variant="login" starCount={100} />
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        {particles.map((p, i) => (
+          <FloatingParticleView key={i} particle={p} />
+        ))}
+      </View>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={styles.header}>
-          <View style={styles.moonIcon}>
-            <Ionicons
-              name="moon"
-              size={48}
-              color={Colors.dark.moon}
-            />
-          </View>
-          <Text style={styles.title}>LunarMood</Text>
-          <Text style={styles.subtitle}>
-            Align your orbit with the stars.
-          </Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Ionicons
-              name="person-outline"
-              size={20}
-              color={Colors.dark.textMuted}
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Username"
-              placeholderTextColor={Colors.dark.textMuted}
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
+        <ScrollView
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingTop: insets.top + (Platform.OS === "web" ? 67 : 40),
+              paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 40),
+            },
+          ]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <GlowingMoon size={96} iconSize={52} />
+            <Text style={styles.title}>LunarMood</Text>
+            <Text style={styles.subtitle}>
+              Align your orbit with the stars.
+            </Text>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={20}
-              color={Colors.dark.textMuted}
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Password"
-              placeholderTextColor={Colors.dark.textMuted}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-            />
-            <Pressable
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeBtn}
-            >
+          <View style={styles.formCard}>
+            <View style={styles.inputContainer}>
               <Ionicons
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                name="person-outline"
                 size={20}
                 color={Colors.dark.textMuted}
+                style={styles.inputIcon}
               />
+              <TextInput
+                style={styles.input}
+                placeholder="Username"
+                placeholderTextColor={Colors.dark.textMuted}
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={20}
+                color={Colors.dark.textMuted}
+                style={styles.inputIcon}
+              />
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Password"
+                placeholderTextColor={Colors.dark.textMuted}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <Pressable
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeBtn}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={20}
+                  color={Colors.dark.textMuted}
+                />
+              </Pressable>
+            </View>
+
+            {error ? (
+              <View style={styles.errorContainer}>
+                <Ionicons name="alert-circle" size={16} color={Colors.dark.mood1} />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.submitButton,
+                pressed && styles.submitButtonPressed,
+                isSubmitting && styles.submitButtonDisabled,
+              ]}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="#FFF" size="small" />
+              ) : (
+                <Text style={styles.submitText}>
+                  {isLogin ? "Enter Orbit" : "Launch Account"}
+                </Text>
+              )}
+            </Pressable>
+
+            <Pressable onPress={toggleMode} style={styles.toggleContainer}>
+              <Text style={styles.toggleText}>
+                {isLogin ? "New to the cosmos? " : "Already have an account? "}
+                <Text style={styles.toggleLink}>
+                  {isLogin ? "Create an account" : "Log in"}
+                </Text>
+              </Text>
             </Pressable>
           </View>
-
-          {error ? (
-            <View style={styles.errorContainer}>
-              <Ionicons name="alert-circle" size={16} color={Colors.dark.mood1} />
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.submitButton,
-              pressed && styles.submitButtonPressed,
-              isSubmitting && styles.submitButtonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator color="#FFF" size="small" />
-            ) : (
-              <Text style={styles.submitText}>
-                {isLogin ? "Enter Orbit" : "Launch Account"}
-              </Text>
-            )}
-          </Pressable>
-
-          <Pressable onPress={toggleMode} style={styles.toggleContainer}>
-            <Text style={styles.toggleText}>
-              {isLogin ? "New to the cosmos? " : "Already have an account? "}
-              <Text style={styles.toggleLink}>
-                {isLogin ? "Create an account" : "Log in"}
-              </Text>
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -181,6 +272,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.dark.background,
+  },
+  flex: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -191,36 +285,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 48,
   },
-  moonIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: "rgba(240, 230, 211, 0.08)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
   title: {
     fontSize: 36,
     fontFamily: "Inter_700Bold",
     color: Colors.dark.primary,
     marginBottom: 8,
+    textShadowColor: "rgba(124, 106, 250, 0.5)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
   },
   subtitle: {
     fontSize: 16,
     fontFamily: "Inter_400Regular",
     color: Colors.dark.textSecondary,
   },
-  form: {
+  formCard: {
     gap: 16,
+    backgroundColor: "rgba(19, 23, 41, 0.6)",
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: "rgba(37, 43, 69, 0.6)",
+    shadowColor: "#7C6AFA",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: "rgba(22, 27, 48, 0.7)",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.dark.border,
+    borderColor: "rgba(37, 43, 69, 0.8)",
     paddingHorizontal: 16,
     height: 56,
   },
@@ -256,6 +353,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginTop: 8,
+    shadowColor: "#7C6AFA",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
   },
   submitButtonPressed: {
     opacity: 0.85,
