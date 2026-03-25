@@ -17,6 +17,8 @@ tags:
     description: Lunar phase operations
   - name: user
     description: User profile operations
+  - name: stats
+    description: Mood statistics operations
 paths:
   /healthz:
     get:
@@ -275,6 +277,26 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/LunarPhase"
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get aggregated mood statistics by lunar phase
+      security:
+        - cookieAuth: []
+      responses:
+        "200":
+          description: Aggregated statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -459,3 +481,58 @@ components:
         - phase
         - illumination
         - emoji
+    PhaseStats:
+      type: object
+      properties:
+        phase:
+          type: string
+        avgMood:
+          type: number
+        avgEnergy:
+          type: number
+        avgConsumption:
+          type: number
+        count:
+          type: integer
+      required:
+        - phase
+        - avgMood
+        - avgEnergy
+        - avgConsumption
+        - count
+    MonthTrend:
+      type: object
+      properties:
+        month:
+          type: string
+        avgMood:
+          type: number
+        avgEnergy:
+          type: number
+        avgConsumption:
+          type: number
+        count:
+          type: integer
+      required:
+        - month
+        - avgMood
+        - avgEnergy
+        - avgConsumption
+        - count
+    StatsResponse:
+      type: object
+      properties:
+        byPhase:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhaseStats"
+        monthlyTrends:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthTrend"
+        totalEntries:
+          type: integer
+      required:
+        - byPhase
+        - monthlyTrends
+        - totalEntries

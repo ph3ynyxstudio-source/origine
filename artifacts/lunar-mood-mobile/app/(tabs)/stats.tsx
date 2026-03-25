@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation, getPhaseTranslationKey } from "@/lib/i18n";
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
+import SwipeableTabView from "@/components/SwipeableTabView";
 
 const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
 
@@ -125,6 +126,7 @@ export default function StatsScreen() {
   }
 
   return (
+    <SwipeableTabView>
     <View style={styles.container}>
       <CosmicBackground starCount={80} />
       <ScrollView
@@ -278,6 +280,7 @@ export default function StatsScreen() {
         )}
       </ScrollView>
     </View>
+    </SwipeableTabView>
   );
 }
 

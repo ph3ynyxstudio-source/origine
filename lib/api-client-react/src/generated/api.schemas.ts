@@ -141,6 +141,28 @@ export interface LunarPhase {
   emoji: string;
 }
 
+export interface PhaseStats {
+  phase: string;
+  avgMood: number;
+  avgEnergy: number;
+  avgConsumption: number;
+  count: number;
+}
+
+export interface MonthTrend {
+  month: string;
+  avgMood: number;
+  avgEnergy: number;
+  avgConsumption: number;
+  count: number;
+}
+
+export interface StatsResponse {
+  byPhase: PhaseStats[];
+  monthlyTrends: MonthTrend[];
+  totalEntries: number;
+}
+
 export type ListMoodsParams = {
   /**
    * Month (1-12)

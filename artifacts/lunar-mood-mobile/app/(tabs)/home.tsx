@@ -21,15 +21,23 @@ import { useTranslation, getPhaseTranslationKey, type Language } from "@/lib/i18
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 import GlowingMoon from "@/components/GlowingMoon";
+import SwipeableTabView from "@/components/SwipeableTabView";
 
-const SUGGESTIONS = ["Coffee", "Tobacco", "Sugar", "Alcohol", "Snacks"];
-const SUGGESTIONS_KEYS: Record<string, string> = {
-  Coffee: "coffee",
-  Tobacco: "tobacco",
-  Sugar: "sugar",
-  Alcohol: "alcohol",
-  Snacks: "snacks",
-};
+import type { TranslationKey } from "@/lib/i18n";
+
+interface SuggestionItem {
+  defaultLabel: string;
+  translationKey: TranslationKey;
+}
+
+const SUGGESTIONS: SuggestionItem[] = [
+  { defaultLabel: "Coffee", translationKey: "coffee" },
+  { defaultLabel: "Tobacco", translationKey: "tobacco" },
+  { defaultLabel: "Sugar", translationKey: "sugar" },
+  { defaultLabel: "Alcohol", translationKey: "alcohol" },
+  { defaultLabel: "Snacks", translationKey: "snacks" },
+];
+
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -111,6 +119,7 @@ export default function HomeScreen() {
   if (!user) return null;
 
   return (
+    <SwipeableTabView>
     <View style={styles.container}>
       <CosmicBackground starCount={80} />
       <ScrollView
@@ -183,22 +192,25 @@ export default function HomeScreen() {
             placeholderTextColor={Colors.dark.textMuted}
           />
           <View style={styles.suggestions}>
-            {SUGGESTIONS.map((s) => (
-              <Pressable
-                key={s}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  const localizedName = t(SUGGESTIONS_KEYS[s] as any) || s;
-                  setLabel(localizedName);
-                  setLabelDirty(true);
-                }}
-                style={[styles.suggestionChip, label === (t(SUGGESTIONS_KEYS[s] as any) || s) && styles.suggestionChipActive]}
-              >
-                <Text style={[styles.suggestionText, label === (t(SUGGESTIONS_KEYS[s] as any) || s) && styles.suggestionTextActive]}>
-                  {t(SUGGESTIONS_KEYS[s] as any) || s}
-                </Text>
-              </Pressable>
-            ))}
+            {SUGGESTIONS.map((s) => {
+              const localizedName = t(s.translationKey);
+              const isActive = label === localizedName;
+              return (
+                <Pressable
+                  key={s.defaultLabel}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setLabel(localizedName);
+                    setLabelDirty(true);
+                  }}
+                  style={[styles.suggestionChip, isActive && styles.suggestionChipActive]}
+                >
+                  <Text style={[styles.suggestionText, isActive && styles.suggestionTextActive]}>
+                    {localizedName}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
           {labelDirty && (
             <Pressable
@@ -221,6 +233,7 @@ export default function HomeScreen() {
         </Pressable>
       </ScrollView>
     </View>
+    </SwipeableTabView>
   );
 }
 

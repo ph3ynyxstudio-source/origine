@@ -218,3 +218,28 @@ export const GetLunarPhasesResponseItem = zod.object({
   emoji: zod.coerce.string(),
 });
 export const GetLunarPhasesResponse = zod.array(GetLunarPhasesResponseItem);
+
+/**
+ * @summary Get aggregated mood statistics by lunar phase
+ */
+export const GetStatsResponse = zod.object({
+  byPhase: zod.array(
+    zod.object({
+      phase: zod.coerce.string(),
+      avgMood: zod.coerce.number(),
+      avgEnergy: zod.coerce.number(),
+      avgConsumption: zod.coerce.number(),
+      count: zod.coerce.number(),
+    }),
+  ),
+  monthlyTrends: zod.array(
+    zod.object({
+      month: zod.coerce.string(),
+      avgMood: zod.coerce.number(),
+      avgEnergy: zod.coerce.number(),
+      avgConsumption: zod.coerce.number(),
+      count: zod.coerce.number(),
+    }),
+  ),
+  totalEntries: zod.coerce.number(),
+});

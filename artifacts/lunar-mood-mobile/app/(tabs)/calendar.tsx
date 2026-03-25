@@ -31,6 +31,7 @@ import { getMonthPhases } from "@/lib/lunar";
 import { useTranslation, getPhaseTranslationKey } from "@/lib/i18n";
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
+import SwipeableTabView from "@/components/SwipeableTabView";
 
 const DAYS_EN = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DAYS_FR = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
@@ -131,6 +132,7 @@ export default function CalendarScreen() {
   if (!user) return null;
 
   return (
+    <SwipeableTabView>
     <View style={styles.container}>
       <CosmicBackground starCount={80} />
       <ScrollView
@@ -261,6 +263,7 @@ export default function CalendarScreen() {
         </View>
       </ScrollView>
     </View>
+    </SwipeableTabView>
   );
 }
 
