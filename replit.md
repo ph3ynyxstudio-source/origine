@@ -41,19 +41,20 @@ artifacts-monorepo/
 
 ## Database Schema
 
-- **users** — id, username, password_hash, created_at
-- **moods** — id, user_id (FK to users), date, mood (1-5), note, lunar_phase, created_at
+- **users** — id, username, password_hash, consumption_label (personalized consumption category, default "Café"), created_at
+- **moods** — id, user_id (FK to users), date, period (enum: morning/afternoon/evening), mood (1-5), energy (0-100), consumption (0-5), note, lunar_phase, created_at. Unique constraint on (user_id, date, period).
 
 ## API Endpoints
 
 - `POST /api/auth/register` — Register a new user
 - `POST /api/auth/login` — Login (sets httpOnly cookie)
-- `GET /api/auth/me` — Get current authenticated user
+- `GET /api/auth/me` — Get current authenticated user (includes consumptionLabel)
 - `POST /api/auth/logout` — Logout (clears cookie)
 - `GET /api/moods` — List mood entries (query params: month, year)
-- `POST /api/moods` — Create a mood entry
-- `PATCH /api/moods/:id` — Update a mood entry
+- `POST /api/moods` — Create a mood entry (fields: date, period, mood, energy, consumption, note). Upserts on conflict (userId, date, period).
+- `PATCH /api/moods/:id` — Update a mood entry (mood, energy, consumption, note)
 - `DELETE /api/moods/:id` — Delete a mood entry
+- `PATCH /api/user/profile` — Update user profile (consumptionLabel)
 - `GET /api/lunar/phases` — Get lunar phases for a month/year
 - `GET /api/healthz` — Health check
 
@@ -61,8 +62,12 @@ artifacts-monorepo/
 
 - Cookie-based JWT authentication
 - Lunar phase calculation (algorithmic, no external API needed)
-- Mood tracking with 1-5 scale tied to daily moon phases
-- Monthly calendar view with mood and moon phase visualization
+- **3 moments × 3 stats per day**: Each day has 3 time periods (Matin/Après-midi/Soir), each with 3 stats (Émotion 1-5, Énergie 0-100%, Consommation 0-5)
+- Personalized consumption category label per user (configurable in sidebar settings)
+- Calendar shows 3 colored dots per day (amber=morning, blue=afternoon, violet=evening)
+- Legend below calendar explains period colors and consumption type
+- Stats cards showing averages for emotion, energy, and consumption
+- Push notification reminders at 8am, 1pm, 8pm (expo-notifications, mobile)
 - Dark celestial themed UI
 
 ## Key Files
@@ -71,15 +76,20 @@ artifacts-monorepo/
 - `artifacts/api-server/src/middlewares/auth.ts` — JWT auth middleware
 - `artifacts/api-server/src/routes/auth.ts` — Auth routes
 - `artifacts/api-server/src/routes/moods.ts` — Mood CRUD routes
+- `artifacts/api-server/src/routes/users.ts` — User profile update route
 - `artifacts/api-server/src/routes/lunar.ts` — Lunar phase endpoint
-- `lib/db/src/schema/users.ts` — Users table schema
-- `lib/db/src/schema/moods.ts` — Moods table schema
+- `lib/db/src/schema/users.ts` — Users table schema (with consumptionLabel)
+- `lib/db/src/schema/moods.ts` — Moods table schema (with period, energy, consumption)
 - `artifacts/lunar-mood-mobile/contexts/AuthContext.tsx` — Mobile auth (JWT + AsyncStorage)
-- `artifacts/lunar-mood-mobile/contexts/MoodContext.tsx` — Mobile mood CRUD
+- `artifacts/lunar-mood-mobile/contexts/MoodContext.tsx` — Mobile mood CRUD (supports period, energy, consumption)
 - `artifacts/lunar-mood-mobile/lib/lunar.ts` — Mobile lunar phase calculation
-- `artifacts/lunar-mood-mobile/app/index.tsx` — Calendar screen (main screen)
+- `artifacts/lunar-mood-mobile/lib/notifications.ts` — Push notification reminders setup
+- `artifacts/lunar-mood-mobile/app/index.tsx` — Calendar screen with 3-dot per day display
 - `artifacts/lunar-mood-mobile/app/login.tsx` — Login/register screen
-- `artifacts/lunar-mood-mobile/app/mood-entry.tsx` — Mood entry form sheet
+- `artifacts/lunar-mood-mobile/app/mood-entry.tsx` — Mood entry form with period/emotion/energy/consumption
+- `artifacts/lunar-mood/src/pages/dashboard.tsx` — Web dashboard with 3-dot calendar and legend
+- `artifacts/lunar-mood/src/components/calendar/mood-dialog.tsx` — Web mood entry dialog with all 3 stats
+- `artifacts/lunar-mood/src/components/layout/sidebar.tsx` — Sidebar with stats and consumption label settings
 
 ## TypeScript & Composite Projects
 

@@ -8,7 +8,7 @@
 import type { LunarPhasePhase } from "./lunarPhasePhase";
 
 export interface LunarPhase {
-  date: Date;
+  date: string;
   phase: LunarPhasePhase;
   illumination: number;
   emoji: string;

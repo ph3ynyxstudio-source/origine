@@ -4,9 +4,10 @@ import { setBaseUrl } from "@workspace/api-client-react";
 
 setBaseUrl(`https://${process.env.EXPO_PUBLIC_DOMAIN}`);
 
-interface User {
+export interface User {
   id: number;
   username: string;
+  consumptionLabel: string | null;
 }
 
 interface AuthContextType {
@@ -15,6 +16,8 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateConsumptionLabel: (label: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,18 +37,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [token]
   );
 
+  const fetchUser = async (savedToken: string): Promise<User | null> => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/me`, {
+        headers: { Cookie: `token=${savedToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return { id: data.id, username: data.username, consumptionLabel: data.consumptionLabel ?? null };
+      }
+    } catch {}
+    return null;
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const savedToken = await AsyncStorage.getItem("auth_token");
         if (savedToken) {
           setToken(savedToken);
-          const res = await fetch(`${API_BASE}/auth/me`, {
-            headers: { Cookie: `token=${savedToken}` },
-          });
-          if (res.ok) {
-            const data = await res.json();
-            setUser({ id: data.id, username: data.username });
+          const userData = await fetchUser(savedToken);
+          if (userData) {
+            setUser(userData);
           } else {
             await AsyncStorage.removeItem("auth_token");
             setToken(null);
@@ -76,7 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json();
     await AsyncStorage.setItem("auth_token", data.token);
     setToken(data.token);
-    setUser({ id: data.id, username: data.username });
+    setUser({ id: data.id, username: data.username, consumptionLabel: null });
+    const userData = await fetchUser(data.token);
+    if (userData) setUser(userData);
   };
 
   const register = async (username: string, password: string) => {
@@ -94,7 +109,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const data = await res.json();
     await AsyncStorage.setItem("auth_token", data.token);
     setToken(data.token);
-    setUser({ id: data.id, username: data.username });
+    setUser({ id: data.id, username: data.username, consumptionLabel: null });
+    const userData = await fetchUser(data.token);
+    if (userData) setUser(userData);
   };
 
   const logout = async () => {
@@ -109,8 +126,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  const updateConsumptionLabel = async (label: string) => {
+    const headers = getHeaders();
+    const res = await fetch(`${API_BASE}/user/profile`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ consumptionLabel: label }),
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to update consumption label");
+    }
+
+    const data = await res.json();
+    setUser((prev) => prev ? { ...prev, consumptionLabel: data.consumptionLabel ?? null } : null);
+  };
+
+  const refreshUser = async () => {
+    if (token) {
+      const userData = await fetchUser(token);
+      if (userData) setUser(userData);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateConsumptionLabel, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

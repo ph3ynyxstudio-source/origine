@@ -1,13 +1,15 @@
 import { useState, useMemo } from "react";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, parseISO, startOfWeek, endOfWeek } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useListMoods, useGetLunarPhases, useGetMe } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/layout/sidebar";
 import { MoodDialog } from "@/components/calendar/mood-dialog";
-import { getMoodColorClass, getMoodEmoji, cn } from "@/lib/utils";
+import { getMoodColorClass, PERIOD_COLORS, PERIOD_LABELS, cn } from "@/lib/utils";
 import { Redirect } from "wouter";
+
+const PERIODS = ["morning", "afternoon", "evening"] as const;
 
 export default function DashboardPage() {
   const { data: user, isError, isLoading: isUserLoading } = useGetMe({ query: { retry: false } });
@@ -29,11 +31,15 @@ export default function DashboardPage() {
   }, [currentMonth]);
 
   const stats = useMemo(() => {
-    if (!moods.length) return { avgMood: 0, totalEntries: 0 };
-    const total = moods.reduce((sum, m) => sum + m.mood, 0);
+    if (!moods.length) return { avgMood: 0, avgEnergy: 0, avgConsumption: 0, totalEntries: 0 };
+    const totalMood = moods.reduce((sum, m) => sum + m.mood, 0);
+    const totalEnergy = moods.reduce((sum, m) => sum + m.energy, 0);
+    const totalConsumption = moods.reduce((sum, m) => sum + m.consumption, 0);
     return {
-      avgMood: total / moods.length,
-      totalEntries: moods.length
+      avgMood: totalMood / moods.length,
+      avgEnergy: Math.round(totalEnergy / moods.length),
+      avgConsumption: Math.round((totalConsumption / moods.length) * 10) / 10,
+      totalEntries: moods.length,
     };
   }, [moods]);
 
@@ -55,7 +61,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row relative">
-      <Sidebar stats={stats} />
+      <Sidebar stats={stats} consumptionLabel={user.consumptionLabel || "Café"} />
       
       <main className="flex-1 p-4 md:p-8 lg:p-12 overflow-y-auto">
         <div className="max-w-5xl mx-auto space-y-8">
@@ -96,7 +102,7 @@ export default function DashboardPage() {
                 {daysInMonth.map((date, i) => {
                   const dateStr = format(date, 'yyyy-MM-dd');
                   const isCurrentMonth = isSameMonth(date, currentMonth);
-                  const entry = moods.find(m => m.date === dateStr);
+                  const dayEntries = moods.filter(m => m.date === dateStr);
                   const phase = lunarPhases.find(p => p.date === dateStr);
 
                   return (
@@ -111,12 +117,11 @@ export default function DashboardPage() {
                         "relative flex flex-col items-center justify-between aspect-square p-2 md:p-3 rounded-2xl border transition-all duration-300 overflow-hidden group",
                         !isCurrentMonth ? "opacity-30 border-transparent cursor-default" : "border-white/5 bg-white/[0.02] hover:bg-white/10 hover:border-white/20 cursor-pointer",
                         isToday(date) && "ring-2 ring-primary ring-offset-2 ring-offset-background",
-                        entry && "border-transparent"
+                        dayEntries.length > 0 && "border-transparent"
                       )}
                     >
-                      {/* Background color based on mood */}
-                      {entry && (
-                        <div className={cn("absolute inset-0 opacity-20", getMoodColorClass(entry.mood))} />
+                      {dayEntries.length > 0 && (
+                        <div className={cn("absolute inset-0 opacity-10", getMoodColorClass(dayEntries[0].mood))} />
                       )}
 
                       <span className={cn(
@@ -128,17 +133,26 @@ export default function DashboardPage() {
 
                       <div className="flex flex-col items-center gap-1 z-10">
                         {phase && isCurrentMonth && (
-                          <span className="text-lg md:text-2xl drop-shadow-lg opacity-80 group-hover:opacity-100 transition-opacity" title={phase.phase.replace('_', ' ')}>
+                          <span className="text-sm md:text-lg drop-shadow-lg opacity-80 group-hover:opacity-100 transition-opacity" title={phase.phase.replace('_', ' ')}>
                             {phase.emoji}
                           </span>
                         )}
                         
-                        {entry && (
-                          <div className={cn(
-                            "absolute bottom-2 right-2 w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center shadow-lg border border-white/20",
-                            getMoodColorClass(entry.mood)
-                          )}>
-                            <span className="text-[10px] md:text-xs">{getMoodEmoji(entry.mood)}</span>
+                        {dayEntries.length > 0 && (
+                          <div className="flex gap-1">
+                            {PERIODS.map((p) => {
+                              const entry = dayEntries.find(e => e.period === p);
+                              return (
+                                <div
+                                  key={p}
+                                  className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full"
+                                  style={{
+                                    backgroundColor: entry ? PERIOD_COLORS[p] : "transparent",
+                                    border: entry ? "none" : "1px solid rgba(255,255,255,0.15)",
+                                  }}
+                                />
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -149,6 +163,22 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          <div className="glass-panel rounded-2xl p-4 md:p-6">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Légende</h3>
+            <div className="flex flex-wrap gap-6">
+              {PERIODS.map((p) => (
+                <div key={p} className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: PERIOD_COLORS[p] }} />
+                  <span className="text-sm text-muted-foreground">{PERIOD_LABELS[p]}</span>
+                </div>
+              ))}
+              <div className="flex items-center gap-2 ml-auto">
+                <span className="text-sm text-muted-foreground">Consommation:</span>
+                <span className="text-sm font-medium">{user.consumptionLabel || "Café"}</span>
+              </div>
+            </div>
+          </div>
+
         </div>
       </main>
 
@@ -156,8 +186,9 @@ export default function DashboardPage() {
         isOpen={isDialogOpen} 
         onClose={() => setIsDialogOpen(false)} 
         date={selectedDate}
-        existingEntry={selectedDate ? moods.find(m => m.date === format(selectedDate, 'yyyy-MM-dd')) : undefined}
+        entries={selectedDate ? moods.filter(m => m.date === format(selectedDate, 'yyyy-MM-dd')) : []}
         lunarPhase={selectedDate ? lunarPhases.find(p => p.date === format(selectedDate, 'yyyy-MM-dd')) : undefined}
+        consumptionLabel={user.consumptionLabel || "Café"}
       />
     </div>
   );

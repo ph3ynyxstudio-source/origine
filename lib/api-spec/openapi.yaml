@@ -15,6 +15,8 @@ tags:
     description: Mood entry operations
   - name: lunar
     description: Lunar phase operations
+  - name: user
+    description: User profile operations
 paths:
   /healthz:
     get:
@@ -94,7 +96,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/UserProfile"
         "401":
           description: Not authenticated
           content:
@@ -113,6 +115,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MessageResponse"
+  /user/profile:
+    patch:
+      operationId: updateProfile
+      tags: [user]
+      summary: Update user profile settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /moods:
     get:
       operationId: listMoods
@@ -291,6 +317,23 @@ components:
       required:
         - id
         - username
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        consumptionLabel:
+          type: ["string", "null"]
+      required:
+        - id
+        - username
+    UpdateProfileRequest:
+      type: object
+      properties:
+        consumptionLabel:
+          type: string
     ErrorResponse:
       type: object
       properties:
@@ -305,6 +348,12 @@ components:
           type: string
       required:
         - message
+    Period:
+      type: string
+      enum:
+        - morning
+        - afternoon
+        - evening
     MoodEntry:
       type: object
       properties:
@@ -314,10 +363,19 @@ components:
           type: integer
         date:
           type: string
-          format: date
+        period:
+          $ref: "#/components/schemas/Period"
         mood:
           type: integer
           minimum: 1
+          maximum: 5
+        energy:
+          type: integer
+          minimum: 0
+          maximum: 100
+        consumption:
+          type: integer
+          minimum: 0
           maximum: 5
         note:
           type: ["string", "null"]
@@ -325,12 +383,14 @@ components:
           type: string
         createdAt:
           type: string
-          format: date-time
       required:
         - id
         - userId
         - date
+        - period
         - mood
+        - energy
+        - consumption
         - lunarPhase
         - createdAt
     CreateMoodRequest:
@@ -338,10 +398,19 @@ components:
       properties:
         date:
           type: string
-          format: date
+        period:
+          $ref: "#/components/schemas/Period"
         mood:
           type: integer
           minimum: 1
+          maximum: 5
+        energy:
+          type: integer
+          minimum: 0
+          maximum: 100
+        consumption:
+          type: integer
+          minimum: 0
           maximum: 5
         note:
           type: ["string", "null"]
@@ -355,6 +424,14 @@ components:
           type: integer
           minimum: 1
           maximum: 5
+        energy:
+          type: integer
+          minimum: 0
+          maximum: 100
+        consumption:
+          type: integer
+          minimum: 0
+          maximum: 5
         note:
           type: ["string", "null"]
     LunarPhase:
@@ -362,7 +439,6 @@ components:
       properties:
         date:
           type: string
-          format: date
         phase:
           type: string
           enum:

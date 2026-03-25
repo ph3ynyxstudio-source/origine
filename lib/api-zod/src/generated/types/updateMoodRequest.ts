@@ -12,6 +12,16 @@ export interface UpdateMoodRequest {
    * @maximum 5
    */
   mood?: number;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  energy?: number;
+  /**
+   * @minimum 0
+   * @maximum 5
+   */
+  consumption?: number;
   /** @nullable */
   note?: string | null;
 }

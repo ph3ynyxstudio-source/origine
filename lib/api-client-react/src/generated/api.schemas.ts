@@ -25,6 +25,17 @@ export interface User {
   username: string;
 }
 
+export interface UserProfile {
+  id: number;
+  username: string;
+  /** @nullable */
+  consumptionLabel?: string | null;
+}
+
+export interface UpdateProfileRequest {
+  consumptionLabel?: string;
+}
+
 export interface ErrorResponse {
   error: string;
 }
@@ -33,15 +44,34 @@ export interface MessageResponse {
   message: string;
 }
 
+export type Period = (typeof Period)[keyof typeof Period];
+
+export const Period = {
+  morning: "morning",
+  afternoon: "afternoon",
+  evening: "evening",
+} as const;
+
 export interface MoodEntry {
   id: number;
   userId: number;
   date: string;
+  period: Period;
   /**
    * @minimum 1
    * @maximum 5
    */
   mood: number;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  energy: number;
+  /**
+   * @minimum 0
+   * @maximum 5
+   */
+  consumption: number;
   /** @nullable */
   note?: string | null;
   lunarPhase: string;
@@ -50,11 +80,22 @@ export interface MoodEntry {
 
 export interface CreateMoodRequest {
   date: string;
+  period?: Period;
   /**
    * @minimum 1
    * @maximum 5
    */
   mood: number;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  energy?: number;
+  /**
+   * @minimum 0
+   * @maximum 5
+   */
+  consumption?: number;
   /** @nullable */
   note?: string | null;
 }
@@ -65,6 +106,16 @@ export interface UpdateMoodRequest {
    * @maximum 5
    */
   mood?: number;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  energy?: number;
+  /**
+   * @minimum 0
+   * @maximum 5
+   */
+  consumption?: number;
   /** @nullable */
   note?: string | null;
 }

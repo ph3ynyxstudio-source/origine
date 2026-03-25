@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and } from "drizzle-orm";
-import { db, moodsTable } from "@workspace/db";
+import { db, moodsTable, type MoodEntry } from "@workspace/db";
 import {
   ListMoodsQueryParams,
   ListMoodsResponse,
@@ -41,7 +41,14 @@ router.get("/moods", requireAuth, async (req, res): Promise<void> => {
     moods = await db.select().from(moodsTable).where(eq(moodsTable.userId, userId));
   }
 
-  res.json(ListMoodsResponse.parse(moods));
+  const normalizedMoods = moods.map((m) => ({
+    ...m,
+    period: m.period || "morning",
+    energy: m.energy ?? 50,
+    consumption: m.consumption ?? 0,
+  }));
+
+  res.json(ListMoodsResponse.parse(normalizedMoods));
 });
 
 router.post("/moods", requireAuth, async (req, res): Promise<void> => {
@@ -52,13 +59,31 @@ router.post("/moods", requireAuth, async (req, res): Promise<void> => {
   }
 
   const userId = req.user!.userId;
-  const { date, mood, note } = parsed.data;
+  const { date, mood, note, period, energy, consumption } = parsed.data;
 
   const phaseInfo = getLunarPhase(new Date(date + "T12:00:00Z"));
 
   const [entry] = await db
     .insert(moodsTable)
-    .values({ userId, date, mood, note: note ?? null, lunarPhase: phaseInfo.phase })
+    .values({
+      userId,
+      date,
+      mood,
+      note: note ?? null,
+      period: period ?? "morning",
+      energy: energy ?? 50,
+      consumption: consumption ?? 0,
+      lunarPhase: phaseInfo.phase,
+    })
+    .onConflictDoUpdate({
+      target: [moodsTable.userId, moodsTable.date, moodsTable.period],
+      set: {
+        mood,
+        note: note ?? null,
+        energy: energy ?? 50,
+        consumption: consumption ?? 0,
+      },
+    })
     .returning();
 
   res.status(201).json(UpdateMoodResponse.parse(entry));
@@ -79,9 +104,15 @@ router.patch("/moods/:id", requireAuth, async (req, res): Promise<void> => {
 
   const userId = req.user!.userId;
 
+  const updateData: Partial<Pick<MoodEntry, "mood" | "note" | "energy" | "consumption">> = {};
+  if (parsed.data.mood !== undefined) updateData.mood = parsed.data.mood;
+  if (parsed.data.note !== undefined) updateData.note = parsed.data.note;
+  if (parsed.data.energy !== undefined) updateData.energy = parsed.data.energy;
+  if (parsed.data.consumption !== undefined) updateData.consumption = parsed.data.consumption;
+
   const [entry] = await db
     .update(moodsTable)
-    .set(parsed.data)
+    .set(updateData)
     .where(and(eq(moodsTable.id, params.data.id), eq(moodsTable.userId, userId)))
     .returning();
 

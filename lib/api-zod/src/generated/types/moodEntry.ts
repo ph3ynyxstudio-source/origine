@@ -5,18 +5,30 @@
  * LunarMood API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Period } from "./period";
 
 export interface MoodEntry {
   id: number;
   userId: number;
-  date: Date;
+  date: string;
+  period: Period;
   /**
    * @minimum 1
    * @maximum 5
    */
   mood: number;
+  /**
+   * @minimum 0
+   * @maximum 100
+   */
+  energy: number;
+  /**
+   * @minimum 0
+   * @maximum 5
+   */
+  consumption: number;
   /** @nullable */
   note?: string | null;
   lunarPhase: string;
-  createdAt: Date;
+  createdAt: string;
 }

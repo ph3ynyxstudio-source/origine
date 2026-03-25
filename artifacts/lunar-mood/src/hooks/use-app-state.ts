@@ -10,7 +10,6 @@ import {
   getListMoodsQueryKey
 } from "@workspace/api-client-react";
 
-// Wrapper hooks to handle cache invalidation automatically
 export function useAppAuth() {
   const queryClient = useQueryClient();
 

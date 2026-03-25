@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useAuth } from "./AuthContext";
 
 const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
 
@@ -8,7 +7,10 @@ export interface MoodEntry {
   id: number;
   userId: number;
   date: string;
+  period: "morning" | "afternoon" | "evening";
   mood: number;
+  energy: number;
+  consumption: number;
   note: string | null;
   lunarPhase: string;
   createdAt: string;
@@ -18,8 +20,8 @@ interface MoodContextType {
   moods: MoodEntry[];
   isLoading: boolean;
   fetchMoods: (month: number, year: number) => Promise<void>;
-  createMood: (date: string, mood: number, note: string | null) => Promise<MoodEntry>;
-  updateMood: (id: number, mood: number, note: string | null) => Promise<MoodEntry>;
+  createMood: (date: string, period: string, mood: number, energy: number, consumption: number, note: string | null) => Promise<MoodEntry>;
+  updateMood: (id: number, mood: number, energy: number, consumption: number, note: string | null) => Promise<MoodEntry>;
   deleteMood: (id: number) => Promise<void>;
   clearMoods: () => void;
 }
@@ -63,14 +65,17 @@ export function MoodProvider({ children }: { children: React.ReactNode }) {
 
   const createMood = async (
     date: string,
+    period: string,
     mood: number,
+    energy: number,
+    consumption: number,
     note: string | null
   ): Promise<MoodEntry> => {
     const headers = await getHeaders();
     const res = await fetch(`${API_BASE}/moods`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ date, mood, note }),
+      body: JSON.stringify({ date, period, mood, energy, consumption, note }),
     });
 
     if (!res.ok) {
@@ -79,20 +84,25 @@ export function MoodProvider({ children }: { children: React.ReactNode }) {
     }
 
     const entry = await res.json();
-    setMoods((prev) => [...prev, entry]);
+    setMoods((prev) => {
+      const filtered = prev.filter(m => !(m.date === date && m.period === period));
+      return [...filtered, entry];
+    });
     return entry;
   };
 
   const updateMood = async (
     id: number,
     mood: number,
+    energy: number,
+    consumption: number,
     note: string | null
   ): Promise<MoodEntry> => {
     const headers = await getHeaders();
     const res = await fetch(`${API_BASE}/moods/${id}`, {
       method: "PATCH",
       headers,
-      body: JSON.stringify({ mood, note }),
+      body: JSON.stringify({ mood, energy, consumption, note }),
     });
 
     if (!res.ok) {

@@ -12,44 +12,58 @@ import * as zod from "zod";
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
-  status: zod.string(),
+  status: zod.coerce.string(),
 });
 
 /**
  * @summary Register a new user
  */
 export const RegisterBody = zod.object({
-  username: zod.string(),
-  password: zod.string(),
+  username: zod.coerce.string(),
+  password: zod.coerce.string(),
 });
 
 /**
  * @summary Log in
  */
 export const LoginBody = zod.object({
-  username: zod.string(),
-  password: zod.string(),
+  username: zod.coerce.string(),
+  password: zod.coerce.string(),
 });
 
 export const LoginResponse = zod.object({
-  id: zod.number(),
-  username: zod.string(),
-  token: zod.string(),
+  id: zod.coerce.number(),
+  username: zod.coerce.string(),
+  token: zod.coerce.string(),
 });
 
 /**
  * @summary Get current user
  */
 export const GetMeResponse = zod.object({
-  id: zod.number(),
-  username: zod.string(),
+  id: zod.coerce.number(),
+  username: zod.coerce.string(),
+  consumptionLabel: zod.coerce.string().nullish(),
 });
 
 /**
  * @summary Log out
  */
 export const LogoutResponse = zod.object({
-  message: zod.string(),
+  message: zod.coerce.string(),
+});
+
+/**
+ * @summary Update user profile settings
+ */
+export const UpdateProfileBody = zod.object({
+  consumptionLabel: zod.coerce.string().optional(),
+});
+
+export const UpdateProfileResponse = zod.object({
+  id: zod.coerce.number(),
+  username: zod.coerce.string(),
+  consumptionLabel: zod.coerce.string().nullish(),
 });
 
 /**
@@ -62,13 +76,28 @@ export const ListMoodsQueryParams = zod.object({
 
 export const listMoodsResponseMoodMax = 5;
 
+export const listMoodsResponseEnergyMin = 0;
+export const listMoodsResponseEnergyMax = 100;
+
+export const listMoodsResponseConsumptionMin = 0;
+export const listMoodsResponseConsumptionMax = 5;
+
 export const ListMoodsResponseItem = zod.object({
-  id: zod.number(),
-  userId: zod.number(),
+  id: zod.coerce.number(),
+  userId: zod.coerce.number(),
   date: zod.coerce.string(),
-  mood: zod.number().min(1).max(listMoodsResponseMoodMax),
-  note: zod.string().nullish(),
-  lunarPhase: zod.string(),
+  period: zod.enum(["morning", "afternoon", "evening"]),
+  mood: zod.coerce.number().min(1).max(listMoodsResponseMoodMax),
+  energy: zod.coerce
+    .number()
+    .min(listMoodsResponseEnergyMin)
+    .max(listMoodsResponseEnergyMax),
+  consumption: zod.coerce
+    .number()
+    .min(listMoodsResponseConsumptionMin)
+    .max(listMoodsResponseConsumptionMax),
+  note: zod.coerce.string().nullish(),
+  lunarPhase: zod.coerce.string(),
   createdAt: zod.coerce.string(),
 });
 export const ListMoodsResponse = zod.array(ListMoodsResponseItem);
@@ -78,10 +107,27 @@ export const ListMoodsResponse = zod.array(ListMoodsResponseItem);
  */
 export const createMoodBodyMoodMax = 5;
 
+export const createMoodBodyEnergyMin = 0;
+export const createMoodBodyEnergyMax = 100;
+
+export const createMoodBodyConsumptionMin = 0;
+export const createMoodBodyConsumptionMax = 5;
+
 export const CreateMoodBody = zod.object({
   date: zod.coerce.string(),
-  mood: zod.number().min(1).max(createMoodBodyMoodMax),
-  note: zod.string().nullish(),
+  period: zod.enum(["morning", "afternoon", "evening"]).optional(),
+  mood: zod.coerce.number().min(1).max(createMoodBodyMoodMax),
+  energy: zod.coerce
+    .number()
+    .min(createMoodBodyEnergyMin)
+    .max(createMoodBodyEnergyMax)
+    .optional(),
+  consumption: zod.coerce
+    .number()
+    .min(createMoodBodyConsumptionMin)
+    .max(createMoodBodyConsumptionMax)
+    .optional(),
+  note: zod.coerce.string().nullish(),
 });
 
 /**
@@ -93,20 +139,51 @@ export const UpdateMoodParams = zod.object({
 
 export const updateMoodBodyMoodMax = 5;
 
+export const updateMoodBodyEnergyMin = 0;
+export const updateMoodBodyEnergyMax = 100;
+
+export const updateMoodBodyConsumptionMin = 0;
+export const updateMoodBodyConsumptionMax = 5;
+
 export const UpdateMoodBody = zod.object({
-  mood: zod.number().min(1).max(updateMoodBodyMoodMax).optional(),
-  note: zod.string().nullish(),
+  mood: zod.coerce.number().min(1).max(updateMoodBodyMoodMax).optional(),
+  energy: zod.coerce
+    .number()
+    .min(updateMoodBodyEnergyMin)
+    .max(updateMoodBodyEnergyMax)
+    .optional(),
+  consumption: zod.coerce
+    .number()
+    .min(updateMoodBodyConsumptionMin)
+    .max(updateMoodBodyConsumptionMax)
+    .optional(),
+  note: zod.coerce.string().nullish(),
 });
 
 export const updateMoodResponseMoodMax = 5;
 
+export const updateMoodResponseEnergyMin = 0;
+export const updateMoodResponseEnergyMax = 100;
+
+export const updateMoodResponseConsumptionMin = 0;
+export const updateMoodResponseConsumptionMax = 5;
+
 export const UpdateMoodResponse = zod.object({
-  id: zod.number(),
-  userId: zod.number(),
+  id: zod.coerce.number(),
+  userId: zod.coerce.number(),
   date: zod.coerce.string(),
-  mood: zod.number().min(1).max(updateMoodResponseMoodMax),
-  note: zod.string().nullish(),
-  lunarPhase: zod.string(),
+  period: zod.enum(["morning", "afternoon", "evening"]),
+  mood: zod.coerce.number().min(1).max(updateMoodResponseMoodMax),
+  energy: zod.coerce
+    .number()
+    .min(updateMoodResponseEnergyMin)
+    .max(updateMoodResponseEnergyMax),
+  consumption: zod.coerce
+    .number()
+    .min(updateMoodResponseConsumptionMin)
+    .max(updateMoodResponseConsumptionMax),
+  note: zod.coerce.string().nullish(),
+  lunarPhase: zod.coerce.string(),
   createdAt: zod.coerce.string(),
 });
 
@@ -137,7 +214,7 @@ export const GetLunarPhasesResponseItem = zod.object({
     "last_quarter",
     "waning_crescent",
   ]),
-  illumination: zod.number(),
-  emoji: zod.string(),
+  illumination: zod.coerce.number(),
+  emoji: zod.coerce.string(),
 });
 export const GetLunarPhasesResponse = zod.array(GetLunarPhasesResponseItem);

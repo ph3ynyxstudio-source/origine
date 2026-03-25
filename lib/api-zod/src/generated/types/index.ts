@@ -17,5 +17,8 @@ export * from "./lunarPhase";
 export * from "./lunarPhasePhase";
 export * from "./messageResponse";
 export * from "./moodEntry";
+export * from "./period";
 export * from "./updateMoodRequest";
+export * from "./updateProfileRequest";
 export * from "./user";
+export * from "./userProfile";

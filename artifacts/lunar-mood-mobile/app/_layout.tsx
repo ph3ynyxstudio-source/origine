@@ -16,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MoodProvider } from "@/contexts/MoodContext";
+import { scheduleReminders } from "@/lib/notifications";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -36,7 +37,16 @@ function RootLayoutNav() {
         name="mood-entry"
         options={{
           presentation: "formSheet",
-          sheetAllowedDetents: [0.65],
+          sheetAllowedDetents: [0.85],
+          sheetGrabberVisible: true,
+          contentStyle: { backgroundColor: "rgba(19, 23, 41, 0.85)" },
+        }}
+      />
+      <Stack.Screen
+        name="settings"
+        options={{
+          presentation: "formSheet",
+          sheetAllowedDetents: [0.5],
           sheetGrabberVisible: true,
           contentStyle: { backgroundColor: "rgba(19, 23, 41, 0.85)" },
         }}
@@ -58,6 +68,10 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded, fontError]);
+
+  useEffect(() => {
+    scheduleReminders().catch(console.warn);
+  }, []);
 
   if (!fontsLoaded && !fontError) return null;
 

@@ -73,7 +73,16 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 });
 
 router.get("/auth/me", requireAuth, async (req, res): Promise<void> => {
-  res.json(GetMeResponse.parse({ id: req.user!.userId, username: req.user!.username }));
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.userId));
+  if (!user) {
+    res.status(401).json({ error: "User not found" });
+    return;
+  }
+  res.json(GetMeResponse.parse({
+    id: user.id,
+    username: user.username,
+    consumptionLabel: user.consumptionLabel,
+  }));
 });
 
 router.post("/auth/logout", (_req, res): void => {

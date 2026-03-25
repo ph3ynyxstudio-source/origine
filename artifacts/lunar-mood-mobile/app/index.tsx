@@ -10,9 +10,9 @@ import {
   RefreshControl,
 } from "react-native";
 import { router } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
 import {
   format,
   startOfMonth,
@@ -24,7 +24,6 @@ import {
   subMonths,
   startOfWeek,
   endOfWeek,
-  isSameDay,
 } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMoods } from "@/contexts/MoodContext";
@@ -34,13 +33,11 @@ import CosmicBackground from "@/components/CosmicBackground";
 
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const MOOD_ICONS: Record<number, string> = {
-  1: "sad-outline",
-  2: "cloudy-outline",
-  3: "ellipse-outline",
-  4: "happy-outline",
-  5: "star-outline",
-};
+const PERIODS = [
+  { key: "morning" as const, label: "Matin", color: "#F59E0B" },
+  { key: "afternoon" as const, label: "Après-midi", color: "#3B82F6" },
+  { key: "evening" as const, label: "Soir", color: "#8B5CF6" },
+];
 
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
@@ -66,9 +63,16 @@ export default function CalendarScreen() {
   }, [lunarPhases]);
 
   const stats = useMemo(() => {
-    if (!moods.length) return { avg: 0, count: 0 };
-    const total = moods.reduce((sum, m) => sum + m.mood, 0);
-    return { avg: Math.round((total / moods.length) * 10) / 10, count: moods.length };
+    if (!moods.length) return { avgMood: 0, avgEnergy: 0, avgConsumption: 0, count: 0 };
+    const totalMood = moods.reduce((sum, m) => sum + m.mood, 0);
+    const totalEnergy = moods.reduce((sum, m) => sum + (m.energy || 0), 0);
+    const totalConsumption = moods.reduce((sum, m) => sum + (m.consumption || 0), 0);
+    return {
+      avgMood: Math.round((totalMood / moods.length) * 10) / 10,
+      avgEnergy: Math.round(totalEnergy / moods.length),
+      avgConsumption: Math.round((totalConsumption / moods.length) * 10) / 10,
+      count: moods.length,
+    };
   }, [moods]);
 
   useEffect(() => {
@@ -103,17 +107,14 @@ export default function CalendarScreen() {
     if (!isSameMonth(date, currentMonth)) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const dateStr = format(date, "yyyy-MM-dd");
-    const existing = moods.find((m) => m.date === dateStr);
     const phase = lunarPhases.find((p) => p.date === dateStr);
     router.push({
       pathname: "/mood-entry",
       params: {
         date: dateStr,
-        existingId: existing?.id?.toString() || "",
-        existingMood: existing?.mood?.toString() || "",
-        existingNote: existing?.note || "",
         phaseEmoji: phase?.emoji || "",
         phaseLabel: phase?.label || "",
+        consumptionLabel: user?.consumptionLabel || "Café",
       },
     });
   };
@@ -165,28 +166,39 @@ export default function CalendarScreen() {
               </View>
             )}
           </View>
-          <Pressable onPress={handleLogout} style={styles.logoutBtn}>
-            <Feather name="log-out" size={20} color={Colors.dark.textSecondary} />
-          </Pressable>
+          <View style={styles.topActions}>
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push("/settings");
+              }}
+              style={styles.logoutBtn}
+            >
+              <Feather name="settings" size={20} color={Colors.dark.textSecondary} />
+            </Pressable>
+            <Pressable onPress={handleLogout} style={styles.logoutBtn}>
+              <Feather name="log-out" size={20} color={Colors.dark.textSecondary} />
+            </Pressable>
+          </View>
         </View>
 
         {stats.count > 0 && (
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
               <Text style={styles.statValue}>{stats.count}</Text>
-              <Text style={styles.statLabel}>Entries</Text>
+              <Text style={styles.statLabel}>Entrées</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{stats.avg}</Text>
-              <Text style={styles.statLabel}>Avg Mood</Text>
+              <Text style={styles.statValue}>{stats.avgMood}</Text>
+              <Text style={styles.statLabel}>Émotion</Text>
             </View>
             <View style={styles.statCard}>
-              <Ionicons
-                name={MOOD_ICONS[Math.round(stats.avg)] as any || "ellipse-outline"}
-                size={24}
-                color={getMoodColor(Math.round(stats.avg))}
-              />
-              <Text style={styles.statLabel}>{getMoodLabel(Math.round(stats.avg))}</Text>
+              <Text style={styles.statValue}>{stats.avgEnergy}%</Text>
+              <Text style={styles.statLabel}>Énergie</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{stats.avgConsumption}</Text>
+              <Text style={styles.statLabel}>{user?.consumptionLabel || "Café"}</Text>
             </View>
           </View>
         )}
@@ -222,7 +234,7 @@ export default function CalendarScreen() {
                 const dateStr = format(date, "yyyy-MM-dd");
                 const isCurrentMonth = isSameMonth(date, currentMonth);
                 const today = isToday(date);
-                const entry = moods.find((m) => m.date === dateStr);
+                const dayEntries = moods.filter((m) => m.date === dateStr);
                 const phase = lunarPhases.find((p) => p.date === dateStr);
 
                 return (
@@ -251,13 +263,25 @@ export default function CalendarScreen() {
                       <Text style={styles.calPhaseEmoji}>{phase.emoji}</Text>
                     )}
 
-                    {entry && (
-                      <View
-                        style={[
-                          styles.moodDot,
-                          { backgroundColor: getMoodColor(entry.mood) },
-                        ]}
-                      />
+                    {dayEntries.length > 0 && (
+                      <View style={styles.dotsRow}>
+                        {PERIODS.map((p) => {
+                          const hasEntry = dayEntries.some((e) => e.period === p.key);
+                          return (
+                            <View
+                              key={p.key}
+                              style={[
+                                styles.periodDot,
+                                {
+                                  backgroundColor: hasEntry ? p.color : "transparent",
+                                  borderWidth: hasEntry ? 0 : 1,
+                                  borderColor: "rgba(255,255,255,0.15)",
+                                },
+                              ]}
+                            />
+                          );
+                        })}
+                      </View>
                     )}
                   </Pressable>
                 );
@@ -267,19 +291,19 @@ export default function CalendarScreen() {
         </View>
 
         <View style={styles.legendCard}>
-          <Text style={styles.legendTitle}>Mood Scale</Text>
+          <Text style={styles.legendTitle}>Périodes</Text>
           <View style={styles.legendRow}>
-            {[1, 2, 3, 4, 5].map((level) => (
-              <View key={level} style={styles.legendItem}>
-                <View
-                  style={[
-                    styles.legendDot,
-                    { backgroundColor: getMoodColor(level) },
-                  ]}
-                />
-                <Text style={styles.legendLabel}>{getMoodLabel(level)}</Text>
+            {PERIODS.map((p) => (
+              <View key={p.key} style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: p.color }]} />
+                <Text style={styles.legendLabel}>{p.label}</Text>
               </View>
             ))}
+          </View>
+          <View style={styles.consumptionLabelRow}>
+            <Text style={styles.consumptionLabelText}>
+              Consommation : {user?.consumptionLabel || "Café"}
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -330,6 +354,10 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     color: Colors.dark.textSecondary,
   },
+  topActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
   logoutBtn: {
     width: 44,
     height: 44,
@@ -355,12 +383,12 @@ const styles = StyleSheet.create({
     borderColor: "rgba(37, 43, 69, 0.6)",
   },
   statValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: "Inter_700Bold",
     color: Colors.dark.text,
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "Inter_400Regular",
     color: Colors.dark.textSecondary,
     marginTop: 4,
@@ -429,7 +457,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 2,
     borderRadius: 12,
-    gap: 2,
+    gap: 1,
   },
   dayCellDisabled: {
     opacity: 0.25,
@@ -447,7 +475,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
   dayNumber: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "Inter_500Medium",
     color: Colors.dark.text,
   },
@@ -459,15 +487,17 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
   },
   calPhaseEmoji: {
-    fontSize: 16,
+    fontSize: 14,
   },
-  moodDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 4,
+  dotsRow: {
+    flexDirection: "row",
+    gap: 2,
+    marginTop: 1,
+  },
+  periodDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   legendCard: {
     backgroundColor: "rgba(19, 23, 41, 0.55)",
@@ -484,7 +514,7 @@ const styles = StyleSheet.create({
   },
   legendRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
   },
   legendItem: {
     alignItems: "center",
@@ -499,8 +529,20 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   legendLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: "Inter_400Regular",
     color: Colors.dark.textMuted,
+  },
+  consumptionLabelRow: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(37, 43, 69, 0.6)",
+    alignItems: "center",
+  },
+  consumptionLabelText: {
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+    color: Colors.dark.textSecondary,
   },
 });

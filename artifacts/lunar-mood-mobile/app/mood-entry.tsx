@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,12 +7,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Platform,
+  ScrollView,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useMoods } from "@/contexts/MoodContext";
+import { useMoods, type MoodEntry } from "@/contexts/MoodContext";
 import { getMoodColor, getMoodLabel } from "@/lib/lunar";
 import Colors from "@/constants/colors";
 import { format, parseISO } from "date-fns";
@@ -26,28 +26,62 @@ const MOOD_ICONS: Record<number, keyof typeof Ionicons.glyphMap> = {
   5: "star-outline",
 };
 
+const PERIODS = [
+  { key: "morning" as const, label: "Matin", color: "#F59E0B" },
+  { key: "afternoon" as const, label: "Après-midi", color: "#3B82F6" },
+  { key: "evening" as const, label: "Soir", color: "#8B5CF6" },
+];
+
+const ENERGY_STEPS = [0, 25, 50, 75, 100];
+
+const CONSUMPTION_LABELS = ["Aucune", "Très peu", "Peu", "Modéré", "Beaucoup", "Excessif"];
+
+function getCurrentPeriod(): "morning" | "afternoon" | "evening" {
+  const hour = new Date().getHours();
+  if (hour < 12) return "morning";
+  if (hour < 18) return "afternoon";
+  return "evening";
+}
+
 export default function MoodEntryScreen() {
   const params = useLocalSearchParams<{
     date: string;
-    existingId: string;
-    existingMood: string;
-    existingNote: string;
     phaseEmoji: string;
     phaseLabel: string;
+    consumptionLabel: string;
   }>();
 
-  const { createMood, updateMood, deleteMood, fetchMoods } = useMoods();
-  const [selectedMood, setSelectedMood] = useState<number>(
-    params.existingMood ? parseInt(params.existingMood, 10) : 0
-  );
-  const [note, setNote] = useState(params.existingNote || "");
+  const { moods, createMood, updateMood, deleteMood, fetchMoods } = useMoods();
+  const [selectedPeriod, setSelectedPeriod] = useState<"morning" | "afternoon" | "evening">(getCurrentPeriod());
+  const [selectedMood, setSelectedMood] = useState<number>(0);
+  const [energy, setEnergy] = useState<number>(50);
+  const [consumption, setConsumption] = useState<number>(0);
+  const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isEditing = !!params.existingId;
 
   const dateObj = params.date ? parseISO(params.date) : new Date();
   const formattedDate = format(dateObj, "EEEE, MMMM d, yyyy");
   const monthNum = dateObj.getMonth() + 1;
   const yearNum = dateObj.getFullYear();
+  const dateStr = params.date || format(new Date(), "yyyy-MM-dd");
+
+  const dayEntries = useMemo(() => moods.filter(m => m.date === dateStr), [moods, dateStr]);
+  const existingEntry = useMemo(() => dayEntries.find(m => m.period === selectedPeriod), [dayEntries, selectedPeriod]);
+  const isEditing = !!existingEntry;
+
+  useEffect(() => {
+    if (existingEntry) {
+      setSelectedMood(existingEntry.mood);
+      setEnergy(existingEntry.energy);
+      setConsumption(existingEntry.consumption);
+      setNote(existingEntry.note || "");
+    } else {
+      setSelectedMood(0);
+      setEnergy(50);
+      setConsumption(0);
+      setNote("");
+    }
+  }, [existingEntry, selectedPeriod]);
 
   const handleMoodSelect = (mood: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -56,7 +90,7 @@ export default function MoodEntryScreen() {
 
   const handleSave = async () => {
     if (selectedMood === 0) {
-      Alert.alert("Select a mood", "Please choose how you're feeling today.");
+      Alert.alert("Sélectionnez une émotion", "Veuillez choisir comment vous vous sentez.");
       return;
     }
 
@@ -64,48 +98,52 @@ export default function MoodEntryScreen() {
     try {
       if (isEditing) {
         await updateMood(
-          parseInt(params.existingId!, 10),
+          existingEntry!.id,
           selectedMood,
+          energy,
+          consumption,
           note.trim() || null
         );
       } else {
-        await createMood(params.date!, selectedMood, note.trim() || null);
+        await createMood(dateStr, selectedPeriod, selectedMood, energy, consumption, note.trim() || null);
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await fetchMoods(monthNum, yearNum);
       router.back();
     } catch (e: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("Error", e.message || "Failed to save mood");
+      Alert.alert("Erreur", e.message || "Échec de la sauvegarde");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = () => {
-    Alert.alert("Delete Entry", "Are you sure you want to delete this mood entry?", [
-      { text: "Cancel", style: "cancel" },
+    Alert.alert("Supprimer", "Êtes-vous sûr de vouloir supprimer cette entrée ?", [
+      { text: "Annuler", style: "cancel" },
       {
-        text: "Delete",
+        text: "Supprimer",
         style: "destructive",
         onPress: async () => {
           try {
-            await deleteMood(parseInt(params.existingId!, 10));
+            await deleteMood(existingEntry!.id);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             await fetchMoods(monthNum, yearNum);
             router.back();
           } catch (e: any) {
-            Alert.alert("Error", e.message || "Failed to delete");
+            Alert.alert("Erreur", e.message || "Échec de la suppression");
           }
         },
       },
     ]);
   };
 
+  const cLabel = params.consumptionLabel || "Café";
+
   return (
     <View style={styles.container}>
       <CosmicBackground variant="sheet" starCount={50} />
-      <View style={styles.content}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.dateText}>{formattedDate}</Text>
           {params.phaseEmoji ? (
@@ -116,7 +154,29 @@ export default function MoodEntryScreen() {
           ) : null}
         </View>
 
-        <Text style={styles.sectionTitle}>How are you feeling?</Text>
+        <Text style={styles.sectionTitle}>Période</Text>
+        <View style={styles.periodRow}>
+          {PERIODS.map((p) => {
+            const isSelected = selectedPeriod === p.key;
+            const hasEntry = dayEntries.some(m => m.period === p.key);
+            return (
+              <Pressable
+                key={p.key}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSelectedPeriod(p.key); }}
+                style={[
+                  styles.periodOption,
+                  isSelected && { borderColor: p.color, backgroundColor: p.color + "20" },
+                ]}
+              >
+                <View style={[styles.periodDot, { backgroundColor: p.color }]} />
+                <Text style={[styles.periodLabel, isSelected && { color: p.color }]}>{p.label}</Text>
+                {hasEntry && <View style={styles.checkDot} />}
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Text style={styles.sectionTitle}>Émotion</Text>
         <View style={styles.moodRow}>
           {[1, 2, 3, 4, 5].map((level) => {
             const isSelected = selectedMood === level;
@@ -138,15 +198,10 @@ export default function MoodEntryScreen() {
               >
                 <Ionicons
                   name={MOOD_ICONS[level]}
-                  size={28}
+                  size={24}
                   color={isSelected ? getMoodColor(level) : Colors.dark.textMuted}
                 />
-                <Text
-                  style={[
-                    styles.moodLabel,
-                    isSelected && { color: getMoodColor(level) },
-                  ]}
-                >
+                <Text style={[styles.moodLabel, isSelected && { color: getMoodColor(level) }]}>
                   {getMoodLabel(level)}
                 </Text>
               </Pressable>
@@ -154,10 +209,52 @@ export default function MoodEntryScreen() {
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>Note (optional)</Text>
+        <Text style={styles.sectionTitle}>Énergie</Text>
+        <View style={styles.energyRow}>
+          {ENERGY_STEPS.map((e) => {
+            const isSelected = energy === e;
+            return (
+              <Pressable
+                key={e}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setEnergy(e); }}
+                style={[
+                  styles.energyOption,
+                  isSelected && { borderColor: "#3B82F6", backgroundColor: "rgba(59, 130, 246, 0.2)" },
+                ]}
+              >
+                <Text style={styles.energyIcon}>⚡</Text>
+                <Text style={[styles.energyLabel, isSelected && { color: "#93C5FD" }]}>{e}%</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Text style={styles.sectionTitle}>{cLabel}</Text>
+        <View style={styles.consumptionRow}>
+          {[0, 1, 2, 3, 4, 5].map((c) => {
+            const isSelected = consumption === c;
+            return (
+              <Pressable
+                key={c}
+                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setConsumption(c); }}
+                style={[
+                  styles.consumptionOption,
+                  isSelected && { borderColor: "#F59E0B", backgroundColor: "rgba(245, 158, 11, 0.2)" },
+                ]}
+              >
+                <Text style={[styles.consumptionValue, isSelected && { color: "#FCD34D" }]}>{c}</Text>
+                <Text style={[styles.consumptionLabel, isSelected && { color: "#FCD34D" }]}>
+                  {CONSUMPTION_LABELS[c]}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Text style={styles.sectionTitle}>Note (optionnel)</Text>
         <TextInput
           style={styles.noteInput}
-          placeholder="Write about your day..."
+          placeholder="Note sur cette période..."
           placeholderTextColor={Colors.dark.textMuted}
           value={note}
           onChangeText={setNote}
@@ -180,7 +277,7 @@ export default function MoodEntryScreen() {
               <ActivityIndicator color="#FFF" size="small" />
             ) : (
               <Text style={styles.saveText}>
-                {isEditing ? "Update" : "Save"} Mood
+                {isEditing ? "Modifier" : "Enregistrer"}
               </Text>
             )}
           </Pressable>
@@ -194,11 +291,11 @@ export default function MoodEntryScreen() {
               onPress={handleDelete}
             >
               <Ionicons name="trash-outline" size={18} color={Colors.dark.mood1} />
-              <Text style={styles.deleteText}>Delete</Text>
+              <Text style={styles.deleteText}>Supprimer</Text>
             </Pressable>
           )}
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -208,13 +305,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.dark.surface,
   },
-  content: {
+  scroll: {
     flex: 1,
+  },
+  content: {
     padding: 24,
+    paddingBottom: 48,
   },
   header: {
     alignItems: "center",
-    marginBottom: 28,
+    marginBottom: 24,
   },
   dateText: {
     fontSize: 16,
@@ -242,23 +342,59 @@ const styles = StyleSheet.create({
     color: Colors.dark.textSecondary,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "Inter_600SemiBold",
     color: Colors.dark.textSecondary,
-    marginBottom: 12,
+    marginBottom: 10,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  moodRow: {
+  periodRow: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 24,
+    marginBottom: 20,
+  },
+  periodOption: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "rgba(37, 43, 69, 0.8)",
+    backgroundColor: "rgba(22, 27, 48, 0.6)",
+    gap: 4,
+    position: "relative",
+  },
+  periodDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  periodLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    color: Colors.dark.textMuted,
+  },
+  checkDot: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#22C55E",
+  },
+  moodRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 20,
   },
   moodOption: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: "rgba(37, 43, 69, 0.8)",
@@ -266,8 +402,59 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   moodLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: "Inter_500Medium",
+    color: Colors.dark.textMuted,
+  },
+  energyRow: {
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 20,
+  },
+  energyOption: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "rgba(37, 43, 69, 0.8)",
+    backgroundColor: "rgba(22, 27, 48, 0.6)",
+    gap: 3,
+  },
+  energyIcon: {
+    fontSize: 16,
+  },
+  energyLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_500Medium",
+    color: Colors.dark.textMuted,
+  },
+  consumptionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginBottom: 20,
+  },
+  consumptionOption: {
+    width: "31%",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "rgba(37, 43, 69, 0.8)",
+    backgroundColor: "rgba(22, 27, 48, 0.6)",
+    gap: 2,
+  },
+  consumptionValue: {
+    fontSize: 16,
+    fontFamily: "Inter_700Bold",
+    color: Colors.dark.textMuted,
+  },
+  consumptionLabel: {
+    fontSize: 9,
+    fontFamily: "Inter_400Regular",
     color: Colors.dark.textMuted,
   },
   noteInput: {
@@ -279,8 +466,8 @@ const styles = StyleSheet.create({
     color: Colors.dark.text,
     fontSize: 15,
     fontFamily: "Inter_400Regular",
-    minHeight: 80,
-    marginBottom: 24,
+    minHeight: 70,
+    marginBottom: 20,
   },
   actions: {
     gap: 12,
