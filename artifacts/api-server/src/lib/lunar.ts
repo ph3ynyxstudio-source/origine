@@ -1,7 +1,8 @@
-interface LunarPhaseInfo {
+export interface LunarPhaseInfo {
   phase: string;
   illumination: number;
   emoji: string;
+  label: string;
 }
 
 const DEG_TO_RAD = Math.PI / 180;
@@ -219,6 +220,44 @@ function findPreviousNewMoonK(jd: number): number {
   return k;
 }
 
+const PHASE_MAP: Record<
+  string,
+  { phase: string; emoji: string; label: string }
+> = {
+  new_moon: { phase: "new_moon", emoji: "\uD83C\uDF11", label: "New Moon" },
+  waxing_crescent: {
+    phase: "waxing_crescent",
+    emoji: "\uD83C\uDF12",
+    label: "Waxing Crescent",
+  },
+  first_quarter: {
+    phase: "first_quarter",
+    emoji: "\uD83C\uDF13",
+    label: "First Quarter",
+  },
+  waxing_gibbous: {
+    phase: "waxing_gibbous",
+    emoji: "\uD83C\uDF14",
+    label: "Waxing Gibbous",
+  },
+  full_moon: { phase: "full_moon", emoji: "\uD83C\uDF15", label: "Full Moon" },
+  waning_gibbous: {
+    phase: "waning_gibbous",
+    emoji: "\uD83C\uDF16",
+    label: "Waning Gibbous",
+  },
+  last_quarter: {
+    phase: "last_quarter",
+    emoji: "\uD83C\uDF17",
+    label: "Last Quarter",
+  },
+  waning_crescent: {
+    phase: "waning_crescent",
+    emoji: "\uD83C\uDF18",
+    label: "Waning Crescent",
+  },
+};
+
 export function getLunarPhase(date: Date): LunarPhaseInfo {
   const jd = dateToJD(date);
   const k = findPreviousNewMoonK(jd);
@@ -240,28 +279,28 @@ export function getLunarPhase(date: Date): LunarPhaseInfo {
   const mid3 = (jdFull + jdLQ) / 2;
   const mid4 = (jdLQ + jdNextNew) / 2;
 
-  let phase: string;
-  let emoji: string;
+  let key: string;
 
   if (jd < mid1) {
-    phase = "new_moon"; emoji = "\uD83C\uDF11";
+    key = "new_moon";
   } else if (jd < jdFQ) {
-    phase = "waxing_crescent"; emoji = "\uD83C\uDF12";
+    key = "waxing_crescent";
   } else if (jd < mid2) {
-    phase = "first_quarter"; emoji = "\uD83C\uDF13";
+    key = "first_quarter";
   } else if (jd < jdFull) {
-    phase = "waxing_gibbous"; emoji = "\uD83C\uDF14";
+    key = "waxing_gibbous";
   } else if (jd < mid3) {
-    phase = "full_moon"; emoji = "\uD83C\uDF15";
+    key = "full_moon";
   } else if (jd < jdLQ) {
-    phase = "waning_gibbous"; emoji = "\uD83C\uDF16";
+    key = "waning_gibbous";
   } else if (jd < mid4) {
-    phase = "last_quarter"; emoji = "\uD83C\uDF17";
+    key = "last_quarter";
   } else {
-    phase = "waning_crescent"; emoji = "\uD83C\uDF18";
+    key = "waning_crescent";
   }
 
-  return { phase, illumination, emoji };
+  const info = PHASE_MAP[key];
+  return { ...info, illumination };
 }
 
 export function getMonthPhases(
