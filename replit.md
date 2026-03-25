@@ -56,17 +56,21 @@ artifacts-monorepo/
 - `DELETE /api/moods/:id` — Delete a mood entry
 - `PATCH /api/user/profile` — Update user profile (consumptionLabel)
 - `GET /api/lunar/phases` — Get lunar phases for a month/year
+- `GET /api/stats` — Get aggregated stats (mood/energy/consumption by lunar phase + monthly trends)
 - `GET /api/healthz` — Health check
 
 ## Features
 
 - Cookie-based JWT authentication
 - Lunar phase calculation (algorithmic, no external API needed)
-- **3 moments × 3 stats per day**: Each day has 3 time periods (Matin/Après-midi/Soir), each with 3 stats (Émotion 1-5, Énergie 0-100%, Consommation 0-5)
-- Personalized consumption category label per user (configurable in sidebar settings)
+- **3 moments x 3 stats per day**: Each day has 3 time periods (Morning/Afternoon/Evening), each with 3 stats (Emotion 1-5, Energy 0-100%, Consumption 0-5)
+- Personalized consumption category label per user (configurable on Home tab)
+- **3-tab navigation (mobile)**: Home, Calendar, Statistics — with semi-transparent ghost-style tab bar
+- **i18n**: English (default) + French, language toggle on Home tab, persisted in AsyncStorage
+- **Statistics tab**: Bar charts (emotion/energy/consumption by lunar phase) + monthly trend line chart
 - Calendar shows 3 colored dots per day (amber=morning, blue=afternoon, violet=evening)
 - Legend below calendar explains period colors and consumption type
-- Stats cards showing averages for emotion, energy, and consumption
+- Stats endpoint aggregates mood data by lunar phase server-side
 - Push notification reminders at 8am, 1pm, 8pm (expo-notifications, mobile)
 - Dark celestial themed UI
 
@@ -84,9 +88,14 @@ artifacts-monorepo/
 - `artifacts/lunar-mood-mobile/contexts/MoodContext.tsx` — Mobile mood CRUD (supports period, energy, consumption)
 - `artifacts/lunar-mood-mobile/lib/lunar.ts` — Mobile lunar phase calculation
 - `artifacts/lunar-mood-mobile/lib/notifications.ts` — Push notification reminders setup
-- `artifacts/lunar-mood-mobile/app/index.tsx` — Calendar screen with 3-dot per day display
+- `artifacts/lunar-mood-mobile/lib/i18n.tsx` — i18n system (EN/FR translations, LanguageContext, useTranslation hook)
+- `artifacts/lunar-mood-mobile/app/(tabs)/home.tsx` — Home tab (profile, settings, language toggle)
+- `artifacts/lunar-mood-mobile/app/(tabs)/calendar.tsx` — Calendar tab with lunar phases and mood dots
+- `artifacts/lunar-mood-mobile/app/(tabs)/stats.tsx` — Statistics tab with lunar correlation charts
+- `artifacts/lunar-mood-mobile/app/(tabs)/_layout.tsx` — Tab navigator with ghost-style tab bar
 - `artifacts/lunar-mood-mobile/app/login.tsx` — Login/register screen
 - `artifacts/lunar-mood-mobile/app/mood-entry.tsx` — Mood entry form with period/emotion/energy/consumption
+- `artifacts/api-server/src/routes/stats.ts` — Stats aggregation endpoint
 - `artifacts/lunar-mood/src/pages/dashboard.tsx` — Web dashboard with 3-dot calendar and legend
 - `artifacts/lunar-mood/src/components/calendar/mood-dialog.tsx` — Web mood entry dialog with all 3 stats
 - `artifacts/lunar-mood/src/components/layout/sidebar.tsx` — Sidebar with stats and consumption label settings

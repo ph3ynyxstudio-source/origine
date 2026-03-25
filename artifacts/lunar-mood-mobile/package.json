@@ -57,6 +57,7 @@
   },
   "dependencies": {
     "date-fns": "^3.6.0",
-    "expo-notifications": "^55.0.13"
+    "expo-notifications": "^55.0.13",
+    "react-native-chart-kit": "^6.12.0"
   }
 }

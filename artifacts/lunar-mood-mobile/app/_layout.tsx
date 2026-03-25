@@ -16,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MoodProvider } from "@/contexts/MoodContext";
+import { I18nProvider } from "@/lib/i18n";
 import { scheduleReminders } from "@/lib/notifications";
 
 SplashScreen.preventAutoHideAsync();
@@ -31,22 +32,13 @@ function RootLayoutNav() {
         animation: "fade",
       }}
     >
-      <Stack.Screen name="index" />
+      <Stack.Screen name="(tabs)" />
       <Stack.Screen name="login" />
       <Stack.Screen
         name="mood-entry"
         options={{
           presentation: "formSheet",
           sheetAllowedDetents: [0.85],
-          sheetGrabberVisible: true,
-          contentStyle: { backgroundColor: "rgba(19, 23, 41, 0.85)" },
-        }}
-      />
-      <Stack.Screen
-        name="settings"
-        options={{
-          presentation: "formSheet",
-          sheetAllowedDetents: [0.5],
           sheetGrabberVisible: true,
           contentStyle: { backgroundColor: "rgba(19, 23, 41, 0.85)" },
         }}
@@ -79,15 +71,17 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <MoodProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <KeyboardProvider>
-                  <RootLayoutNav />
-                </KeyboardProvider>
-              </GestureHandlerRootView>
-            </MoodProvider>
-          </AuthProvider>
+          <I18nProvider>
+            <AuthProvider>
+              <MoodProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <KeyboardProvider>
+                    <RootLayoutNav />
+                  </KeyboardProvider>
+                </GestureHandlerRootView>
+              </MoodProvider>
+            </AuthProvider>
+          </I18nProvider>
         </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

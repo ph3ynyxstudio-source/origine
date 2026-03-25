@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "@/lib/i18n";
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 import GlowingMoon from "@/components/GlowingMoon";
@@ -109,6 +110,7 @@ const particles = generateParticles(Platform.OS === "web" ? 8 : 12);
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { login, register } = useAuth();
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -118,11 +120,11 @@ export default function LoginScreen() {
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) {
-      setError("Please fill in all fields");
+      setError(t("fillAllFields"));
       return;
     }
     if (password.length < 3) {
-      setError("Password must be at least 3 characters");
+      setError(t("passwordMinLength"));
       return;
     }
 
@@ -139,7 +141,7 @@ export default function LoginScreen() {
       router.replace("/");
     } catch (e: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setError(e.message || "Something went wrong");
+      setError(e.message || t("somethingWentWrong"));
     } finally {
       setIsSubmitting(false);
     }
@@ -175,10 +177,8 @@ export default function LoginScreen() {
         >
           <View style={styles.header}>
             <GlowingMoon size={96} iconSize={52} />
-            <Text style={styles.title}>LunarMood</Text>
-            <Text style={styles.subtitle}>
-              Align your orbit with the stars.
-            </Text>
+            <Text style={styles.title}>{t("loginTitle")}</Text>
+            <Text style={styles.subtitle}>{t("loginSubtitle")}</Text>
           </View>
 
           <View style={styles.formCard}>
@@ -191,7 +191,7 @@ export default function LoginScreen() {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Username"
+                placeholder={t("username")}
                 placeholderTextColor={Colors.dark.textMuted}
                 value={username}
                 onChangeText={setUsername}
@@ -209,7 +209,7 @@ export default function LoginScreen() {
               />
               <TextInput
                 style={[styles.input, { flex: 1 }]}
-                placeholder="Password"
+                placeholder={t("password")}
                 placeholderTextColor={Colors.dark.textMuted}
                 value={password}
                 onChangeText={setPassword}
@@ -248,16 +248,16 @@ export default function LoginScreen() {
                 <ActivityIndicator color="#FFF" size="small" />
               ) : (
                 <Text style={styles.submitText}>
-                  {isLogin ? "Enter Orbit" : "Launch Account"}
+                  {isLogin ? t("enterOrbit") : t("launchAccount")}
                 </Text>
               )}
             </Pressable>
 
             <Pressable onPress={toggleMode} style={styles.toggleContainer}>
               <Text style={styles.toggleText}>
-                {isLogin ? "New to the cosmos? " : "Already have an account? "}
+                {isLogin ? t("newToCosmos") : t("alreadyHaveAccount")}
                 <Text style={styles.toggleLink}>
-                  {isLogin ? "Create an account" : "Log in"}
+                  {isLogin ? t("createAccount") : t("logIn")}
                 </Text>
               </Text>
             </Pressable>

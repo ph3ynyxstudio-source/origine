@@ -13,7 +13,8 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { useMoods, type MoodEntry } from "@/contexts/MoodContext";
-import { getMoodColor, getMoodLabel } from "@/lib/lunar";
+import { getMoodColor } from "@/lib/lunar";
+import { useTranslation, getMoodTranslationKey, getConsumptionTranslationKey } from "@/lib/i18n";
 import Colors from "@/constants/colors";
 import { format, parseISO } from "date-fns";
 import CosmicBackground from "@/components/CosmicBackground";
@@ -26,15 +27,7 @@ const MOOD_ICONS: Record<number, keyof typeof Ionicons.glyphMap> = {
   5: "star-outline",
 };
 
-const PERIODS = [
-  { key: "morning" as const, label: "Matin", color: "#F59E0B" },
-  { key: "afternoon" as const, label: "Après-midi", color: "#3B82F6" },
-  { key: "evening" as const, label: "Soir", color: "#8B5CF6" },
-];
-
 const ENERGY_STEPS = [0, 25, 50, 75, 100];
-
-const CONSUMPTION_LABELS = ["Aucune", "Très peu", "Peu", "Modéré", "Beaucoup", "Excessif"];
 
 function getCurrentPeriod(): "morning" | "afternoon" | "evening" {
   const hour = new Date().getHours();
@@ -52,12 +45,22 @@ export default function MoodEntryScreen() {
   }>();
 
   const { moods, createMood, updateMood, deleteMood, fetchMoods } = useMoods();
+  const { t } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState<"morning" | "afternoon" | "evening">(getCurrentPeriod());
   const [selectedMood, setSelectedMood] = useState<number>(0);
   const [energy, setEnergy] = useState<number>(50);
   const [consumption, setConsumption] = useState<number>(0);
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const PERIODS = useMemo(
+    () => [
+      { key: "morning" as const, label: t("morning"), color: "#F59E0B" },
+      { key: "afternoon" as const, label: t("afternoon"), color: "#3B82F6" },
+      { key: "evening" as const, label: t("evening"), color: "#8B5CF6" },
+    ],
+    [t]
+  );
 
   const dateObj = params.date ? parseISO(params.date) : new Date();
   const formattedDate = format(dateObj, "EEEE, MMMM d, yyyy");
@@ -90,7 +93,7 @@ export default function MoodEntryScreen() {
 
   const handleSave = async () => {
     if (selectedMood === 0) {
-      Alert.alert("Sélectionnez une émotion", "Veuillez choisir comment vous vous sentez.");
+      Alert.alert(t("selectEmotion"), t("selectEmotionMessage"));
       return;
     }
 
@@ -112,17 +115,17 @@ export default function MoodEntryScreen() {
       router.back();
     } catch (e: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      Alert.alert("Erreur", e.message || "Échec de la sauvegarde");
+      Alert.alert(t("saveFailed"), e.message || "");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = () => {
-    Alert.alert("Supprimer", "Êtes-vous sûr de vouloir supprimer cette entrée ?", [
-      { text: "Annuler", style: "cancel" },
+    Alert.alert(t("deleteConfirmTitle"), t("deleteConfirmMessage"), [
+      { text: t("cancel"), style: "cancel" },
       {
-        text: "Supprimer",
+        text: t("delete"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -131,14 +134,14 @@ export default function MoodEntryScreen() {
             await fetchMoods(monthNum, yearNum);
             router.back();
           } catch (e: any) {
-            Alert.alert("Erreur", e.message || "Échec de la suppression");
+            Alert.alert(t("deleteFailed"), e.message || "");
           }
         },
       },
     ]);
   };
 
-  const cLabel = params.consumptionLabel || "Café";
+  const cLabel = params.consumptionLabel || "Coffee";
 
   return (
     <View style={styles.container}>
@@ -154,7 +157,7 @@ export default function MoodEntryScreen() {
           ) : null}
         </View>
 
-        <Text style={styles.sectionTitle}>Période</Text>
+        <Text style={styles.sectionTitle}>{t("period")}</Text>
         <View style={styles.periodRow}>
           {PERIODS.map((p) => {
             const isSelected = selectedPeriod === p.key;
@@ -176,7 +179,7 @@ export default function MoodEntryScreen() {
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>Émotion</Text>
+        <Text style={styles.sectionTitle}>{t("emotion")}</Text>
         <View style={styles.moodRow}>
           {[1, 2, 3, 4, 5].map((level) => {
             const isSelected = selectedMood === level;
@@ -202,14 +205,14 @@ export default function MoodEntryScreen() {
                   color={isSelected ? getMoodColor(level) : Colors.dark.textMuted}
                 />
                 <Text style={[styles.moodLabel, isSelected && { color: getMoodColor(level) }]}>
-                  {getMoodLabel(level)}
+                  {t(getMoodTranslationKey(level))}
                 </Text>
               </Pressable>
             );
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>Énergie</Text>
+        <Text style={styles.sectionTitle}>{t("energy")}</Text>
         <View style={styles.energyRow}>
           {ENERGY_STEPS.map((e) => {
             const isSelected = energy === e;
@@ -222,7 +225,7 @@ export default function MoodEntryScreen() {
                   isSelected && { borderColor: "#3B82F6", backgroundColor: "rgba(59, 130, 246, 0.2)" },
                 ]}
               >
-                <Text style={styles.energyIcon}>⚡</Text>
+                <Ionicons name="flash" size={16} color={isSelected ? "#93C5FD" : Colors.dark.textMuted} />
                 <Text style={[styles.energyLabel, isSelected && { color: "#93C5FD" }]}>{e}%</Text>
               </Pressable>
             );
@@ -244,17 +247,17 @@ export default function MoodEntryScreen() {
               >
                 <Text style={[styles.consumptionValue, isSelected && { color: "#FCD34D" }]}>{c}</Text>
                 <Text style={[styles.consumptionLabel, isSelected && { color: "#FCD34D" }]}>
-                  {CONSUMPTION_LABELS[c]}
+                  {t(getConsumptionTranslationKey(c))}
                 </Text>
               </Pressable>
             );
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>Note (optionnel)</Text>
+        <Text style={styles.sectionTitle}>{t("noteOptional")}</Text>
         <TextInput
           style={styles.noteInput}
-          placeholder="Note sur cette période..."
+          placeholder={t("notePlaceholder")}
           placeholderTextColor={Colors.dark.textMuted}
           value={note}
           onChangeText={setNote}
@@ -277,7 +280,7 @@ export default function MoodEntryScreen() {
               <ActivityIndicator color="#FFF" size="small" />
             ) : (
               <Text style={styles.saveText}>
-                {isEditing ? "Modifier" : "Enregistrer"}
+                {isEditing ? t("editEntry") : t("saveEntry")}
               </Text>
             )}
           </Pressable>
@@ -291,7 +294,7 @@ export default function MoodEntryScreen() {
               onPress={handleDelete}
             >
               <Ionicons name="trash-outline" size={18} color={Colors.dark.mood1} />
-              <Text style={styles.deleteText}>Supprimer</Text>
+              <Text style={styles.deleteText}>{t("delete")}</Text>
             </Pressable>
           )}
         </View>
@@ -422,9 +425,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(22, 27, 48, 0.6)",
     gap: 3,
   },
-  energyIcon: {
-    fontSize: 16,
-  },
   energyLabel: {
     fontSize: 11,
     fontFamily: "Inter_500Medium",
@@ -500,10 +500,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    height: 44,
-    borderRadius: 12,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: "rgba(239, 68, 68, 0.08)",
     borderWidth: 1,
-    borderColor: "rgba(239, 68, 68, 0.3)",
+    borderColor: "rgba(239, 68, 68, 0.2)",
   },
   deleteText: {
     color: Colors.dark.mood1,
