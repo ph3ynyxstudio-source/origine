@@ -33,15 +33,15 @@ const REMINDER_TIMES: ReminderConfig[] = [
     id: "afternoon",
     hour: 13,
     minute: 0,
-    title: { en: "Afternoon", fr: "Apr\u00e8s-midi" },
-    body: { en: "Time to log your afternoon mood!", fr: "C'est l'heure de noter votre humeur de l'apr\u00e8s-midi !" },
+    title: { en: "Afternoon", fr: "Après-midi" },
+    body: { en: "Time to log your afternoon mood!", fr: "C'est l'heure de noter votre humeur de l'après-midi !" },
   },
   {
     id: "evening",
     hour: 20,
     minute: 0,
     title: { en: "Evening", fr: "Soir" },
-    body: { en: "How was your evening? Log your mood!", fr: "Comment s'est pass\u00e9e votre soir\u00e9e ? Notez votre humeur !" },
+    body: { en: "How was your evening? Log your mood!", fr: "Comment s'est passée votre soirée ? Notez votre humeur !" },
   },
 ];
 

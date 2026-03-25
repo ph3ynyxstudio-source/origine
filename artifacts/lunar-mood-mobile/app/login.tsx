@@ -285,7 +285,7 @@ export default function LoginScreen() {
                 onPress={() => toggleLang("fr")}
                 style={[styles.langChip, language === "fr" && styles.langChipActive]}
               >
-                <Text style={[styles.langText, language === "fr" && styles.langTextActive]}>Fran\u00e7ais</Text>
+                <Text style={[styles.langText, language === "fr" && styles.langTextActive]}>Français</Text>
               </Pressable>
             </View>
 
