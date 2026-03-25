@@ -1,6 +1,3 @@
-const KNOWN_NEW_MOON = new Date("2026-02-16T06:00:00Z").getTime();
-const SYNODIC_MONTH = 29.53058770576;
-
 export interface LunarPhaseInfo {
   phase: string;
   illumination: number;
@@ -8,80 +5,314 @@ export interface LunarPhaseInfo {
   label: string;
 }
 
-function getMoonAge(date: Date): number {
-  const diff = date.getTime() - KNOWN_NEW_MOON;
-  const days = diff / (1000 * 60 * 60 * 24);
-  return ((days % SYNODIC_MONTH) + SYNODIC_MONTH) % SYNODIC_MONTH;
+const DEG_TO_RAD = Math.PI / 180;
+
+function sinD(deg: number): number {
+  return Math.sin(deg * DEG_TO_RAD);
 }
 
+function cosD(deg: number): number {
+  return Math.cos(deg * DEG_TO_RAD);
+}
+
+function dateToJD(date: Date): number {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth() + 1;
+  const d =
+    date.getUTCDate() +
+    date.getUTCHours() / 24 +
+    date.getUTCMinutes() / 1440 +
+    date.getUTCSeconds() / 86400;
+
+  let Y = y;
+  let M = m;
+  if (M <= 2) {
+    Y -= 1;
+    M += 12;
+  }
+
+  const A = Math.floor(Y / 100);
+  const B = 2 - A + Math.floor(A / 4);
+
+  return (
+    Math.floor(365.25 * (Y + 4716)) +
+    Math.floor(30.6001 * (M + 1)) +
+    d +
+    B -
+    1524.5
+  );
+}
+
+function computePhaseJD(k: number): number {
+  const T = k / 1236.85;
+  const T2 = T * T;
+  const T3 = T2 * T;
+  const T4 = T3 * T;
+
+  let JDE =
+    2451550.09766 +
+    29.530588861 * k +
+    0.00015437 * T2 -
+    0.00000015 * T3 +
+    0.00000000073 * T4;
+
+  const E = 1 - 0.002516 * T - 0.0000074 * T2;
+  const E2 = E * E;
+
+  const M = 2.5534 + 29.1053567 * k - 0.0000014 * T2 - 0.00000011 * T3;
+  const Mp =
+    201.5643 +
+    385.81693528 * k +
+    0.0107582 * T2 +
+    0.00001238 * T3 -
+    0.000000058 * T4;
+  const F =
+    160.7108 +
+    390.67050284 * k -
+    0.0016118 * T2 -
+    0.00000227 * T3 +
+    0.000000011 * T4;
+  const Om =
+    124.7746 - 1.56375588 * k + 0.0020672 * T2 + 0.00000215 * T3;
+
+  const phase = k - Math.floor(k);
+  const isNew = Math.abs(phase) < 0.01 || Math.abs(phase - 1) < 0.01;
+  const isFull = Math.abs(phase - 0.5) < 0.01;
+  const isFQ = Math.abs(phase - 0.25) < 0.01;
+  const isLQ = Math.abs(phase - 0.75) < 0.01;
+
+  let correction = 0;
+
+  if (isNew) {
+    correction =
+      -0.4072 * sinD(Mp) +
+      0.17241 * E * sinD(M) +
+      0.01608 * sinD(2 * Mp) +
+      0.01039 * sinD(2 * F) +
+      0.00739 * E * sinD(Mp - M) +
+      -0.00514 * E * sinD(Mp + M) +
+      0.00208 * E2 * sinD(2 * M) +
+      -0.00111 * sinD(Mp - 2 * F) +
+      -0.00057 * sinD(Mp + 2 * F) +
+      0.00056 * E * sinD(2 * Mp + M) +
+      -0.00042 * sinD(3 * Mp) +
+      0.00042 * E * sinD(M + 2 * F) +
+      0.00038 * E * sinD(M - 2 * F) +
+      -0.00024 * E * sinD(2 * Mp - M) +
+      -0.00017 * sinD(Om) +
+      -0.00007 * sinD(Mp + 2 * M) +
+      0.00004 * sinD(2 * Mp - 2 * F) +
+      0.00004 * sinD(3 * M) +
+      0.00003 * sinD(Mp + M - 2 * F) +
+      0.00003 * sinD(2 * Mp + 2 * F) +
+      -0.00003 * sinD(Mp + M + 2 * F) +
+      0.00003 * sinD(Mp - M + 2 * F) +
+      -0.00002 * sinD(Mp - M - 2 * F) +
+      -0.00002 * sinD(3 * Mp + M) +
+      0.00002 * sinD(4 * Mp);
+  } else if (isFull) {
+    correction =
+      -0.40614 * sinD(Mp) +
+      0.17302 * E * sinD(M) +
+      0.01614 * sinD(2 * Mp) +
+      0.01043 * sinD(2 * F) +
+      0.00734 * E * sinD(Mp - M) +
+      -0.00515 * E * sinD(Mp + M) +
+      0.00209 * E2 * sinD(2 * M) +
+      -0.00111 * sinD(Mp - 2 * F) +
+      -0.00057 * sinD(Mp + 2 * F) +
+      0.00056 * E * sinD(2 * Mp + M) +
+      -0.00042 * sinD(3 * Mp) +
+      0.00042 * E * sinD(M + 2 * F) +
+      0.00038 * E * sinD(M - 2 * F) +
+      -0.00024 * E * sinD(2 * Mp - M) +
+      -0.00017 * sinD(Om) +
+      -0.00007 * sinD(Mp + 2 * M) +
+      0.00004 * sinD(2 * Mp - 2 * F) +
+      0.00004 * sinD(3 * M) +
+      0.00003 * sinD(Mp + M - 2 * F) +
+      0.00003 * sinD(2 * Mp + 2 * F) +
+      -0.00003 * sinD(Mp + M + 2 * F) +
+      0.00003 * sinD(Mp - M + 2 * F) +
+      -0.00002 * sinD(Mp - M - 2 * F) +
+      -0.00002 * sinD(3 * Mp + M) +
+      0.00002 * sinD(4 * Mp);
+  } else if (isFQ || isLQ) {
+    correction =
+      -0.62801 * sinD(Mp) +
+      0.17172 * E * sinD(M) +
+      -0.01183 * E * sinD(Mp + M) +
+      0.00862 * sinD(2 * Mp) +
+      0.00804 * sinD(2 * F) +
+      0.00454 * E * sinD(Mp - M) +
+      0.00204 * E2 * sinD(2 * M) +
+      -0.0018 * sinD(Mp - 2 * F) +
+      -0.0007 * sinD(Mp + 2 * F) +
+      -0.0004 * sinD(3 * Mp) +
+      -0.00034 * E * sinD(2 * Mp - M) +
+      0.00032 * E * sinD(M + 2 * F) +
+      0.00032 * E * sinD(M - 2 * F) +
+      -0.00028 * E2 * sinD(Mp + 2 * M) +
+      0.00027 * E * sinD(2 * Mp + M) +
+      -0.00017 * sinD(Om) +
+      -0.00005 * sinD(Mp - M - 2 * F) +
+      0.00004 * sinD(2 * Mp + 2 * F) +
+      -0.00004 * sinD(Mp + M + 2 * F) +
+      0.00004 * sinD(Mp - 2 * M) +
+      0.00003 * sinD(Mp + M - 2 * F) +
+      0.00003 * sinD(3 * M) +
+      0.00002 * sinD(2 * Mp - 2 * F) +
+      0.00002 * sinD(Mp - M + 2 * F) +
+      -0.00002 * sinD(3 * Mp + M);
+
+    const W =
+      0.00306 -
+      0.00038 * E * cosD(M) +
+      0.00026 * cosD(Mp) -
+      0.00002 * cosD(Mp - M) +
+      0.00002 * cosD(Mp + M) +
+      0.00002 * cosD(2 * F);
+
+    if (isFQ) {
+      correction += W;
+    } else {
+      correction -= W;
+    }
+  }
+
+  JDE += correction;
+
+  const A1 = 299.77 + 132.8475848 * k - 0.009173 * T2;
+  const A2 = 251.88 + 92.517 * k;
+  const A3 = 251.83 + 360.3572 * k;
+  const A4 = 349.42 + 450.37046 * k;
+  const A5 = 84.66 + 966.197 * k;
+  const A6 = 141.74 + 115.8755 * k;
+  const A7 = 207.14 + 119.773 * k;
+  const A8 = 154.84 + 926.2602 * k;
+  const A9 = 34.52 + 1367.9222 * k;
+  const A10 = 207.19 + 532.8963 * k;
+  const A11 = 291.34 + 3.6577 * k;
+  const A12 = 161.72 + 125.1025 * k;
+  const A13 = 239.56 + 44.8824 * k;
+  const A14 = 331.55 + 942.062 * k;
+
+  const additional =
+    0.000325 * sinD(A1) +
+    0.000165 * sinD(A2) +
+    0.000164 * sinD(A3) +
+    0.000126 * sinD(A4) +
+    0.00011 * sinD(A5) +
+    0.000062 * sinD(A6) +
+    0.00006 * sinD(A7) +
+    0.000056 * sinD(A8) +
+    0.000047 * sinD(A9) +
+    0.000042 * sinD(A10) +
+    0.00004 * sinD(A11) +
+    0.000037 * sinD(A12) +
+    0.000035 * sinD(A13) +
+    0.000023 * sinD(A14);
+
+  JDE += additional;
+
+  return JDE;
+}
+
+function findNearestNewMoonK(jd: number): number {
+  const year = 2000 + (jd - 2451545.0) / 365.25;
+  const k0 = Math.round((year - 2000) * 12.3685);
+  let bestK = k0;
+  let bestDist = Math.abs(computePhaseJD(k0) - jd);
+  for (const offset of [-1, 1]) {
+    const kk = k0 + offset;
+    const dist = Math.abs(computePhaseJD(kk) - jd);
+    if (dist < bestDist) {
+      bestK = kk;
+      bestDist = dist;
+    }
+  }
+  return bestK;
+}
+
+const PHASE_MAP: Record<
+  string,
+  { phase: string; emoji: string; label: string }
+> = {
+  new_moon: { phase: "new_moon", emoji: "\uD83C\uDF11", label: "New Moon" },
+  waxing_crescent: {
+    phase: "waxing_crescent",
+    emoji: "\uD83C\uDF12",
+    label: "Waxing Crescent",
+  },
+  first_quarter: {
+    phase: "first_quarter",
+    emoji: "\uD83C\uDF13",
+    label: "First Quarter",
+  },
+  waxing_gibbous: {
+    phase: "waxing_gibbous",
+    emoji: "\uD83C\uDF14",
+    label: "Waxing Gibbous",
+  },
+  full_moon: { phase: "full_moon", emoji: "\uD83C\uDF15", label: "Full Moon" },
+  waning_gibbous: {
+    phase: "waning_gibbous",
+    emoji: "\uD83C\uDF16",
+    label: "Waning Gibbous",
+  },
+  last_quarter: {
+    phase: "last_quarter",
+    emoji: "\uD83C\uDF17",
+    label: "Last Quarter",
+  },
+  waning_crescent: {
+    phase: "waning_crescent",
+    emoji: "\uD83C\uDF18",
+    label: "Waning Crescent",
+  },
+};
+
 export function getLunarPhase(date: Date): LunarPhaseInfo {
-  const age = getMoonAge(date);
-  const fraction = age / SYNODIC_MONTH;
+  const jd = dateToJD(date);
+  const k = findNearestNewMoonK(jd);
+
+  const jdNew = computePhaseJD(k);
+  const jdFQ = computePhaseJD(k + 0.25);
+  const jdFull = computePhaseJD(k + 0.5);
+  const jdLQ = computePhaseJD(k + 0.75);
+  const jdNextNew = computePhaseJD(k + 1);
+
+  const age = jd - jdNew;
+  const cycleLength = jdNextNew - jdNew;
+  const fraction = age / cycleLength;
   const illumination =
     Math.round(((1 - Math.cos(2 * Math.PI * fraction)) / 2) * 100) / 100;
 
-  if (age < 1.85)
-    return {
-      phase: "new_moon",
-      illumination,
-      emoji: "\uD83C\uDF11",
-      label: "New Moon",
-    };
-  if (age < 7.38)
-    return {
-      phase: "waxing_crescent",
-      illumination,
-      emoji: "\uD83C\uDF12",
-      label: "Waxing Crescent",
-    };
-  if (age < 9.23)
-    return {
-      phase: "first_quarter",
-      illumination,
-      emoji: "\uD83C\uDF13",
-      label: "First Quarter",
-    };
-  if (age < 14.77)
-    return {
-      phase: "waxing_gibbous",
-      illumination,
-      emoji: "\uD83C\uDF14",
-      label: "Waxing Gibbous",
-    };
-  if (age < 16.61)
-    return {
-      phase: "full_moon",
-      illumination,
-      emoji: "\uD83C\uDF15",
-      label: "Full Moon",
-    };
-  if (age < 22.15)
-    return {
-      phase: "waning_gibbous",
-      illumination,
-      emoji: "\uD83C\uDF16",
-      label: "Waning Gibbous",
-    };
-  if (age < 23.99)
-    return {
-      phase: "last_quarter",
-      illumination,
-      emoji: "\uD83C\uDF17",
-      label: "Last Quarter",
-    };
-  if (age < 27.68)
-    return {
-      phase: "waning_crescent",
-      illumination,
-      emoji: "\uD83C\uDF18",
-      label: "Waning Crescent",
-    };
-  return {
-    phase: "new_moon",
-    illumination,
-    emoji: "\uD83C\uDF11",
-    label: "New Moon",
-  };
+  const HALF_DAY = 0.5;
+  let key: string;
+
+  if (Math.abs(jd - jdNew) <= 1) {
+    key = "new_moon";
+  } else if (jd < jdFQ - HALF_DAY) {
+    key = "waxing_crescent";
+  } else if (Math.abs(jd - jdFQ) <= HALF_DAY) {
+    key = "first_quarter";
+  } else if (jd < jdFull - 1) {
+    key = "waxing_gibbous";
+  } else if (Math.abs(jd - jdFull) <= 1) {
+    key = "full_moon";
+  } else if (jd < jdLQ - HALF_DAY) {
+    key = "waning_gibbous";
+  } else if (Math.abs(jd - jdLQ) <= HALF_DAY) {
+    key = "last_quarter";
+  } else if (jd < jdNextNew - 1) {
+    key = "waning_crescent";
+  } else {
+    key = "new_moon";
+  }
+
+  const info = PHASE_MAP[key];
+  return { ...info, illumination };
 }
 
 export function getMonthPhases(
@@ -92,7 +323,7 @@ export function getMonthPhases(
   const phases = [];
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month - 1, day, 12, 0, 0);
+    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
     const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const phaseInfo = getLunarPhase(date);
     phases.push({ date: dateStr, ...phaseInfo });
