@@ -65,11 +65,11 @@ export const listMoodsResponseMoodMax = 5;
 export const ListMoodsResponseItem = zod.object({
   id: zod.number(),
   userId: zod.number(),
-  date: zod.date(),
+  date: zod.coerce.string(),
   mood: zod.number().min(1).max(listMoodsResponseMoodMax),
   note: zod.string().nullish(),
   lunarPhase: zod.string(),
-  createdAt: zod.date(),
+  createdAt: zod.coerce.string(),
 });
 export const ListMoodsResponse = zod.array(ListMoodsResponseItem);
 
@@ -79,7 +79,7 @@ export const ListMoodsResponse = zod.array(ListMoodsResponseItem);
 export const createMoodBodyMoodMax = 5;
 
 export const CreateMoodBody = zod.object({
-  date: zod.date(),
+  date: zod.coerce.string(),
   mood: zod.number().min(1).max(createMoodBodyMoodMax),
   note: zod.string().nullish(),
 });
@@ -103,11 +103,11 @@ export const updateMoodResponseMoodMax = 5;
 export const UpdateMoodResponse = zod.object({
   id: zod.number(),
   userId: zod.number(),
-  date: zod.date(),
+  date: zod.coerce.string(),
   mood: zod.number().min(1).max(updateMoodResponseMoodMax),
   note: zod.string().nullish(),
   lunarPhase: zod.string(),
-  createdAt: zod.date(),
+  createdAt: zod.coerce.string(),
 });
 
 /**
@@ -126,7 +126,7 @@ export const GetLunarPhasesQueryParams = zod.object({
 });
 
 export const GetLunarPhasesResponseItem = zod.object({
-  date: zod.date(),
+  date: zod.coerce.string(),
   phase: zod.enum([
     "new_moon",
     "waxing_crescent",

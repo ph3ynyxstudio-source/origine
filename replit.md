@@ -2,7 +2,7 @@
 
 ## Overview
 
-LunarMood — a mood tracking web app connected to lunar phases. Built as a pnpm workspace monorepo using TypeScript.
+LunarMood — a mood tracking app connected to lunar phases. Built as a pnpm workspace monorepo using TypeScript. Includes a web app (React + Vite) and an Android mobile app (Expo React Native, package ID: `com.luntrak.lunarmood`).
 
 ## Stack
 
@@ -12,10 +12,11 @@ LunarMood — a mood tracking web app connected to lunar phases. Built as a pnpm
 - **TypeScript version**: 5.9
 - **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
-- **Frontend**: React + Vite + Tailwind CSS
+- **Web frontend**: React + Vite + Tailwind CSS
+- **Mobile**: Expo React Native (Android, package `com.luntrak.lunarmood`)
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
-- **Auth**: Cookie-based JWT (bcryptjs + jsonwebtoken)
+- **Auth**: Cookie-based JWT (bcryptjs + jsonwebtoken); mobile uses `Cookie: token=...` header + AsyncStorage
 - **Build**: esbuild (API server), Vite (frontend)
 
 ## Structure
@@ -24,7 +25,8 @@ LunarMood — a mood tracking web app connected to lunar phases. Built as a pnpm
 artifacts-monorepo/
 ├── artifacts/
 │   ├── api-server/         # Express API server
-│   └── lunar-mood/         # React + Vite frontend (LunarMood app)
+│   ├── lunar-mood/         # React + Vite frontend (LunarMood app)
+│   └── lunar-mood-mobile/  # Expo React Native Android app
 ├── lib/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
@@ -72,6 +74,12 @@ artifacts-monorepo/
 - `artifacts/api-server/src/routes/lunar.ts` — Lunar phase endpoint
 - `lib/db/src/schema/users.ts` — Users table schema
 - `lib/db/src/schema/moods.ts` — Moods table schema
+- `artifacts/lunar-mood-mobile/contexts/AuthContext.tsx` — Mobile auth (JWT + AsyncStorage)
+- `artifacts/lunar-mood-mobile/contexts/MoodContext.tsx` — Mobile mood CRUD
+- `artifacts/lunar-mood-mobile/lib/lunar.ts` — Mobile lunar phase calculation
+- `artifacts/lunar-mood-mobile/app/index.tsx` — Calendar screen (main screen)
+- `artifacts/lunar-mood-mobile/app/login.tsx` — Login/register screen
+- `artifacts/lunar-mood-mobile/app/mood-entry.tsx` — Mood entry form sheet
 
 ## TypeScript & Composite Projects
 
