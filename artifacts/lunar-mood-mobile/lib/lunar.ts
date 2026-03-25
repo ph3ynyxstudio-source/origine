@@ -1,4 +1,4 @@
-const KNOWN_NEW_MOON = new Date("2000-01-06T18:14:00Z").getTime();
+const KNOWN_NEW_MOON = new Date("2026-02-16T06:00:00Z").getTime();
 const SYNODIC_MONTH = 29.53058770576;
 
 export interface LunarPhaseInfo {
