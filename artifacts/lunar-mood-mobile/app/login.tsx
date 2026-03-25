@@ -10,16 +10,21 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Animated,
+  Modal,
+  Alert,
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation, type Language } from "@/lib/i18n";
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 import GlowingMoon from "@/components/GlowingMoon";
+
+const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
 
 interface FloatingParticle {
   x: number;
@@ -110,13 +115,16 @@ const particles = generateParticles(Platform.OS === "web" ? 8 : 12);
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
   const { login, register } = useAuth();
-  const { t } = useTranslation();
+  const { t, language, setLanguage } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
 
   const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) {
@@ -153,6 +161,66 @@ export default function LoginScreen() {
     setError("");
   };
 
+  const toggleLang = (lang: Language) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setLanguage(lang);
+  };
+
+  const handleDevSeed = async () => {
+    setIsSeeding(true);
+    try {
+      const token = await AsyncStorage.getItem("auth_token");
+      const res = await fetch(`${API_BASE}/dev/seed`, {
+        method: "POST",
+        headers: token ? { Cookie: `token=${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        Alert.alert(t("devGenerateSuccess"), `${data.count} ${t("devEntries")}`);
+      } else {
+        throw new Error("Failed");
+      }
+    } catch {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Alert.alert(t("devGenerateFailed"));
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  const handleDevClear = () => {
+    Alert.alert(t("devClearData"), t("devConfirmClear"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("delete"),
+        style: "destructive",
+        onPress: async () => {
+          setIsClearing(true);
+          try {
+            const token = await AsyncStorage.getItem("auth_token");
+            const res = await fetch(`${API_BASE}/dev/seed`, {
+              method: "DELETE",
+              headers: token ? { Cookie: `token=${token}` } : {},
+            });
+            if (res.ok) {
+              const data = await res.json();
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              Alert.alert(t("devClearSuccess"), `${data.count} ${t("devEntriesDeleted")}`);
+            } else {
+              throw new Error("Failed");
+            }
+          } catch {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Alert.alert(t("devClearFailed"));
+          } finally {
+            setIsClearing(false);
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <CosmicBackground variant="login" starCount={100} />
@@ -161,6 +229,89 @@ export default function LoginScreen() {
           <FloatingParticleView key={i} particle={p} />
         ))}
       </View>
+
+      <Pressable
+        style={[styles.gearButton, { top: insets.top + 12, left: 16 }]}
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setShowSettings(true);
+        }}
+      >
+        <Ionicons name="settings-outline" size={22} color={Colors.dark.textSecondary} />
+      </Pressable>
+
+      <Modal
+        visible={showSettings}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setShowSettings(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowSettings(false)}>
+          <Pressable
+            style={[styles.settingsPanel, { marginTop: insets.top + 56 }]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.settingsPanelHeader}>
+              <Ionicons name="settings-outline" size={18} color={Colors.dark.primaryLight} />
+              <Text style={styles.settingsPanelTitle}>{t("settings")}</Text>
+              <Pressable onPress={() => setShowSettings(false)} style={styles.closeBtn}>
+                <Ionicons name="close" size={20} color={Colors.dark.textSecondary} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.settingsSectionLabel}>{t("language")}</Text>
+            <View style={styles.langRow}>
+              <Pressable
+                onPress={() => toggleLang("en")}
+                style={[styles.langChip, language === "en" && styles.langChipActive]}
+              >
+                <Text style={[styles.langText, language === "en" && styles.langTextActive]}>English</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => toggleLang("fr")}
+                style={[styles.langChip, language === "fr" && styles.langChipActive]}
+              >
+                <Text style={[styles.langText, language === "fr" && styles.langTextActive]}>Fran\u00e7ais</Text>
+              </Pressable>
+            </View>
+
+            {__DEV__ && (
+              <>
+                <Text style={styles.devSectionLabel}>{t("devTools")}</Text>
+                <Pressable
+                  onPress={handleDevSeed}
+                  disabled={isSeeding}
+                  style={({ pressed }) => [styles.devButton, styles.devButtonSeed, pressed && styles.btnPressed, isSeeding && styles.btnDisabled]}
+                >
+                  {isSeeding ? (
+                    <ActivityIndicator color="#FFF" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="flask-outline" size={16} color="#FFF" />
+                      <Text style={styles.devButtonText}>{t("devGenerateData")}</Text>
+                    </>
+                  )}
+                </Pressable>
+                <Pressable
+                  onPress={handleDevClear}
+                  disabled={isClearing}
+                  style={({ pressed }) => [styles.devButton, styles.devButtonClear, pressed && styles.btnPressed, isClearing && styles.btnDisabled]}
+                >
+                  {isClearing ? (
+                    <ActivityIndicator color="#FFF" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="trash-outline" size={16} color="#FFF" />
+                      <Text style={styles.devButtonText}>{t("devClearData")}</Text>
+                    </>
+                  )}
+                </Pressable>
+              </>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
+
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -280,6 +431,116 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
     paddingHorizontal: 32,
+  },
+  gearButton: {
+    position: "absolute",
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(19, 23, 41, 0.7)",
+    borderWidth: 1,
+    borderColor: "rgba(37, 43, 69, 0.6)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
+  },
+  settingsPanel: {
+    marginHorizontal: 16,
+    backgroundColor: "rgba(15, 18, 32, 0.97)",
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(37, 43, 69, 0.6)",
+    gap: 12,
+  },
+  settingsPanelHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  settingsPanelTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.dark.text,
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  settingsSectionLabel: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    color: Colors.dark.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  langRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  langChip: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(37, 43, 69, 0.8)",
+    backgroundColor: "rgba(22, 27, 48, 0.6)",
+    alignItems: "center",
+  },
+  langChipActive: {
+    borderColor: Colors.dark.primary,
+    backgroundColor: "rgba(124, 106, 250, 0.15)",
+  },
+  langText: {
+    fontSize: 14,
+    fontFamily: "Inter_500Medium",
+    color: Colors.dark.textMuted,
+  },
+  langTextActive: {
+    color: Colors.dark.primaryLight,
+  },
+  devSectionLabel: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+    color: "rgba(250, 200, 50, 0.8)",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginTop: 4,
+  },
+  devButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    height: 40,
+    borderRadius: 12,
+  },
+  devButtonSeed: {
+    backgroundColor: "rgba(124, 106, 250, 0.35)",
+    borderWidth: 1,
+    borderColor: "rgba(124, 106, 250, 0.5)",
+  },
+  devButtonClear: {
+    backgroundColor: "rgba(239, 68, 68, 0.2)",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.35)",
+  },
+  devButtonText: {
+    color: "#FFF",
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+  },
+  btnPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
+  btnDisabled: {
+    opacity: 0.5,
   },
   header: {
     alignItems: "center",
