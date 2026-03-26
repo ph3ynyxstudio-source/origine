@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { I18nProvider } from "@/lib/i18n"
 import { useGetMe } from "@workspace/api-client-react"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 // Pages
 import Login from "@/pages/Login"
@@ -23,14 +23,14 @@ const queryClient = new QueryClient({
 })
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { data: user, isLoading, isError } = useGetMe()
+  const { data: user, isLoading } = useGetMe()
   const [, setLocation] = useLocation()
 
   useEffect(() => {
-    if (!isLoading && isError) {
+    if (!isLoading && !user) {
       setLocation("/login")
     }
-  }, [isLoading, isError, setLocation])
+  }, [isLoading, user, setLocation])
 
   if (isLoading) {
     return (
@@ -40,7 +40,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
     )
   }
 
-  if (isError || !user) return null
+  if (!user) return null
 
   return <Component />
 }
@@ -56,14 +56,23 @@ function CatchAllRedirect({ user }: { user: unknown }) {
 function MainRouter() {
   const { data: user, isLoading } = useGetMe()
   const [location, setLocation] = useLocation()
+  const hasRedirected = useRef(false)
 
   useEffect(() => {
-    if (!isLoading) {
-      if (user && (location === "/" || location === "/login")) {
+    if (isLoading) return
+
+    if (user && (location === "/" || location === "/login")) {
+      if (!hasRedirected.current) {
+        hasRedirected.current = true
         setLocation("/dashboard")
-      } else if (!user && location !== "/login") {
+      }
+    } else if (!user && location !== "/" && location !== "/login") {
+      if (!hasRedirected.current) {
+        hasRedirected.current = true
         setLocation("/login")
       }
+    } else {
+      hasRedirected.current = false
     }
   }, [user, isLoading, location, setLocation])
 
@@ -77,13 +86,13 @@ function MainRouter() {
 
   return (
     <Switch>
+      <Route path="/" component={Login} />
       <Route path="/login" component={Login} />
       <Route path="/dashboard"><ProtectedRoute component={Dashboard} /></Route>
       <Route path="/calendar"><ProtectedRoute component={Calendar} /></Route>
       <Route path="/statistics"><ProtectedRoute component={Statistics} /></Route>
       <Route path="/settings"><ProtectedRoute component={Settings} /></Route>
-      
-      <Route>{() => <CatchAllRedirect user={user} />}</Route>
+      <Route><CatchAllRedirect user={user} /></Route>
     </Switch>
   )
 }
