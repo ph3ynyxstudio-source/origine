@@ -78,12 +78,6 @@ const translations = {
     fri: "Fri",
     sat: "Sat",
     logged: "logged",
-    consumptionByPhase: "Consumption by Lunar Phase",
-    conso: "Conso",
-    entries: "entries",
-    emotionByPhase: "Emotion by Lunar Phase",
-    energyByPhase: "Energy by Lunar Phase",
-    monthlyTrends: "Monthly Trends",
   },
   fr: {
     home: "Accueil",
@@ -160,12 +154,6 @@ const translations = {
     fri: "Ven",
     sat: "Sam",
     logged: "enregistrées",
-    consumptionByPhase: "Consommation par Phase Lunaire",
-    conso: "Conso",
-    entries: "entrées",
-    emotionByPhase: "Émotion par Phase Lunaire",
-    energyByPhase: "Énergie par Phase Lunaire",
-    monthlyTrends: "Tendances Mensuelles",
   },
 };
 
