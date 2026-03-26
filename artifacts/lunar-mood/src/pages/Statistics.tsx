@@ -78,7 +78,7 @@ export default function Statistics() {
     <AppLayout>
       <div className="pt-4 space-y-8">
         <header>
-          <h1 className="text-3xl font-display font-bold text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-2">
             {t("statistics")}
           </h1>
           <p className="text-muted-foreground">{stats.totalEntries} {t("entries")} {t("logged")}</p>
@@ -90,12 +90,12 @@ export default function Statistics() {
               <CardTitle>{t("emotionByPhase")}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full">
+              <div className="h-[250px] sm:h-[300px] w-full -ml-2 sm:ml-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={formattedPhaseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={formattedPhaseData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{fontSize: 10}} interval={0} angle={-45} textAnchor="end" height={60} />
-                    <YAxis stroke="rgba(255,255,255,0.3)" domain={[0, 5]} ticks={[1,2,3,4,5]} />
+                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{fontSize: 9}} interval={0} angle={-45} textAnchor="end" height={70} />
+                    <YAxis stroke="rgba(255,255,255,0.3)" domain={[0, 5]} ticks={[1,2,3,4,5]} tick={{fontSize: 10}} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="mood" name={t("emotion")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -109,12 +109,12 @@ export default function Statistics() {
               <CardTitle>{t("energyByPhase")}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full">
+              <div className="h-[250px] sm:h-[300px] w-full -ml-2 sm:ml-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={formattedPhaseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={formattedPhaseData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{fontSize: 10}} interval={0} angle={-45} textAnchor="end" height={60} />
-                    <YAxis stroke="rgba(255,255,255,0.3)" domain={[0, 100]} />
+                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{fontSize: 9}} interval={0} angle={-45} textAnchor="end" height={70} />
+                    <YAxis stroke="rgba(255,255,255,0.3)" domain={[0, 100]} tick={{fontSize: 10}} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="energy" name={t("energy")} fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -128,12 +128,12 @@ export default function Statistics() {
               <CardTitle>{t("consumptionByPhase")}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px] w-full">
+              <div className="h-[250px] sm:h-[300px] w-full -ml-2 sm:ml-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={formattedPhaseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <BarChart data={formattedPhaseData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{fontSize: 10}} interval={0} angle={-45} textAnchor="end" height={60} />
-                    <YAxis stroke="rgba(255,255,255,0.3)" domain={[0, 5]} ticks={[0,1,2,3,4,5]} />
+                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{fontSize: 9}} interval={0} angle={-45} textAnchor="end" height={70} />
+                    <YAxis stroke="rgba(255,255,255,0.3)" domain={[0, 5]} ticks={[0,1,2,3,4,5]} tick={{fontSize: 10}} />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar dataKey="conso" name={t("conso")} fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
                   </BarChart>
@@ -148,9 +148,9 @@ export default function Statistics() {
             <CardTitle>{t("monthlyTrends")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[350px] w-full">
+            <div className="h-[280px] sm:h-[350px] w-full -ml-2 sm:ml-0">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={stats.monthlyTrends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart data={stats.monthlyTrends} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" />
                   <YAxis yAxisId="left" stroke="rgba(255,255,255,0.3)" domain={[0, 5]} />

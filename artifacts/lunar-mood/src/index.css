@@ -142,3 +142,7 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-white/20;
 }
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

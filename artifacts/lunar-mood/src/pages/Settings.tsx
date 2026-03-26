@@ -23,7 +23,7 @@ export default function Settings() {
     <AppLayout>
       <div className="pt-4 space-y-8 max-w-2xl mx-auto">
         <header>
-          <h1 className="text-3xl font-display font-bold text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-2">
             {t("settings")}
           </h1>
         </header>

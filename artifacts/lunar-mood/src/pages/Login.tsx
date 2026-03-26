@@ -68,7 +68,7 @@ export default function Login() {
           >
             <MoonStar className="w-16 h-16 text-primary drop-shadow-[0_0_15px_rgba(124,106,250,0.8)]" />
           </motion.div>
-          <h1 className="text-5xl font-display font-bold cosmic-gradient-text mb-3">
+          <h1 className="text-3xl sm:text-5xl font-display font-bold cosmic-gradient-text mb-3">
             {t("loginTitle")}
           </h1>
           <p className="text-muted-foreground text-lg">{t("loginSubtitle")}</p>

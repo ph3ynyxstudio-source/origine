@@ -39,7 +39,7 @@ export default function Dashboard() {
     <AppLayout>
       <div className="space-y-8 pt-4">
         <header>
-          <h1 className="text-3xl font-display font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground">
             {t("hello")}, <span className="cosmic-gradient-text">{user?.username}</span>
           </h1>
           <p className="text-muted-foreground mt-2 text-lg">
@@ -90,27 +90,27 @@ export default function Dashboard() {
                   }
 
                   return (
-                    <div key={period} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${periodColors[period]}`}>
+                    <div key={period} className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-white/5 border border-white/5">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${periodColors[period]}`}>
                           {entry ? getMoodEmoji(entry.mood) : "—"}
                         </div>
-                        <div>
-                          <p className="font-medium capitalize">{t(period)}</p>
+                        <div className="min-w-0">
+                          <p className="font-medium capitalize text-sm sm:text-base">{t(period)}</p>
                           {entry && (
-                            <p className="text-xs text-muted-foreground mt-1 truncate max-w-[120px]">
+                            <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1 truncate max-w-[80px] sm:max-w-[120px]">
                               {entry.note || ""}
                             </p>
                           )}
                         </div>
                       </div>
                       {entry ? (
-                        <div className="text-right text-sm text-muted-foreground flex gap-3">
+                        <div className="text-right text-xs sm:text-sm text-muted-foreground flex gap-2 sm:gap-3 flex-shrink-0">
                           <span>⚡ {entry.energy}%</span>
                           <span>🍷 {entry.consumption}/5</span>
                         </div>
                       ) : (
-                        <span className="text-sm text-muted-foreground opacity-50">{t("notLogged")}</span>
+                        <span className="text-xs sm:text-sm text-muted-foreground opacity-50 flex-shrink-0">{t("notLogged")}</span>
                       )}
                     </div>
                   )

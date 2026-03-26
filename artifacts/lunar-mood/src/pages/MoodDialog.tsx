@@ -131,7 +131,7 @@ export function MoodDialog({
             ))}
           </div>
 
-          <div className="p-6 space-y-8">
+          <div className="p-4 sm:p-6 space-y-6 sm:space-y-8 max-h-[60vh] overflow-y-auto">
             {/* Emotion */}
             <div>
               <label className="text-sm font-medium text-foreground/80 mb-4 block">{t("emotion")}</label>
@@ -140,13 +140,13 @@ export function MoodDialog({
                   <button
                     key={opt.value}
                     onClick={() => setFormData(prev => ({ ...prev, mood: opt.value }))}
-                    className={`flex flex-col items-center gap-2 p-3 rounded-xl flex-1 transition-all border
+                    className={`flex flex-col items-center gap-1 sm:gap-2 p-2 sm:p-3 rounded-xl flex-1 transition-all border
                       ${formData.mood === opt.value 
                         ? 'bg-white/10 border-primary/50 shadow-[0_0_15px_rgba(124,106,250,0.3)]' 
                         : 'border-white/5 hover:bg-white/5 opacity-50 hover:opacity-100'}`}
                   >
-                    <span className="text-3xl filter drop-shadow-md">{getMoodEmoji(opt.value)}</span>
-                    <span className="text-xs font-medium" style={{ color: formData.mood === opt.value ? getMoodColor(opt.value) : undefined }}>
+                    <span className="text-2xl sm:text-3xl filter drop-shadow-md">{getMoodEmoji(opt.value)}</span>
+                    <span className="text-[10px] sm:text-xs font-medium" style={{ color: formData.mood === opt.value ? getMoodColor(opt.value) : undefined }}>
                       {opt.label}
                     </span>
                   </button>
@@ -172,8 +172,8 @@ export function MoodDialog({
               />
             </div>
 
-            {/* Consumption & Note Row */}
-            <div className="grid grid-cols-2 gap-6">
+            {/* Consumption & Note */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium text-foreground/80 mb-4 block">{t("conso")}</label>
                 <div className="flex justify-between gap-1">
