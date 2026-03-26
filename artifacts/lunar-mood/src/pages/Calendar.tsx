@@ -3,12 +3,13 @@ import { useListMoods, useGetLunarPhases } from "@workspace/api-client-react"
 import { useTranslation } from "@/lib/i18n"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { format, startOfMonth, getDaysInMonth, getDay, subMonths, addMonths } from "date-fns"
+import { fr } from "date-fns/locale"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { MoodDialog } from "./MoodDialog"
 
 export default function Calendar() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDateStr, setSelectedDateStr] = useState<string | null>(null)
   
@@ -47,7 +48,7 @@ export default function Calendar() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <span className="font-medium text-lg min-w-[120px] text-center">
-              {format(currentDate, "MMMM yyyy")}
+              {format(currentDate, "MMMM yyyy", { locale: language === "fr" ? fr : undefined })}
             </span>
             <button onClick={nextMonth} className="p-2 hover:bg-white/10 rounded-full transition">
               <ChevronRight className="w-5 h-5" />
