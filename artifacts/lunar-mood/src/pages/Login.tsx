@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useLocation } from "wouter"
 import { useLogin, useRegister } from "@workspace/api-client-react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,7 @@ export default function Login() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
+  const queryClient = useQueryClient()
   const loginMutation = useLogin()
   const registerMutation = useRegister()
 
@@ -24,7 +26,7 @@ export default function Login() {
     setError("")
     
     if (!username || !password) {
-      setError(t("fillAllFields") || "Please fill all fields")
+      setError(t("fillAllFields"))
       return
     }
 
@@ -34,6 +36,7 @@ export default function Login() {
       } else {
         await loginMutation.mutateAsync({ data: { username, password } })
       }
+      await queryClient.invalidateQueries()
       setLocation("/dashboard")
     } catch {
       setError(t("somethingWentWrong"))
