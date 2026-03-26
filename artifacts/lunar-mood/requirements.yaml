@@ -1,0 +1,22 @@
+packages:
+  "framer-motion": "For fluid page transitions, micro-interactions, and celestial floating animations."
+  "recharts": "For rendering beautiful mood, energy, and consumption statistics charts."
+  "date-fns": "For robust calendar math and date formatting across locales."
+  "clsx": "Utility for constructing className strings conditionally."
+  "tailwind-merge": "Utility to safely merge Tailwind classes without style conflicts."
+
+images:
+  - path: "artifacts/lunar-mood/public/images/cosmic-bg.png"
+    description: "Deep space cosmic nebula background with deep purples, indigo, and subtle starlight, highly aesthetic and moody"
+    aspect_ratio: "16:9"
+  - path: "artifacts/lunar-mood/public/images/moon-phases-illustration.png"
+    description: "Abstract elegant illustration of moon phases transitioning in gold and cream over a dark void"
+    aspect_ratio: "16:9"
+  - path: "artifacts/lunar-mood/public/images/app-logo.png"
+    description: "Minimalist glowing crescent moon logo mark in violet and cream colors, transparent background"
+    aspect_ratio: "1:1"
+
+notes:
+  - Using generated hooks from @workspace/api-client-react.
+  - Auth uses httpOnly cookies, relying on useGetMe() to check session state.
+  - Theme is strictly dark mode (cosmic aesthetic).

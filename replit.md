@@ -76,6 +76,7 @@ artifacts-monorepo/
 - Push notification reminders at 8am, 1pm, 8pm (expo-notifications, mobile) — bilingual (EN/FR), with toggle in settings
 - Notification toggle on Home screen settings + login gear panel; permission-aware (reverts if denied)
 - Dark celestial themed UI
+- **Web app**: Full React + Vite version with all mobile features (dashboard, calendar, mood entry, statistics, settings), responsive sidebar + bottom nav, i18n EN/FR, recharts, framer-motion animations
 - **Play Store ready**: EAS Build configured (development/preview/production profiles), adaptive icon, splash screen, Android permissions
 
 ## Key Files
@@ -101,9 +102,14 @@ artifacts-monorepo/
 - `artifacts/lunar-mood-mobile/app/mood-entry.tsx` — Mood entry form with period/emotion/energy/consumption
 - `artifacts/api-server/src/routes/stats.ts` — Stats aggregation endpoint
 - `artifacts/api-server/src/routes/dev.ts` — Dev seed/clear endpoints (gated behind NODE_ENV !== production)
-- `artifacts/lunar-mood/src/pages/dashboard.tsx` — Web dashboard with 3-dot calendar and legend
-- `artifacts/lunar-mood/src/components/calendar/mood-dialog.tsx` — Web mood entry dialog with all 3 stats
-- `artifacts/lunar-mood/src/components/layout/sidebar.tsx` — Sidebar with stats and consumption label settings
+- `artifacts/lunar-mood/src/pages/Dashboard.tsx` — Web dashboard with lunar phase and today's summary
+- `artifacts/lunar-mood/src/pages/Calendar.tsx` — Web calendar with colored dots and mood entry dialog
+- `artifacts/lunar-mood/src/pages/Statistics.tsx` — Web stats with recharts (emotion/energy/conso by lunar phase + trends)
+- `artifacts/lunar-mood/src/pages/Settings.tsx` — Web settings (language toggle EN/FR, credits "© 2026 Mo", logout)
+- `artifacts/lunar-mood/src/pages/Login.tsx` — Web login/register with cosmic theme
+- `artifacts/lunar-mood/src/pages/MoodDialog.tsx` — Web mood entry dialog (3 periods × 3 stats)
+- `artifacts/lunar-mood/src/components/layout/AppLayout.tsx` — Web layout with sidebar (desktop) and bottom nav (mobile)
+- `artifacts/lunar-mood/src/lib/i18n.tsx` — Web i18n system (EN/FR, localStorage)
 
 ## TypeScript & Composite Projects
 
