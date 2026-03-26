@@ -3,11 +3,12 @@ import { useTranslation } from "@/lib/i18n"
 import { Card, CardContent } from "@/components/ui/card"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { format } from "date-fns"
+import { fr } from "date-fns/locale"
 import { getMoodEmoji } from "@/lib/utils"
 import { motion } from "framer-motion"
 
 export default function Dashboard() {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const { data: user } = useGetMe()
   
   const today = new Date()
@@ -32,7 +33,7 @@ export default function Dashboard() {
     waning_crescent: "phaseWaningCrescent",
   }
 
-  const phaseLabel = currentPhase ? t(phaseNames[currentPhase.phase] as any) || currentPhase.phase.replace("_", " ") : "..."
+  const phaseLabel = currentPhase ? t(phaseNames[currentPhase.phase]) || currentPhase.phase.replace("_", " ") : "..."
 
   return (
     <AppLayout>
@@ -42,7 +43,7 @@ export default function Dashboard() {
             {t("hello")}, <span className="cosmic-gradient-text">{user?.username}</span>
           </h1>
           <p className="text-muted-foreground mt-2 text-lg">
-            {format(today, "EEEE, MMMM do")}
+            {format(today, "EEEE, d MMMM", { locale: language === "fr" ? fr : undefined })}
           </p>
         </header>
 
@@ -95,7 +96,7 @@ export default function Dashboard() {
                           {entry ? getMoodEmoji(entry.mood) : "—"}
                         </div>
                         <div>
-                          <p className="font-medium capitalize">{t(period as any)}</p>
+                          <p className="font-medium capitalize">{t(period)}</p>
                           {entry && (
                             <p className="text-xs text-muted-foreground mt-1 truncate max-w-[120px]">
                               {entry.note || ""}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { useCreateMood, useUpdateMood, useDeleteMood } from "@workspace/api-client-react"
+import type { MoodEntry } from "@workspace/api-client-react"
 import { useTranslation } from "@/lib/i18n"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,7 +17,7 @@ export function MoodDialog({
   onClose 
 }: { 
   date: string, 
-  existingEntries: any[], 
+  existingEntries: MoodEntry[], 
   onClose: () => void 
 }) {
   const { t } = useTranslation()

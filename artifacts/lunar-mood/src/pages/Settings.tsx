@@ -41,7 +41,7 @@ export default function Settings() {
               </div>
               <div>
                 <h3 className="text-xl font-bold">{user?.username}</h3>
-                <p className="text-muted-foreground text-sm">Astronaut</p>
+                <p className="text-muted-foreground text-sm">{t("astronaut")}</p>
               </div>
             </div>
 

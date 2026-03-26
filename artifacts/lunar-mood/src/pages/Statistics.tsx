@@ -52,18 +52,18 @@ export default function Statistics() {
 
   const formattedPhaseData = stats.byPhase.map(p => ({
     ...p,
-    name: `${phaseEmojis[p.phase] || ""} ${t(phaseTranslations[p.phase] as any) || p.phase}`,
+    name: `${phaseEmojis[p.phase] || ""} ${t(phaseTranslations[p.phase]) || p.phase}`,
     mood: p.avgMood,
     energy: p.avgEnergy,
     conso: p.avgConsumption
   }))
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ color: string; name: string; value: number }>; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-popover/90 backdrop-blur border border-white/10 p-3 rounded-lg shadow-xl">
           <p className="font-bold mb-2">{label}</p>
-          {payload.map((p: any, i: number) => (
+          {payload.map((p, i) => (
             <p key={i} style={{ color: p.color }} className="text-sm">
               {p.name}: {p.value}
             </p>

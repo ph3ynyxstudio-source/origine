@@ -35,8 +35,8 @@ export default function Login() {
         await loginMutation.mutateAsync({ data: { username, password } })
       }
       setLocation("/dashboard")
-    } catch (err: any) {
-      setError(err?.response?.data?.error || t("somethingWentWrong"))
+    } catch {
+      setError(t("somethingWentWrong"))
     }
   }
 

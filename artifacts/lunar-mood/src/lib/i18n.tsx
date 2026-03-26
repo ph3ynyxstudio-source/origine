@@ -78,6 +78,7 @@ const translations = {
     fri: "Fri",
     sat: "Sat",
     logged: "logged",
+    astronaut: "Astronaut",
   },
   fr: {
     home: "Accueil",
@@ -154,13 +155,14 @@ const translations = {
     fri: "Ven",
     sat: "Sam",
     logged: "enregistrées",
+    astronaut: "Astronaute",
   },
 };
 
 type Translations = typeof translations.en;
 
 interface I18nContextType {
-  t: (key: keyof Translations) => string;
+  t: (key: keyof Translations | string) => string;
   language: Language;
   setLanguage: (lang: Language) => void;
 }
@@ -182,8 +184,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("app_language", lang);
   };
 
-  const t = (key: keyof Translations): string => {
-    return translations[language][key] || translations.en[key] || key;
+  const t = (key: keyof Translations | string): string => {
+    const k = key as keyof Translations;
+    return translations[language][k] || translations.en[k] || key;
   };
 
   return (
