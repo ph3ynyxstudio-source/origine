@@ -1,16 +1,14 @@
-import { useLocation } from "wouter"
 import { useGetMe, useLogout } from "@workspace/api-client-react"
-import { useTranslation, Language } from "@/lib/i18n"
+import { useTranslation } from "@/lib/i18n"
 import { AppLayout } from "@/components/layout/AppLayout"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { MoonStar, LogOut, Globe, AppWindow } from "lucide-react"
+import { MoonStar, LogOut, Globe } from "lucide-react"
 
 export default function Settings() {
   const { t, language, setLanguage } = useTranslation()
   const { data: user } = useGetMe()
   const logoutMutation = useLogout()
-  const [, setLocation] = useLocation()
 
   const handleLogout = async () => {
     try {

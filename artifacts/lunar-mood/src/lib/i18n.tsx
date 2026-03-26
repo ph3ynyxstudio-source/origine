@@ -79,6 +79,7 @@ const translations = {
     sat: "Sat",
     logged: "logged",
     astronaut: "Astronaut",
+    pageNotFound: "This page doesn't exist",
   },
   fr: {
     home: "Accueil",
@@ -156,6 +157,7 @@ const translations = {
     sat: "Sam",
     logged: "enregistrées",
     astronaut: "Astronaute",
+    pageNotFound: "Cette page n'existe pas",
   },
 };
 

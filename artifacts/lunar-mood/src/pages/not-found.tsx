@@ -8,7 +8,7 @@ export default function NotFound() {
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-background text-foreground p-4">
       <MoonStar className="w-16 h-16 text-primary/40 mb-6" />
       <h1 className="text-4xl font-display font-bold text-white mb-4">404</h1>
-      <p className="text-muted-foreground text-lg mb-8">{t("notLogged")}</p>
+      <p className="text-muted-foreground text-lg mb-8">{t("pageNotFound")}</p>
       <Link href="/dashboard" className="text-primary hover:text-accent transition-colors font-medium">
         {t("home")}
       </Link>
