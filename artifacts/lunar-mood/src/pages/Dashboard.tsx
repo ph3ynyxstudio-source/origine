@@ -19,8 +19,25 @@ export default function Dashboard() {
   const { data: phases } = useGetLunarPhases({ month: currentMonth, year: currentYear })
   const { data: moods } = useListMoods({ month: currentMonth, year: currentYear })
 
-  const currentPhase = phases?.find(p => p.date === dateString) || phases?.[0]
-  const todaysMoods = moods?.filter(m => m.date === dateString) || []
+  const phaseList = Array.isArray(phases)
+    ? phases
+    : Array.isArray((phases as any)?.data)
+      ? (phases as any).data
+      : Array.isArray((phases as any)?.items)
+        ? (phases as any).items
+        : []
+  
+  const moodList = Array.isArray(moods)
+    ? moods
+    : Array.isArray((moods as any)?.data)
+      ? (moods as any).data
+      : Array.isArray((moods as any)?.items)
+        ? (moods as any).items
+        : []
+  
+  const currentPhase = phaseList.find((p: any) => p.date === dateString) || phaseList[0]
+  const todaysMoods = moodList.filter((m: any) => m.date === dateString)
+
 
   const phaseNames: Record<string, string> = {
     new_moon: "phaseNewMoon",
@@ -81,8 +98,8 @@ export default function Dashboard() {
               </h3>
               
               <div className="flex-1 flex flex-col gap-4">
-                {["morning", "afternoon", "evening"].map((period) => {
-                  const entry = todaysMoods.find(m => m.period === period)
+              {(["morning", "afternoon", "evening"] as const).map((period) => {
+                  const entry = todaysMoods.find((m: any) => m.period === period)
                   const periodColors: Record<string, string> = {
                     morning: "bg-[hsl(var(--period-morning))]/20 text-[hsl(var(--period-morning))]",
                     afternoon: "bg-[hsl(var(--period-afternoon))]/20 text-[hsl(var(--period-afternoon))]",

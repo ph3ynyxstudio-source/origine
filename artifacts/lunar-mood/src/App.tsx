@@ -1,17 +1,17 @@
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { Toaster } from "@/components/ui/toaster"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { I18nProvider } from "@/lib/i18n"
+import { Toaster } from "./components/ui/toaster"
+import { TooltipProvider } from "./components/ui/tooltip"
+import { I18nProvider } from "./lib/i18n"
 import { useGetMe } from "@workspace/api-client-react"
 import { useEffect, useRef } from "react"
 
 // Pages
-import Login from "@/pages/Login"
-import Dashboard from "@/pages/Dashboard"
-import Calendar from "@/pages/Calendar"
-import Statistics from "@/pages/Statistics"
-import Settings from "@/pages/Settings"
+import Login from "./pages/Login"
+import Dashboard from "./pages/Dashboard"
+import Calendar from "./pages/Calendar"
+import Statistics from "./pages/Statistics"
+import Settings from "./pages/Settings"
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -18,6 +18,7 @@ export default function Calendar() {
   
   const { data: moods } = useListMoods({ month, year })
   const { data: phases } = useGetLunarPhases({ month, year })
+  const moodList = Array.isArray(moods) ? moods : [];
 
   const daysInMonth = getDaysInMonth(currentDate)
   const firstDayOfMonth = getDay(startOfMonth(currentDate))
@@ -35,7 +36,16 @@ export default function Calendar() {
     afternoon: "bg-[hsl(var(--period-afternoon))]",
     evening: "bg-[hsl(var(--period-evening))]",
   }
-
+  const phaseIcons: Record<string, string> = {
+    new_moon: "🌑",
+    waxing_crescent: "🌒",
+    first_quarter: "🌓",
+    waxing_gibbous: "🌔",
+    full_moon: "🌕",
+    waning_gibbous: "🌖",
+    last_quarter: "🌗",
+    waning_crescent: "🌘",
+  }
   return (
     <AppLayout>
       <div className="pt-4 space-y-6">
@@ -76,8 +86,9 @@ export default function Calendar() {
             ))}
             
             {days.map((dateStr) => {
-              const dayMoods = moods?.filter(m => m.date === dateStr) || []
+              const dayMoods = moodList.filter(m => m.date === dateStr) || []
               const phase = phases?.find(p => p.date === dateStr)
+              const illumination = Math.round((phase?.illumination || 0) * 100)
               const dayNum = parseInt(dateStr.split('-')[2])
               const isToday = dateStr === format(new Date(), "yyyy-MM-dd")
 
@@ -88,15 +99,20 @@ export default function Calendar() {
                   className={`relative aspect-square rounded-lg sm:rounded-2xl border transition-all flex flex-col items-center justify-center p-0.5 sm:p-1 hover:scale-105
                     ${isToday ? 'border-primary bg-primary/10 shadow-[0_0_20px_rgba(124,106,250,0.2)]' : 'border-white/5 bg-white/5 hover:border-white/20 hover:bg-white/10'}`}
                 >
-                  <span className={`text-xs sm:text-sm font-medium ${isToday ? 'text-primary' : 'text-foreground'}`}>
-                    {dayNum}
-                  </span>
+               <span className={`absolute bottom-1 sm:bottom-1.5 z-10 px-1 rounded-full text-[10px] sm:text-xs font-medium shadow-[0_0_8px_rgba(0,0,0,0.55)] ${isToday ? 'text-primary bg-black/40' : 'text-white bg-black/45'}`}>
+  {dayNum}
+</span>
                   
                   {phase && (
-                    <span className="absolute top-1 right-1 text-xs opacity-60 pointer-events-none">
-                      {phase.emoji}
-                    </span>
-                  )}
+  <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+    <div className="relative flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm shadow-[0_0_18px_rgba(168,139,250,0.35)]">
+      <span className="text-1g sm:text-xl leading-none drop-shadow-[0_0_10px_rgba(255,255,255,0.45)]">
+        {phase.emoji}
+      </span>
+    </div>
+  </div>
+)}
+                  
 
                   <div className="absolute bottom-1 sm:bottom-2 left-0 right-0 flex justify-center gap-0.5 sm:gap-1">
                     {["morning", "afternoon", "evening"].map((period) => {

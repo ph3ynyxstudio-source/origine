@@ -17,7 +17,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   ]
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-background">
+    <div className="min-h-screen flex flex-col md:flex-row bg-background relative overflow-hidden">
+      <img
+  src={`${import.meta.env.BASE_URL}images/cosmic-bg.png`}
+  alt="Cosmic Background"
+  className="absolute inset-0 w-full h-full object-cover opacity-40 pointer-events-none"
+/>
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex w-64 flex-col border-r border-white/5 glass-panel z-10 rounded-none h-screen fixed left-0 top-0">
         <div className="p-6 flex items-center gap-3">
