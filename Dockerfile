@@ -14,10 +14,10 @@ COPY . .
 RUN pnpm install
 
 # 6. Build du serveur
-RUN pnpm --filter api-server build
+RUN pnpm --filter @workspace/api-server build
 
 # 7. Port utilisé par Google Cloud
 EXPOSE 8080
 
 # 8. Lancement
-CMD ["pnpm", "--filter", "api-server", "start"]
+CMD ["pnpm", "--filter", "@workspace/api-server", "start"]
