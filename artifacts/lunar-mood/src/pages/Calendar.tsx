@@ -8,6 +8,13 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { MoodDialog } from "./MoodDialog"
 
+type LunarPhaseDay = {
+  date: string
+  phase: string
+  illumination: number
+  emoji: string
+}
+
 export default function Calendar() {
   const { t, language } = useTranslation()
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -18,7 +25,14 @@ export default function Calendar() {
   
   const { data: moods } = useListMoods({ month, year })
   const { data: phases } = useGetLunarPhases({ month, year })
-  const moodList = Array.isArray(moods) ? moods : [];
+  const moodList = Array.isArray(moods) ? moods : []
+  const phaseList: LunarPhaseDay[] = Array.isArray(phases)
+    ? phases
+    : Array.isArray((phases as { data?: LunarPhaseDay[] } | undefined)?.data)
+      ? (phases as { data: LunarPhaseDay[] }).data
+      : Array.isArray((phases as { items?: LunarPhaseDay[] } | undefined)?.items)
+        ? (phases as { items: LunarPhaseDay[] }).items
+        : []
 
   const daysInMonth = getDaysInMonth(currentDate)
   const firstDayOfMonth = getDay(startOfMonth(currentDate))
@@ -86,8 +100,8 @@ export default function Calendar() {
             ))}
             
             {days.map((dateStr) => {
-              const dayMoods = moodList.filter(m => m.date === dateStr) || []
-              const phase = phases?.find(p => p.date === dateStr)
+              const dayMoods = moodList.filter(m => m.date === dateStr)
+              const phase = phaseList.find(p => p.date === dateStr)
               const illumination = Math.round((phase?.illumination || 0) * 100)
               const dayNum = parseInt(dateStr.split('-')[2])
               const isToday = dateStr === format(new Date(), "yyyy-MM-dd")
@@ -142,7 +156,7 @@ export default function Calendar() {
         {selectedDateStr && (
           <MoodDialog 
             date={selectedDateStr} 
-            existingEntries={moods?.filter(m => m.date === selectedDateStr) || []}
+            existingEntries={moodList.filter(m => m.date === selectedDateStr)}
             onClose={() => setSelectedDateStr(null)}
           />
         )}
