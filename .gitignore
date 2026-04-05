@@ -99,3 +99,12 @@ Thumbs.db
 .local/
 ..env
 artifacts/api-server/.env
+Vite dev logs
+artifacts/lunar-mood/.vite-dev.err
+artifacts/lunar-mood/.vite-dev.log
+
+# API server dist
+artifacts/api-server/dist/
+
+# Temp files
+_tmp_*
