@@ -26,6 +26,7 @@ node_modules
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+.idx/
 
 # misc
 /.sass-cache
@@ -47,6 +48,20 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+.env
+
+# Environment variables per artifact
+artifacts/api-server/.env
+
+# Vite dev logs
+artifacts/lunar-mood/.vite-dev.err
+artifacts/lunar-mood/.vite-dev.log
+
+# API server dist
+artifacts/api-server/dist/
+
+# Temp files
+_tmp_*
 
 .vscode/
 .idx/

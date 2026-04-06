@@ -1,170 +1,157 @@
-import { useGetStats } from "@workspace/api-client-react"
-import { useTranslation } from "@/lib/i18n"
-import { AppLayout } from "@/components/layout/AppLayout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from "recharts"
+import { AppLayout } from "@/components/layout/AppLayout";
+import { getMonthEntries } from "../data/storage";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
+
+const PHASES = [
+  { key: "new_moon", emoji: "🌑", label: "Nouvelle Lune" },
+  { key: "waxing_crescent", emoji: "🌒", label: "Croissant" },
+  { key: "first_quarter", emoji: "🌓", label: "1er Quartier" },
+  { key: "waxing_gibbous", emoji: "🌔", label: "Gibbeuse +" },
+  { key: "full_moon", emoji: "🌕", label: "Pleine Lune" },
+  { key: "waning_gibbous", emoji: "🌖", label: "Gibbeuse -" },
+  { key: "last_quarter", emoji: "🌗", label: "Der. Quartier" },
+  { key: "waning_crescent", emoji: "🌘", label: "Décroissant" },
+];
 
 export default function Statistics() {
-  const { t } = useTranslation()
-  const { data: stats, isLoading } = useGetStats()
+  const today = new Date();
+  const entries = getMonthEntries(today.getFullYear(), today.getMonth());
 
-  if (isLoading) {
+  if (entries.length === 0) {
     return (
       <AppLayout>
-        <div className="h-full flex items-center justify-center pt-32">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+        <div
+          style={{
+            padding: "32px",
+            color: "white",
+            textAlign: "center",
+            opacity: 0.5,
+          }}
+        >
+          <p style={{ fontSize: "20px" }}>Aucune donnée encore</p>
+          <p style={{ fontSize: "14px", marginTop: "8px" }}>
+            Commence à enregistrer tes humeurs !
+          </p>
         </div>
       </AppLayout>
-    )
+    );
   }
 
-  if (!stats || stats.totalEntries === 0) {
-    return (
-      <AppLayout>
-        <div className="h-full flex flex-col items-center justify-center pt-32 text-center">
-          <h2 className="text-2xl font-bold text-muted-foreground">{t("noDataYet")}</h2>
-        </div>
-      </AppLayout>
-    )
-  }
+  const phaseData = PHASES.map((p) => {
+    const phaseEntries = entries.filter((e) => e.moonPhase === p.key);
+    if (!phaseEntries.length)
+      return { name: p.emoji, emotion: 0, energy: 0, conso: 0 };
 
-  const phaseEmojis: Record<string, string> = {
-    new_moon: "🌑",
-    waxing_crescent: "🌒",
-    first_quarter: "🌓",
-    waxing_gibbous: "🌔",
-    full_moon: "🌕",
-    waning_gibbous: "🌖",
-    last_quarter: "🌗",
-    waning_crescent: "🌘",
-  }
-
-  const phaseTranslations: Record<string, string> = {
-    new_moon: "phaseNewMoon",
-    waxing_crescent: "phaseWaxingCrescent",
-    first_quarter: "phaseFirstQuarter",
-    waxing_gibbous: "phaseWaxingGibbous",
-    full_moon: "phaseFullMoon",
-    waning_gibbous: "phaseWaningGibbous",
-    last_quarter: "phaseLastQuarter",
-    waning_crescent: "phaseWaningCrescent",
-  }
-
-  const formattedPhaseData = stats.byPhase.map(p => ({
-    ...p,
-    name: `${phaseEmojis[p.phase] || ""} ${t(phaseTranslations[p.phase]) || p.phase}`,
-    mood: p.avgMood,
-    energy: p.avgEnergy,
-    conso: p.avgConsumption
-  }))
-
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ color: string; name: string; value: number }>; label?: string }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-popover/90 backdrop-blur border border-white/10 p-3 rounded-lg shadow-xl">
-          <p className="font-bold mb-2">{label}</p>
-          {payload.map((p, i) => (
-            <p key={i} style={{ color: p.color }} className="text-sm">
-              {p.name}: {p.value}
-            </p>
-          ))}
-        </div>
+    const avg = (key: "emotion" | "energy" | "consumption") => {
+      const vals = phaseEntries.flatMap((e) =>
+        Object.values(e.moments)
+          .map((m) => (m as any)?.[key] ?? null)
+          .filter((v): v is number => v !== null),
       );
-    }
-    return null;
-  };
+      return vals.length
+        ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
+        : 0;
+    };
+
+    return {
+      name: p.emoji,
+      emotion: avg("emotion"),
+      energy: avg("energy"),
+      conso: avg("consumption"),
+    };
+  });
 
   return (
     <AppLayout>
-      <div className="pt-4 space-y-8">
-        <header>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-white mb-2">
-            {t("statistics")}
-          </h1>
-          <p className="text-muted-foreground">{stats.totalEntries} {t("entries")} {t("logged")}</p>
-        </header>
+      <div style={{ padding: "16px", color: "white" }}>
+        <h1
+          style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "4px" }}
+        >
+          Statistiques
+        </h1>
+        <p style={{ opacity: 0.5, marginBottom: "24px" }}>
+          {entries.length} entrées ce mois
+        </p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("emotionByPhase")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[250px] sm:h-[300px] w-full -ml-2 sm:ml-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={formattedPhaseData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{fontSize: 9}} interval={0} angle={-45} textAnchor="end" height={70} />
-                    <YAxis stroke="rgba(255,255,255,0.3)" domain={[0, 5]} ticks={[1,2,3,4,5]} tick={{fontSize: 10}} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="mood" name={t("emotion")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("energyByPhase")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[250px] sm:h-[300px] w-full -ml-2 sm:ml-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={formattedPhaseData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{fontSize: 9}} interval={0} angle={-45} textAnchor="end" height={70} />
-                    <YAxis stroke="rgba(255,255,255,0.3)" domain={[0, 100]} tick={{fontSize: 10}} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="energy" name={t("energy")} fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("consumptionByPhase")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[250px] sm:h-[300px] w-full -ml-2 sm:ml-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={formattedPhaseData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" tick={{fontSize: 9}} interval={0} angle={-45} textAnchor="end" height={70} />
-                    <YAxis stroke="rgba(255,255,255,0.3)" domain={[0, 5]} ticks={[0,1,2,3,4,5]} tick={{fontSize: 10}} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Bar dataKey="conso" name={t("conso")} fill="hsl(0, 84%, 60%)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+        <div
+          style={{
+            background: "rgba(255,255,255,0.07)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: "16px",
+            padding: "20px",
+            marginBottom: "16px",
+          }}
+        >
+          <p style={{ marginBottom: "16px", opacity: 0.7 }}>
+            Émotion par phase lunaire
+          </p>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={phaseData}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.05)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="name"
+                stroke="rgba(255,255,255,0.3)"
+                tick={{ fontSize: 14 }}
+              />
+              <YAxis
+                stroke="rgba(255,255,255,0.3)"
+                domain={[0, 5]}
+                tick={{ fontSize: 10 }}
+              />
+              <Tooltip />
+              <Bar dataKey="emotion" fill="#a78bfa" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("monthlyTrends")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px] sm:h-[350px] w-full -ml-2 sm:ml-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={stats.monthlyTrends} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="month" stroke="rgba(255,255,255,0.3)" />
-                  <YAxis yAxisId="left" stroke="rgba(255,255,255,0.3)" domain={[0, 5]} />
-                  <YAxis yAxisId="right" orientation="right" stroke="rgba(255,255,255,0.3)" domain={[0, 100]} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Line yAxisId="left" type="monotone" dataKey="avgMood" name={t("emotion")} stroke="hsl(var(--primary))" strokeWidth={3} dot={{r: 4, fill: "hsl(var(--primary))"}} />
-                  <Line yAxisId="left" type="monotone" dataKey="avgConsumption" name={t("conso")} stroke="hsl(0, 84%, 60%)" strokeWidth={3} dot={{r: 4}} />
-                  <Line yAxisId="right" type="monotone" dataKey="avgEnergy" name={t("energy")} stroke="hsl(var(--accent))" strokeWidth={3} dot={{r: 4}} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <div
+          style={{
+            background: "rgba(255,255,255,0.07)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: "16px",
+            padding: "20px",
+          }}
+        >
+          <p style={{ marginBottom: "16px", opacity: 0.7 }}>
+            Énergie par phase lunaire
+          </p>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={phaseData}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.05)"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="name"
+                stroke="rgba(255,255,255,0.3)"
+                tick={{ fontSize: 14 }}
+              />
+              <YAxis
+                stroke="rgba(255,255,255,0.3)"
+                domain={[0, 5]}
+                tick={{ fontSize: 10 }}
+              />
+              <Tooltip />
+              <Bar dataKey="energy" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </AppLayout>
-  )
+  );
 }
