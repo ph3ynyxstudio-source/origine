@@ -62,3 +62,6 @@ artifacts/api-server/dist/
 
 # Temp files
 _tmp_*
+
+.vscode/
+.idx/
