@@ -5,17 +5,9 @@ import { fr } from "date-fns/locale";
 import { getMoonPhase } from "../data/moon";
 import { getDayEntry } from "../data/storage";
 import { formatDate } from "../data/calendar";
+import { getMoonPhaseIcon } from "@/components/getMoonPhaseIcon";
 
-const MOON_EMOJIS: Record<string, string> = {
-  new_moon: "🌑",
-  waxing_crescent: "🌒",
-  first_quarter: "🌓",
-  waxing_gibbous: "🌔",
-  full_moon: "🌕",
-  waning_gibbous: "🌖",
-  last_quarter: "🌗",
-  waning_crescent: "🌘",
-};
+type MetricKey = "emotion" | "energy" | "consumption";
 
 const PHASE_LABELS: Record<string, string> = {
   new_moon: "Nouvelle Lune",
@@ -28,6 +20,102 @@ const PHASE_LABELS: Record<string, string> = {
   waning_crescent: "Croissant Décroissant",
 };
 
+function metricToPercent(value: number | null): number {
+  if (value === null) return 0;
+  return value * 20;
+}
+
+function getAverageMetric(
+  entry: ReturnType<typeof getDayEntry>,
+  key: MetricKey,
+): number | null {
+  if (!entry) return null;
+
+  const values = Object.values(entry.moments)
+    .map((moment) => moment?.[key] ?? null)
+    .filter((value) => value !== null) as number[];
+
+  if (!values.length) return null;
+
+  return Math.round(
+    values.reduce((sum, value) => sum + value, 0) / values.length,
+  ) as 1 | 2 | 3 | 4 | 5;
+}
+
+function getEmotionLabel(value: number | null): string {
+  if (value === null) return "Non enregistré";
+  if (value <= 1) return "Très bas";
+  if (value <= 2) return "Bas";
+  if (value <= 3) return "Stable";
+  if (value <= 4) return "Bien";
+  return "Très bien";
+}
+
+function getEnergyLabel(value: number | null): string {
+  if (value === null) return "Non enregistré";
+  if (value <= 1) return "Très faible";
+  if (value <= 2) return "Faible";
+  if (value <= 3) return "Douce";
+  if (value <= 4) return "Bonne";
+  return "Élevée";
+}
+
+function getInsightText(
+  emotion: number | null,
+  energy: number | null,
+  hasEntry: boolean,
+): string {
+  if (!hasEntry) {
+    return "Aucune donnée aujourd’hui. Entre un moment pour commencer à faire émerger tes tendances.";
+  }
+
+  if (emotion === null && energy === null) {
+    return "Quelques éléments sont encore absents aujourd’hui. Une seule entrée suffit déjà à commencer ton suivi.";
+  }
+
+  if (emotion !== null && energy !== null) {
+    if (emotion >= 4 && energy >= 4) {
+      return "Ta journée semble assez alignée : ton humeur et ton énergie sont toutes les deux hautes.";
+    }
+
+    if (emotion >= 4 && energy < 3) {
+      return "Ton humeur reste bonne, même si ton énergie semble plus basse. Peut-être une journée émotionnellement stable, mais exigeante.";
+    }
+
+    if (emotion < 3 && energy >= 4) {
+      return "Tu sembles avoir de l’énergie, mais un ressenti plus lourd. Ça peut signaler une agitation intérieure malgré un bon élan.";
+    }
+
+    if (emotion < 3 && energy < 3) {
+      return "Humeur et énergie paraissent plus basses aujourd’hui. Ce serait une bonne journée pour ralentir et observer sans pression.";
+    }
+  }
+
+  if (emotion !== null) {
+    return "Ton humeur du jour commence à dessiner une tendance. Continue doucement pour voir ce qui revient le plus souvent.";
+  }
+
+  return "Ton niveau d’énergie du jour donne déjà un premier signal utile. Quelques entrées de plus rendront le tableau plus parlant.";
+}
+
+const cardStyle: React.CSSProperties = {
+  background: "rgba(26,35,74,0.12)",
+  backdropFilter: "blur(25px)",
+  WebkitBackdropFilter: "blur(16px)",
+  border: "1px solid rgba(126,235,255,0.08)",
+  borderRadius: "24px",
+  boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
+};
+
+const progressTrackStyle: React.CSSProperties = {
+  width: "100%",
+  height: "10px",
+  borderRadius: "999px",
+  background: "rgba(255,255,255,0.08)",
+  overflow: "hidden",
+  marginTop: "12px",
+};
+
 export default function Dashboard() {
   const { language } = useTranslation();
   const today = new Date();
@@ -35,102 +123,144 @@ export default function Dashboard() {
   const moonPhase = getMoonPhase(today);
   const entry = getDayEntry(dateStr);
 
-  const periods = [
-    { key: "morning", label: "Matin", color: "#f59e0b" },
-    { key: "midday", label: "Midi", color: "#60a5fa" },
-    { key: "evening", label: "Soir", color: "#a78bfa" },
-  ];
+  const MoonIcon = getMoonPhaseIcon(moonPhase);
+
+  const emotionValue = getAverageMetric(entry, "emotion");
+  const energyValue = getAverageMetric(entry, "energy");
+
+  const emotionLabel = getEmotionLabel(emotionValue);
+  const energyLabel = getEnergyLabel(energyValue);
+  const insightText = getInsightText(emotionValue, energyValue, Boolean(entry));
 
   return (
     <AppLayout>
-      <div style={{ padding: "16px", color: "white" }}>
+      <div style={{ padding: "16px", color: "#EAF4FF" }}>
         <h1
-          style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "4px" }}
-        >
-          Bonjour 🌙
+          style={{
+            fontSize: "24px",
+            fontWeight: "bold",
+            marginBottom: "4px",
+          }}>
+          Bonjour
         </h1>
+
         <p style={{ opacity: 0.6, marginBottom: "24px" }}>
           {format(today, "EEEE, d MMMM", {
             locale: language === "fr" ? fr : undefined,
           })}
         </p>
 
-        {/* Phase lunaire */}
         <div
           style={{
-            background: "rgba(255,255,255,0.07)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: "16px",
+            ...cardStyle,
             padding: "24px",
             textAlign: "center",
             marginBottom: "16px",
-          }}
-        >
-          <span style={{ fontSize: "64px" }}>{MOON_EMOJIS[moonPhase]}</span>
+          }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: "8px",
+              filter: "drop-shadow(0 0 4px rgba(126, 235, 255, 0.001))",
+            }}>
+            <MoonIcon className="w-20 h-20 text-[#ddebfa75]" />
+          </div>
+
           <p
             style={{
               fontSize: "11px",
               opacity: 0.6,
               letterSpacing: "2px",
               marginTop: "8px",
-            }}
-          >
+              marginBottom: "4px",
+            }}>
             PHASE ACTUELLE
           </p>
-          <p style={{ fontSize: "22px", fontWeight: "bold", marginTop: "4px" }}>
+
+          <p
+            style={{
+              fontSize: "22px",
+              fontWeight: "bold",
+              marginTop: "4px",
+            }}>
             {PHASE_LABELS[moonPhase]}
           </p>
         </div>
 
-        {/* Aujourd'hui */}
         <div
           style={{
-            background: "rgba(255,255,255,0.07)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: "16px",
+            ...cardStyle,
             padding: "20px",
-          }}
-        >
-          <p style={{ fontSize: "13px", opacity: 0.6, marginBottom: "12px" }}>
-            L'ORBITE D'AUJOURD'HUI
+            marginBottom: "16px",
+          }}>
+          <p style={{ fontSize: "13px", opacity: 0.6, marginBottom: "6px" }}>
+            HUMEUR DU JOUR
           </p>
-          {periods.map((p) => {
-            const moment =
-              entry?.moments?.[p.key as "morning" | "midday" | "evening"];
-            return (
-              <div
-                key={p.key}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "12px",
-                  borderRadius: "10px",
-                  background: "rgba(255,255,255,0.05)",
-                  marginBottom: "8px",
-                }}
-              >
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "12px" }}
-                >
-                  <div
-                    style={{
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "50%",
-                      background: p.color,
-                    }}
-                  />
-                  <span>{p.label}</span>
-                </div>
-                <span style={{ opacity: 0.5, fontSize: "13px" }}>
-                  {moment ? `😊 ${moment.emotion ?? "-"}` : "Non enregistré"}
-                </span>
-              </div>
-            );
-          })}
+          <p style={{ fontSize: "20px", fontWeight: "bold", margin: 0 }}>
+            {emotionValue !== null ? `${metricToPercent(emotionValue)}%` : "--"}
+          </p>
+          <p style={{ opacity: 0.7, marginTop: "4px", marginBottom: 0 }}>
+            {emotionLabel}
+          </p>
+
+          <div style={progressTrackStyle}>
+            <div
+              style={{
+                width: `${metricToPercent(emotionValue)}%`,
+                height: "100%",
+                borderRadius: "999px",
+                background:
+                  "linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%)",
+              }}
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            ...cardStyle,
+            padding: "20px",
+            marginBottom: "16px",
+          }}>
+          <p style={{ fontSize: "13px", opacity: 0.6, marginBottom: "6px" }}>
+            ÉNERGIE
+          </p>
+          <p style={{ fontSize: "20px", fontWeight: "bold", margin: 0 }}>
+            {energyValue !== null ? `${metricToPercent(energyValue)}%` : "--"}
+          </p>
+          <p style={{ opacity: 0.7, marginTop: "4px", marginBottom: 0 }}>
+            {energyLabel}
+          </p>
+
+          <div style={progressTrackStyle}>
+            <div
+              style={{
+                width: `${metricToPercent(energyValue)}%`,
+                height: "100%",
+                borderRadius: "999px",
+                background: "linear-gradient(90deg, #7EEBFF 0%, #B78CFF 100%)",
+              }}
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            ...cardStyle,
+            padding: "20px",
+          }}>
+          <p style={{ fontSize: "13px", opacity: 0.6, marginBottom: "10px" }}>
+            INSIGHT
+          </p>
+          <p
+            style={{
+              margin: 0,
+              lineHeight: 1.6,
+              color: "rgba(234,244,255,0.88)",
+            }}>
+            {insightText}
+          </p>
         </div>
       </div>
     </AppLayout>

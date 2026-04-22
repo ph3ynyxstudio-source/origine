@@ -10,7 +10,7 @@ export type MoonPhase =
 
 export type MomentKey = "morning" | "midday" | "evening";
 
-export type MetricValue = 1 | 2 | 3 | 4 | 5 | null;
+export type MetricValue = number | null;
 
 export type MomentEntry = {
   emotion: MetricValue;

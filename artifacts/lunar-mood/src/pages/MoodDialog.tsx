@@ -16,6 +16,23 @@ const MOMENT_LABELS: Record<MomentKey, string> = {
   evening: "Soir",
 };
 
+function metricLabel(value: number): string {
+  return `${value * 20}%`;
+}
+function metricToPercent(value: number | null): number {
+  if (value === null) return 0;
+  return value * 20;
+}
+
+function percentToMetric(value: number): 1 | 2 | 3 | 4 | 5 {
+  if (value <= 20) return 1;
+  if (value <= 40) return 2;
+  if (value <= 60) return 3;
+  if (value <= 80) return 4;
+  return 5;
+}
+
+const newLocal = "}";
 export function MoodDialog({ date, onClose }: Props) {
   const existing = getDayEntry(date);
   const [activeMoment, setActiveMoment] = useState<MomentKey>("morning");
@@ -43,6 +60,7 @@ export function MoodDialog({ date, onClose }: Props) {
       moments,
       updatedAt: Date.now(),
     };
+
     saveDayEntry(entry);
     onClose();
   }
@@ -58,8 +76,7 @@ export function MoodDialog({ date, onClose }: Props) {
         justifyContent: "center",
         background: "rgba(0,0,0,0.7)",
         backdropFilter: "blur(4px)",
-      }}
-    >
+      }}>
       <div
         style={{
           background: "#1a1a2e",
@@ -68,16 +85,15 @@ export function MoodDialog({ date, onClose }: Props) {
           width: "90%",
           maxWidth: "400px",
           color: "white",
-        }}
-      >
+        }}>
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             marginBottom: "16px",
-          }}
-        >
-          <h2 style={{ fontSize: "18px" }}>{date}</h2>
+          }}>
+          <h2 style={{ fontSize: "18px", margin: 0 }}>{date}</h2>
+
           <button
             onClick={onClose}
             style={{
@@ -86,13 +102,11 @@ export function MoodDialog({ date, onClose }: Props) {
               color: "white",
               cursor: "pointer",
               fontSize: "20px",
-            }}
-          >
+            }}>
             ✕
           </button>
         </div>
 
-        {/* Tabs moments */}
         <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
           {MOMENTS.map((m) => (
             <button
@@ -108,16 +122,15 @@ export function MoodDialog({ date, onClose }: Props) {
                   activeMoment === m ? "#7c3aed" : "rgba(255,255,255,0.1)",
                 color: "white",
                 fontWeight: activeMoment === m ? "bold" : "normal",
-              }}
-            >
+              }}>
               {MOMENT_LABELS[m]}
             </button>
           ))}
         </div>
 
-        {/* Émotion */}
         <div style={{ marginBottom: "16px" }}>
           <p style={{ marginBottom: "8px", opacity: 0.7 }}>Émotion</p>
+
           <div style={{ display: "flex", gap: "8px" }}>
             {([1, 2, 3, 4, 5] as MetricValue[]).map((v) => (
               <button
@@ -137,74 +150,93 @@ export function MoodDialog({ date, onClose }: Props) {
                   color: "white",
                   cursor: "pointer",
                   fontSize: "18px",
-                }}
-              >
+                }}>
                 {["😞", "😕", "😐", "🙂", "😊"][v! - 1]}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Énergie */}
         <div style={{ marginBottom: "16px" }}>
           <p style={{ marginBottom: "8px", opacity: 0.7 }}>Énergie</p>
-          <div style={{ display: "flex", gap: "8px" }}>
-            {([1, 2, 3, 4, 5] as MetricValue[]).map((v) => (
-              <button
-                key={v}
-                onClick={() => setMetric("energy", v)}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "8px",
-                  border: "2px solid",
-                  borderColor: current.energy === v ? "#60a5fa" : "transparent",
-                  background:
-                    current.energy === v
-                      ? "rgba(96,165,250,0.2)"
-                      : "rgba(255,255,255,0.05)",
-                  color: "white",
-                  cursor: "pointer",
-                }}
-              >
-                {v}
-              </button>
-            ))}
+
+          <input
+            type="range"
+            min="20"
+            max="100"
+            step="20"
+            value={metricToPercent(current.energy)}
+            onChange={(e) =>
+              setMetric("energy", percentToMetric(Number(e.target.value)))
+            }
+            style={{
+              width: "100%",
+              accentColor: "#7EEBFF",
+              cursor: "pointer",
+            }}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: "8px",
+              fontSize: "12px",
+              opacity: 0.7,
+            }}>
+            <span>20%</span>
+            <span>60%</span>
+            <span>100%</span>
           </div>
+
+          <p style={{ marginTop: "8px", fontWeight: "bold" }}>
+            {current.energy !== null
+              ? `${metricToPercent(current.energy)}%`
+              : "--"}
+          </p>
         </div>
 
-        {/* Consommation */}
         <div style={{ marginBottom: "16px" }}>
           <p style={{ marginBottom: "8px", opacity: 0.7 }}>Consommation</p>
-          <div style={{ display: "flex", gap: "8px" }}>
-            {([1, 2, 3, 4, 5] as MetricValue[]).map((v) => (
-              <button
-                key={v}
-                onClick={() => setMetric("consumption", v)}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "8px",
-                  border: "2px solid",
-                  borderColor:
-                    current.consumption === v ? "#f472b6" : "transparent",
-                  background:
-                    current.consumption === v
-                      ? "rgba(244,114,182,0.2)"
-                      : "rgba(255,255,255,0.05)",
-                  color: "white",
-                  cursor: "pointer",
-                }}
-              >
-                {v}
-              </button>
-            ))}
-          </div>
-        </div>
 
-        {/* Note */}
+          <input
+            type="range"
+            min="20"
+            max="100"
+            step="20"
+            value={metricToPercent(current.consumption)}
+            onChange={(e) =>
+              setMetric("consumption", percentToMetric(Number(e.target.value)))
+            }
+            style={{
+              width: "100%",
+              accentColor: "#B78CFF",
+              cursor: "pointer",
+            }}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: "8px",
+              fontSize: "12px",
+              opacity: 0.7,
+            }}>
+            <span>20%</span>
+            <span>60%</span>
+            <span>100%</span>
+          </div>
+
+          <p style={{ marginTop: "8px", fontWeight: "bold" }}>
+            {current.consumption !== null
+              ? `${metricToPercent(current.consumption)}%`
+              : "--"}
+          </p>
+        </div>
         <div style={{ marginBottom: "20px" }}>
           <p style={{ marginBottom: "8px", opacity: 0.7 }}>Note</p>
+
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -218,11 +250,11 @@ export function MoodDialog({ date, onClose }: Props) {
               color: "white",
               resize: "none",
               height: "60px",
+              boxSizing: "border-box",
             }}
           />
         </div>
 
-        {/* Actions */}
         <div style={{ display: "flex", gap: "8px" }}>
           <button
             onClick={onClose}
@@ -234,14 +266,14 @@ export function MoodDialog({ date, onClose }: Props) {
               border: "none",
               color: "white",
               cursor: "pointer",
-            }}
-          >
+            }}>
             Annuler
           </button>
+
           <button
             onClick={handleSave}
             style={{
-              flex: 2,
+              flex: 1,
               padding: "12px",
               borderRadius: "8px",
               background: "#7c3aed",
@@ -249,8 +281,7 @@ export function MoodDialog({ date, onClose }: Props) {
               color: "white",
               cursor: "pointer",
               fontWeight: "bold",
-            }}
-          >
+            }}>
             Sauvegarder
           </button>
         </div>

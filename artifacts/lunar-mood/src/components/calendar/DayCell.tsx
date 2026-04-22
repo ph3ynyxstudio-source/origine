@@ -1,4 +1,5 @@
 import { MoonPhase, MomentEntry } from "../../data/day-entry.types";
+import { getMoonPhaseIcon } from "../getMoonPhaseIcon";
 
 export type DayCellProps = {
   date: Date;
@@ -11,20 +12,6 @@ export type DayCellProps = {
   };
   onOpen: () => void;
 };
-
-function getMoonEmoji(phase: MoonPhase): string {
-  const map: Record<MoonPhase, string> = {
-    new_moon: "🌑",
-    waxing_crescent: "🌒",
-    first_quarter: "🌓",
-    waxing_gibbous: "🌔",
-    full_moon: "🌕",
-    waning_gibbous: "🌖",
-    last_quarter: "🌗",
-    waning_crescent: "🌘",
-  };
-  return map[phase];
-}
 
 function hasMomentEntry(moment?: MomentEntry): boolean {
   if (!moment) return false;
@@ -47,6 +34,7 @@ export function DayCell({
   moments,
   onOpen,
 }: DayCellProps) {
+  const MoonIcon = getMoonPhaseIcon(moonPhase);
   const morningFilled = hasMomentEntry(moments?.morning);
   const middayFilled = hasMomentEntry(moments?.midday);
   const eveningFilled = hasMomentEntry(moments?.evening);
@@ -72,7 +60,7 @@ export function DayCell({
       }}
     >
       <div>{date.getDate()}</div>
-      <div>{getMoonEmoji(moonPhase)}</div>
+      <MoonIcon className="h-5 w-5 text-slate-300/70" />
 
       <div style={{ display: "flex", gap: "3px" }}>
         <div

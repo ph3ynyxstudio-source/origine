@@ -16,14 +16,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <I18nProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <WouterRouter>
             <Switch>
               <Route path="/" component={Dashboard} />
               <Route path="/dashboard" component={Dashboard} />
-              <Route
-                path="/calendar"
-                component={() => <Calendar onDayOpen={() => {}} />}
-              />
+              <Route path="/calendar" component={Calendar} />
               <Route path="/statistics" component={Statistics} />
               <Route path="/settings" component={Settings} />
             </Switch>
