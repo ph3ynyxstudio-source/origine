@@ -70,20 +70,25 @@ export function MoodDialog({ date, onClose }: Props) {
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 50,
+        zIndex: 999,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         background: "rgba(0,0,0,0.7)",
         backdropFilter: "blur(4px)",
+        padding: "16px",
+        boxSizing: "border-box",
       }}>
       <div
         style={{
           background: "#1a1a2e",
           borderRadius: "16px",
-          padding: "24px",
+          padding: "28px",
+          boxSizing: "border-box",
           width: "90%",
           maxWidth: "400px",
+          maxHeight: "85vh",
+          overflowY: "auto",
           color: "white",
         }}>
         <div
@@ -130,30 +135,30 @@ export function MoodDialog({ date, onClose }: Props) {
 
         <div style={{ marginBottom: "16px" }}>
           <p style={{ marginBottom: "8px", opacity: 0.7 }}>Émotion</p>
+          <div style={{ marginBottom: "16px" }}>
+            <p style={{ marginBottom: "8px", opacity: 0.7 }}>Émotion</p>
 
-          <div style={{ display: "flex", gap: "8px" }}>
-            {([1, 2, 3, 4, 5] as MetricValue[]).map((v) => (
-              <button
-                key={v}
-                onClick={() => setMetric("emotion", v)}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  borderRadius: "8px",
-                  border: "2px solid",
-                  borderColor:
-                    current.emotion === v ? "#a78bfa" : "transparent",
-                  background:
-                    current.emotion === v
-                      ? "rgba(167,139,250,0.2)"
-                      : "rgba(255,255,255,0.05)",
-                  color: "white",
-                  cursor: "pointer",
-                  fontSize: "18px",
-                }}>
-                {["😞", "😕", "😐", "🙂", "😊"][v! - 1]}
-              </button>
-            ))}
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={current.emotion !== null ? current.emotion * 25 : 50}
+              onChange={(e) =>
+                setMetric(
+                  "emotion",
+                  Math.round(Number(e.target.value) / 25) as MetricValue,
+                )
+              }
+              style={{
+                width: "100%",
+                accentColor: "#7EEBFF",
+                cursor: "pointer",
+              }}
+            />
+
+            <p style={{ marginTop: "8px", fontWeight: "bold", color: "white" }}>
+              {current.emotion !== null ? current.emotion * 25 : 50}%
+            </p>
           </div>
         </div>
 

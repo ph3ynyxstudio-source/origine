@@ -6,6 +6,7 @@ import { getMoonPhase } from "../data/moon";
 import { getDayEntry } from "../data/storage";
 import { formatDate } from "../data/calendar";
 import { getMoonPhaseIcon } from "@/components/getMoonPhaseIcon";
+import { analyzeHistory } from "@/core/crystaph3y/engine";
 
 type MetricKey = "emotion" | "energy" | "consumption";
 
@@ -60,44 +61,6 @@ function getEnergyLabel(value: number | null): string {
   return "Élevée";
 }
 
-function getInsightText(
-  emotion: number | null,
-  energy: number | null,
-  hasEntry: boolean,
-): string {
-  if (!hasEntry) {
-    return "Aucune donnée aujourd’hui. Entre un moment pour commencer à faire émerger tes tendances.";
-  }
-
-  if (emotion === null && energy === null) {
-    return "Quelques éléments sont encore absents aujourd’hui. Une seule entrée suffit déjà à commencer ton suivi.";
-  }
-
-  if (emotion !== null && energy !== null) {
-    if (emotion >= 4 && energy >= 4) {
-      return "Ta journée semble assez alignée : ton humeur et ton énergie sont toutes les deux hautes.";
-    }
-
-    if (emotion >= 4 && energy < 3) {
-      return "Ton humeur reste bonne, même si ton énergie semble plus basse. Peut-être une journée émotionnellement stable, mais exigeante.";
-    }
-
-    if (emotion < 3 && energy >= 4) {
-      return "Tu sembles avoir de l’énergie, mais un ressenti plus lourd. Ça peut signaler une agitation intérieure malgré un bon élan.";
-    }
-
-    if (emotion < 3 && energy < 3) {
-      return "Humeur et énergie paraissent plus basses aujourd’hui. Ce serait une bonne journée pour ralentir et observer sans pression.";
-    }
-  }
-
-  if (emotion !== null) {
-    return "Ton humeur du jour commence à dessiner une tendance. Continue doucement pour voir ce qui revient le plus souvent.";
-  }
-
-  return "Ton niveau d’énergie du jour donne déjà un premier signal utile. Quelques entrées de plus rendront le tableau plus parlant.";
-}
-
 const cardStyle: React.CSSProperties = {
   background: "rgba(26,35,74,0.12)",
   backdropFilter: "blur(25px)",
@@ -127,10 +90,28 @@ export default function Dashboard() {
 
   const emotionValue = getAverageMetric(entry, "emotion");
   const energyValue = getAverageMetric(entry, "energy");
+  // 🧠 crystaph3y (version simple)
+  const result = analyzeHistory(
+    entry
+      ? [
+          {
+            date: dateStr,
+            mood: emotionValue ? emotionValue * 20 : 50,
+            consumption: 2,
+            tags: [],
+          },
+        ]
+      : [],
+    {
+      mood: emotionValue ? emotionValue * 20 : 50,
+      consumption: 2,
+      tags: [],
+      date: dateStr,
+    },
+  );
 
   const emotionLabel = getEmotionLabel(emotionValue);
   const energyLabel = getEnergyLabel(energyValue);
-  const insightText = getInsightText(emotionValue, energyValue, Boolean(entry));
 
   return (
     <AppLayout>
@@ -259,7 +240,7 @@ export default function Dashboard() {
               lineHeight: 1.6,
               color: "rgba(234,244,255,0.88)",
             }}>
-            {insightText}
+            {result.insight}
           </p>
         </div>
       </div>

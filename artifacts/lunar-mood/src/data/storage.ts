@@ -1,6 +1,6 @@
 import { DayEntry } from "./day-entry.types";
 
-const PREFIX = "lunarmood:day:";
+const PREFIX = "lun4rmood:day:";
 
 export function getDayEntry(date: string): DayEntry | null {
   const raw = localStorage.getItem(PREFIX + date);
