@@ -1,6 +1,10 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useState } from "react";
-import { FullMoon, WaningCrescent, WaxingCrescent } from "@/components/moon-phases";
+import {
+  FullMoon,
+  WaningCrescent,
+  WaxingCrescent,
+} from "@/components/moon-phases";
 import { CalendarGrid } from "../components/calendar/CalendarGrid";
 import { MoodDialog } from "./MoodDialog";
 export default function Calendar() {
@@ -42,8 +46,7 @@ export default function Calendar() {
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: "16px",
-          }}
-        >
+          }}>
           <button
             onClick={prevMonth}
             style={{
@@ -52,8 +55,7 @@ export default function Calendar() {
               color: "white",
               fontSize: "20px",
               cursor: "pointer",
-            }}
-          >
+            }}>
             ‹
           </button>
           <span style={{ textTransform: "capitalize" }}>{monthName}</span>
@@ -65,8 +67,7 @@ export default function Calendar() {
               color: "white",
               fontSize: "20px",
               cursor: "pointer",
-            }}
-          >
+            }}>
             ›
           </button>
         </div>

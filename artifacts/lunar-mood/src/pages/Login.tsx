@@ -46,23 +46,13 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background image declared in requirements */}
-      <img
-        src={`${import.meta.env.BASE_URL}images/cosmic-bg.png`}
-        alt="Cosmic Background"
-        className="absolute inset-0 w-full h-full object-cover opacity-40 mix-blend-screen pointer-events-none"
-      />
-
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="inline-block mb-4">
-        <img
-          src={`${import.meta.env.BASE_URL}images/splash-icon.png`}
-          alt="LunarMood Splash"
-          className="w-28 h-28 sm:w-36 sm:h-36 object-contain drop-shadow-[0_0_25px_rgba(126,235,255,0.22)]"
-        />
+        className="mb-4 flex justify-center"
+      >
+        <div className="h-28 w-28 rounded-full border border-white/12 bg-[radial-gradient(circle_at_30%_30%,rgba(142,242,255,0.3),transparent_42%),radial-gradient(circle_at_70%_68%,rgba(200,140,255,0.26),transparent_48%),linear-gradient(180deg,rgba(15,23,48,0.95),rgba(7,11,22,0.92))] shadow-[0_0_40px_rgba(126,235,255,0.08)] sm:h-36 sm:w-36" />
       </motion.div>
 
       <Card className="border-white/10 backdrop-blur-2xl bg-black/40">

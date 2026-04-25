@@ -22,7 +22,7 @@ export default function Settings() {
                 <span className="text-2xl font-bold text-primary">🌙</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold">LunarMood</h3>
+                <h3 className="text-xl font-bold">Lun4rMood</h3>
                 <p className="text-muted-foreground text-sm">
                   {t("astronaut")}
                 </p>
@@ -61,7 +61,7 @@ export default function Settings() {
             <div className="p-6 flex flex-col items-center text-center space-y-2 pb-12">
               <MoonStar className="w-8 h-8 text-white/20 mb-2" />
               <h4 className="font-display text-lg tracking-wider text-white/50">
-                LunarMood
+                Lun4rMood
               </h4>
               <p className="text-sm text-white/30">© 2026</p>
             </div>

@@ -51,14 +51,12 @@ export function DayCell({
         flexDirection: "column",
         alignItems: "center",
         gap: "2px",
-        background: "rgba(255, 255, 255, 0.07)",
-        backdropFilter: "blur(8px)",
-        border: "1px solid rgba(255,255,255,0.15)",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+        background: "rgba(255, 255, 255, 0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "none",
         minHeight: "60px",
         justifyContent: "space-between",
-      }}
-    >
+      }}>
       <div>{date.getDate()}</div>
       <MoonIcon className="h-5 w-5 text-slate-300/70" />
 

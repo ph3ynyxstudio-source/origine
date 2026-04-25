@@ -6,9 +6,9 @@ packages:
   "tailwind-merge": "Utility to safely merge Tailwind classes without style conflicts."
 
 images:
-  - path: "artifacts/lunar-mood/public/images/cosmic-bg.png"
-    description: "Deep space cosmic nebula background with deep purples, indigo, and subtle starlight, highly aesthetic and moody"
-    aspect_ratio: "16:9"
+  - path: "artifacts/lunar-mood/public/images/cosmic-bg.webp"
+    description: "Deep space vertical nebula background with dark blue-black tones, soft violet energy, and a calmer, more spacious star field"
+    aspect_ratio: "9:16"
   - path: "artifacts/lunar-mood/public/images/moon-phases-illustration.png"
     description: "Abstract elegant illustration of moon phases transitioning in gold and cream over a dark void"
     aspect_ratio: "16:9"

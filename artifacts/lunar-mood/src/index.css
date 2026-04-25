@@ -55,7 +55,7 @@
   --popover: 230 40% 7%;
   --popover-foreground: 39 46% 88%;
 
-  --primary: 248 94% 70%;
+  --primary: 187 100% 78%;
   --primary-foreground: 0 0% 100%;
 
   --secondary: 230 30% 15%;
@@ -64,13 +64,13 @@
   --muted: 230 30% 12%;
   --muted-foreground: 230 20% 65%;
 
-  --accent: 280 80% 65%;
+  --accent: 279 100% 77%;
   --accent-foreground: 0 0% 100%;
 
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --border: 230 30% 18%;
+  --border: 226 28% 22%;
   --input: 230 30% 15%;
   --ring: 248 94% 70%;
 
@@ -87,11 +87,124 @@
   html,
   body {
     @apply bg-background text-foreground antialiased font-sans min-h-screen selection:bg-primary/30 selection:text-primary-foreground;
-    background-image: url("/images/crystal_bg.png");
-    background-size: cover;
-    background-position: center;
+    background-color: #070b16;
+    background-image:
+      radial-gradient(
+        circle at 50% 39%,
+        rgba(142, 242, 255, 0.12),
+        transparent 20rem
+      ),
+      radial-gradient(
+        circle at 54% 47%,
+        rgba(200, 140, 255, 0.085),
+        transparent 29rem
+      ),
+      radial-gradient(
+        circle at 46% 58%,
+        rgba(138, 93, 255, 0.06),
+        transparent 26rem
+      ),
+      radial-gradient(
+        circle at 50% 118%,
+        rgba(5, 8, 18, 0.94),
+        transparent 40rem
+      ),
+      linear-gradient(
+        180deg,
+        #0f1730 0%,
+        #0a1022 34%,
+        #070b16 72%,
+        #04070f 100%
+      );
     background-attachment: fixed;
     background-repeat: no-repeat;
+    position: relative;
+    isolation: isolate;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.1;
+    background-image:
+      linear-gradient(rgba(199, 246, 255, 0.01) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(199, 246, 255, 0.008) 1px, transparent 1px),
+      radial-gradient(
+        circle at 50% 50%,
+        rgba(199, 246, 255, 0.018),
+        transparent 68%
+      );
+    background-size:
+      4px 4px,
+      4px 4px,
+      100% 100%;
+    mix-blend-mode: soft-light;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.32;
+    background-image:
+      radial-gradient(
+        circle at 12% 88%,
+        rgba(199, 246, 255, 0.7) 0 1px,
+        transparent 1.8px
+      ),
+      radial-gradient(
+        circle at 20% 94%,
+        rgba(142, 242, 255, 0.55) 0 1px,
+        transparent 1.8px
+      ),
+      radial-gradient(
+        circle at 31% 90%,
+        rgba(200, 140, 255, 0.5) 0 1px,
+        transparent 1.9px
+      ),
+      radial-gradient(
+        circle at 45% 96%,
+        rgba(199, 246, 255, 0.45) 0 1px,
+        transparent 1.7px
+      ),
+      radial-gradient(
+        circle at 57% 89%,
+        rgba(142, 242, 255, 0.42) 0 1px,
+        transparent 1.9px
+      ),
+      radial-gradient(
+        circle at 68% 93%,
+        rgba(200, 140, 255, 0.48) 0 1px,
+        transparent 1.8px
+      ),
+      radial-gradient(
+        circle at 79% 87%,
+        rgba(199, 246, 255, 0.38) 0 1px,
+        transparent 1.7px
+      ),
+      radial-gradient(
+        circle at 88% 95%,
+        rgba(142, 242, 255, 0.44) 0 1px,
+        transparent 1.8px
+      );
+    background-repeat: no-repeat;
+    mask-image: linear-gradient(to bottom, transparent 0%, transparent 72%, rgba(0, 0, 0, 0.7) 86%, black 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 72%, rgba(0, 0, 0, 0.7) 86%, black 100%);
+  }
+
+  #root {
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  .app-shell {
+    background-color: transparent !important;
   }
 
   h1,
@@ -155,6 +268,13 @@
   @apply bg-white/20;
 }
 
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    html,
+    body {
+      background-attachment: scroll;
+    }
+  }
