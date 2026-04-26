@@ -85,6 +85,7 @@ export function MoodDialog({ date, onClose }: Props) {
           borderRadius: "16px",
           padding: "28px",
           boxSizing: "border-box",
+          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)",
           width: "90%",
           maxWidth: "400px",
           maxHeight: "85vh",

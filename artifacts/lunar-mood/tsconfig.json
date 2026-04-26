@@ -6,8 +6,7 @@
     "noEmit": true,
     "jsx": "preserve",
     "lib": ["esnext", "dom", "dom.iterable"],
-    "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
+   "exclude": ["api-server"]   "resolveJsonModule": true, 
     "moduleResolution": "bundler",
     "types": ["node", "vite/client", "react", "react-dom"], // <-- Ajoute ceci ici
     "paths": {
