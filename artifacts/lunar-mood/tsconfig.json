@@ -1,22 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
+  "exclude": ["node_modules", "build", "dist", "**/*.test.ts", "api-server"],
+
   "compilerOptions": {
     "noEmit": true,
     "jsx": "preserve",
     "lib": ["esnext", "dom", "dom.iterable"],
-    "exclude": ["api-server"],
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
-    "types": ["node", "vite/client", "react", "react-dom"], // <-- Ajoute ceci ici
+    "types": ["node", "vite/client", "react", "react-dom"],
     "paths": {
       "@/*": ["./src/*"]
     }
-  },
-  "references": [
-    {
-      "path": "../../lib/api-client-react"
-    }
-  ]
+  }
 }
