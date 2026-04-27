@@ -2,11 +2,12 @@
   "extends": "../../tsconfig.base.json",
   "include": ["src/**/*"],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
- "compilerOptions": {
+  "compilerOptions": {
     "noEmit": true,
     "jsx": "preserve",
     "lib": ["esnext", "dom", "dom.iterable"],
-   "exclude": ["api-server"]   "resolveJsonModule": true, 
+    "exclude": ["api-server"],
+    "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "types": ["node", "vite/client", "react", "react-dom"], // <-- Ajoute ceci ici
     "paths": {
