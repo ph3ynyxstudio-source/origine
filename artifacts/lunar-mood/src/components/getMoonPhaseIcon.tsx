@@ -22,6 +22,6 @@ const phaseIconMap: Record<MoonPhase, MoonPhaseIconComponent> = {
   waning_crescent: WaningCrescent,
 };
 
-export function getMoonPhaseIcon(phase: string): MoonPhaseIconComponent {
-  return phaseIconMap[phase as MoonPhase] ?? NewMoon;
+export function getMoonPhaseIcon(phase: MoonPhase): MoonPhaseIconComponent {
+  return phaseIconMap[phase];
 }

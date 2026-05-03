@@ -1,7 +1,15 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
+import { useTranslation } from "@/lib/i18n";
+
 import { getDayEntry, saveDayEntry } from "../data/storage";
 import { getMoonPhase } from "../data/moon";
-import type { MomentKey, MetricValue, DayEntry } from "../data/day-entry.types";
+import { parseLocalDate } from "../data/calendar";
+import type {
+  MomentKey,
+  MetricValue,
+  DayEntry,
+  NormalizedSignal,
+} from "../data/day-entry.types";
 
 type Props = {
   date: string;
@@ -10,31 +18,11 @@ type Props = {
 
 const MOMENTS: MomentKey[] = ["morning", "midday", "evening"];
 
-const MOMENT_LABELS: Record<MomentKey, string> = {
-  morning: "Matin",
-  midday: "Midi",
-  evening: "Soir",
-};
-
-function metricLabel(value: number): string {
-  return `${value * 20}%`;
-}
-function metricToPercent(value: number | null): number {
-  if (value === null) return 0;
-  return value * 20;
-}
-
-function percentToMetric(value: number): 1 | 2 | 3 | 4 | 5 {
-  if (value <= 20) return 1;
-  if (value <= 40) return 2;
-  if (value <= 60) return 3;
-  if (value <= 80) return 4;
-  return 5;
-}
-
-const newLocal = "}";
 export function MoodDialog({ date, onClose }: Props) {
+  const { t } = useTranslation();
+
   const existing = getDayEntry(date);
+
   const [activeMoment, setActiveMoment] = useState<MomentKey>("morning");
   const [moments, setMoments] = useState(existing?.moments ?? {});
   const [note, setNote] = useState(existing?.note ?? "");
@@ -48,16 +36,39 @@ export function MoodDialog({ date, onClose }: Props) {
   function setMetric(key: keyof typeof current, value: MetricValue) {
     setMoments((prev) => ({
       ...prev,
-      [activeMoment]: { ...current, [key]: value },
+      [activeMoment]: {
+        ...(prev[activeMoment] ?? {}),
+        ...current,
+        [key]: value,
+      },
     }));
   }
 
+  // 🔥 NORMALIZATION SIMPLE (TON SYSTÈME MVP)
+  function normalizeNote(note: string): NormalizedSignal[] {
+    const normalized: NormalizedSignal[] = [];
+
+    const lower = note.toLowerCase();
+
+    if (lower.includes("café")) normalized.push("caffeine");
+    if (lower.includes("coffee")) normalized.push("caffeine");
+
+    if (lower.includes("sucre")) normalized.push("sugar");
+    if (lower.includes("gâteau")) normalized.push("sugar");
+    if (lower.includes("cake")) normalized.push("sugar");
+
+    return normalized;
+  }
+
   function handleSave() {
+    const normalized = normalizeNote(note);
+
     const entry: DayEntry = {
       date,
-      moonPhase: existing?.moonPhase ?? getMoonPhase(new Date(date)),
+      moonPhase: existing?.moonPhase ?? getMoonPhase(parseLocalDate(date)),
       note,
       moments,
+      normalized, // 🔥 ajouté
       updatedAt: Date.now(),
     };
 
@@ -66,232 +77,163 @@ export function MoodDialog({ date, onClose }: Props) {
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "rgba(0,0,0,0.7)",
-        backdropFilter: "blur(4px)",
-        padding: "16px",
-        boxSizing: "border-box",
-      }}>
-      <div
-        style={{
-          background: "#1a1a2e",
-          borderRadius: "16px",
-          padding: "28px",
-          boxSizing: "border-box",
-          boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)",
-          width: "90%",
-          maxWidth: "400px",
-          maxHeight: "85vh",
-          overflowY: "auto",
-          color: "white",
-        }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: "16px",
-          }}>
-          <h2 style={{ fontSize: "18px", margin: 0 }}>{date}</h2>
-
-          <button
-            onClick={onClose}
-            style={{
-              background: "none",
-              border: "none",
-              color: "white",
-              cursor: "pointer",
-              fontSize: "20px",
-            }}>
+    <div style={overlay}>
+      <div style={modal}>
+        {/* HEADER */}
+        <div style={header}>
+          <h2>{date}</h2>
+          <button onClick={onClose} style={closeBtn}>
             ✕
           </button>
         </div>
 
-        <div style={{ display: "flex", gap: "8px", marginBottom: "20px" }}>
+        {/* MOMENTS */}
+        <div style={row}>
           {MOMENTS.map((m) => (
             <button
               key={m}
               onClick={() => setActiveMoment(m)}
               style={{
-                flex: 1,
-                padding: "8px",
-                borderRadius: "8px",
-                border: "none",
-                cursor: "pointer",
+                ...pill,
                 background:
                   activeMoment === m ? "#7c3aed" : "rgba(255,255,255,0.1)",
-                color: "white",
-                fontWeight: activeMoment === m ? "bold" : "normal",
               }}>
-              {MOMENT_LABELS[m]}
+              {t(m)}
             </button>
           ))}
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
-          <p style={{ marginBottom: "8px", opacity: 0.7 }}>Émotion</p>
-          <div style={{ marginBottom: "16px" }}>
-            <p style={{ marginBottom: "8px", opacity: 0.7 }}>Émotion</p>
-
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={current.emotion !== null ? current.emotion * 25 : 50}
-              onChange={(e) =>
-                setMetric(
-                  "emotion",
-                  Math.round(Number(e.target.value) / 25) as MetricValue,
-                )
-              }
-              style={{
-                width: "100%",
-                accentColor: "#7EEBFF",
-                cursor: "pointer",
-              }}
-            />
-
-            <p style={{ marginTop: "8px", fontWeight: "bold", color: "white" }}>
-              {current.emotion !== null ? current.emotion * 25 : 50}%
-            </p>
-          </div>
-        </div>
-
-        <div style={{ marginBottom: "16px" }}>
-          <p style={{ marginBottom: "8px", opacity: 0.7 }}>Énergie</p>
+        {/* EMOTION */}
+        <div style={section}>
+          <label>{t("emotion")}</label>
 
           <input
             type="range"
-            min="20"
+            min="0"
             max="100"
-            step="20"
-            value={metricToPercent(current.energy)}
+            value={current.emotion ?? 50}
             onChange={(e) =>
-              setMetric("energy", percentToMetric(Number(e.target.value)))
+              setMetric("emotion", Number(e.target.value) as MetricValue)
             }
-            style={{
-              width: "100%",
-              accentColor: "#7EEBFF",
-              cursor: "pointer",
-            }}
+            style={slider}
           />
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: "8px",
-              fontSize: "12px",
-              opacity: 0.7,
-            }}>
-            <span>20%</span>
-            <span>60%</span>
-            <span>100%</span>
-          </div>
-
-          <p style={{ marginTop: "8px", fontWeight: "bold" }}>
-            {current.energy !== null
-              ? `${metricToPercent(current.energy)}%`
-              : "--"}
-          </p>
+          <strong>{current.emotion ?? 50}%</strong>
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
-          <p style={{ marginBottom: "8px", opacity: 0.7 }}>Consommation</p>
+        {/* ENERGY */}
+        <div style={section}>
+          <label>{t("energy")}</label>
 
           <input
             type="range"
-            min="20"
+            min="0"
             max="100"
-            step="20"
-            value={metricToPercent(current.consumption)}
+            value={current.energy ?? 50}
             onChange={(e) =>
-              setMetric("consumption", percentToMetric(Number(e.target.value)))
+              setMetric("energy", Number(e.target.value) as MetricValue)
             }
-            style={{
-              width: "100%",
-              accentColor: "#B78CFF",
-              cursor: "pointer",
-            }}
+            style={slider}
           />
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: "8px",
-              fontSize: "12px",
-              opacity: 0.7,
-            }}>
-            <span>20%</span>
-            <span>60%</span>
-            <span>100%</span>
-          </div>
-
-          <p style={{ marginTop: "8px", fontWeight: "bold" }}>
-            {current.consumption !== null
-              ? `${metricToPercent(current.consumption)}%`
-              : "--"}
-          </p>
+          <strong>{current.energy ?? 50}%</strong>
         </div>
-        <div style={{ marginBottom: "20px" }}>
-          <p style={{ marginBottom: "8px", opacity: 0.7 }}>Note</p>
 
+        {/* CONSUMPTION */}
+        <div style={section}>
+          <label>{t("consumption")}</label>
+
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={current.consumption ?? 50}
+            onChange={(e) =>
+              setMetric("consumption", Number(e.target.value) as MetricValue)
+            }
+            style={slider}
+          />
+
+          <strong>{current.consumption ?? 50}%</strong>
+        </div>
+
+        {/* NOTE */}
+        <div style={section}>
+          <label>{t("note")}</label>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="..."
-            style={{
-              width: "100%",
-              borderRadius: "8px",
-              padding: "8px",
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              color: "white",
-              resize: "none",
-              height: "60px",
-              boxSizing: "border-box",
-            }}
+            style={textarea}
           />
         </div>
 
-        <div style={{ display: "flex", gap: "8px" }}>
-          <button
-            onClick={onClose}
-            style={{
-              flex: 1,
-              padding: "12px",
-              borderRadius: "8px",
-              background: "rgba(255,255,255,0.1)",
-              border: "none",
-              color: "white",
-              cursor: "pointer",
-            }}>
-            Annuler
+        {/* ACTIONS */}
+        <div style={row}>
+          <button onClick={onClose} style={btnSecondary}>
+            {t("cancel")}
           </button>
 
-          <button
-            onClick={handleSave}
-            style={{
-              flex: 1,
-              padding: "12px",
-              borderRadius: "8px",
-              background: "#7c3aed",
-              border: "none",
-              color: "white",
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}>
-            Sauvegarder
+          <button onClick={handleSave} style={btnPrimary}>
+            {t("save")}
           </button>
         </div>
       </div>
     </div>
   );
 }
+
+/* styles (inchangés) */
+const overlay: CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.7)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+};
+const modal: CSSProperties = {
+  width: "90%",
+  maxWidth: "400px",
+  maxHeight: "85vh",
+  overflowY: "auto",
+  background: "#1a1a2e",
+  borderRadius: "16px",
+  padding: "24px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "16px",
+};
+const header: CSSProperties = { display: "flex", justifyContent: "space-between" };
+const row: CSSProperties = { display: "flex", gap: "8px" };
+const section: CSSProperties = { display: "flex", flexDirection: "column", gap: "8px" };
+const pill: CSSProperties = {
+  flex: 1,
+  padding: "8px",
+  borderRadius: "8px",
+  border: "none",
+  color: "white",
+};
+const slider: CSSProperties = { width: "100%", cursor: "pointer" };
+const textarea: CSSProperties = { width: "100%", padding: "8px", borderRadius: "8px" };
+const btnPrimary: CSSProperties = {
+  flex: 1,
+  background: "#7c3aed",
+  padding: "12px",
+  borderRadius: "8px",
+  border: "none",
+  color: "white",
+};
+const btnSecondary: CSSProperties = {
+  flex: 1,
+  background: "rgba(255,255,255,0.1)",
+  padding: "12px",
+  borderRadius: "8px",
+  border: "none",
+  color: "white",
+};
+const closeBtn: CSSProperties = {
+  background: "none",
+  border: "none",
+  color: "white",
+  fontSize: "20px",
+};

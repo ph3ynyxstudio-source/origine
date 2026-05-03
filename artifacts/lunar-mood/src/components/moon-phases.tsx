@@ -15,18 +15,28 @@ function BaseMoon({ className, children }: BaseMoonProps) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-hidden="true"
-    >
+      aria-hidden="true">
       <defs>
-        <filter id="moon-neon-glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="1.5" result="blur" />
+        <filter
+          id="moon-neon-glow"
+          x="-20%"
+          y="-20%"
+          width="140%"
+          height="140%">
+          <feGaussianBlur stdDeviation="1.52" result="blur" />
           <feComposite in="SourceGraphic" in2="blur" operator="over" />
         </filter>
 
-        <linearGradient id="moon-crystal-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="currentColor" stopOpacity="0.4" />
-          <stop offset="50%" stopColor="currentColor" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="currentColor" stopOpacity="0.2" />
+        <linearGradient
+          id="moon-crystal-gradient"
+          x1="0%"
+          y1="0%"
+          x2="100%"
+          y2="0%">
+          <stop offset="0%" stopColor="#7EEBFF" />
+          <stop offset="50%" stopColor="#7EEBFF" />
+          <stop offset="50%" stopColor="#B78CFF" />
+          <stop offset="100%" stopColor="#B78CFF" />
         </linearGradient>
       </defs>
 

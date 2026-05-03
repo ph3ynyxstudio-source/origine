@@ -1,4 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useTranslation } from "@/lib/i18n";
 import { getMonthEntries } from "../data/storage";
 import {
   BarChart,
@@ -22,6 +23,7 @@ const PHASES = [
 ];
 
 export default function Statistics() {
+  const { t } = useTranslation();
   const today = new Date();
   const entries = getMonthEntries(today.getFullYear(), today.getMonth());
 
@@ -36,9 +38,9 @@ export default function Statistics() {
             opacity: 0.5,
           }}
         >
-          <p style={{ fontSize: "20px" }}>Aucune donnée encore</p>
+          <p style={{ fontSize: "20px" }}>{t("noDataYet")}</p>
           <p style={{ fontSize: "14px", marginTop: "8px" }}>
-            Commence à enregistrer tes humeurs !
+            {t("startLoggingMoods")}
           </p>
         </div>
       </AppLayout>
@@ -75,10 +77,10 @@ export default function Statistics() {
         <h1
           style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "4px" }}
         >
-          Statistiques
+          {t("statistics")}
         </h1>
         <p style={{ opacity: 0.5, marginBottom: "24px" }}>
-          {entries.length} entrées ce mois
+          {entries.length} {t("entriesThisMonth")}
         </p>
 
         <div
@@ -92,7 +94,7 @@ export default function Statistics() {
           }}
         >
           <p style={{ marginBottom: "16px", opacity: 0.7 }}>
-            Émotion par phase lunaire
+            {t("emotionByPhase")}
           </p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={phaseData}>
@@ -127,7 +129,7 @@ export default function Statistics() {
           }}
         >
           <p style={{ marginBottom: "16px", opacity: 0.7 }}>
-            Énergie par phase lunaire
+            {t("energyByPhase")}
           </p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={phaseData}>

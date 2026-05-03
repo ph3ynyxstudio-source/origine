@@ -1,3 +1,4 @@
+import { AppLayout } from "./components/layout/AppLayout";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "./components/ui/toaster";
@@ -17,13 +18,15 @@ function App() {
       <TooltipProvider>
         <I18nProvider>
           <WouterRouter>
-            <Switch>
-              <Route path="/" component={Dashboard} />
-              <Route path="/dashboard" component={Dashboard} />
-              <Route path="/calendar" component={Calendar} />
-              <Route path="/statistics" component={Statistics} />
-              <Route path="/settings" component={Settings} />
-            </Switch>
+            <AppLayout>
+              <Switch>
+                <Route path="/" component={Dashboard} />
+                <Route path="/dashboard" component={Dashboard} />
+                <Route path="/calendar" component={Calendar} />
+                <Route path="/statistics" component={Statistics} />
+                <Route path="/settings" component={Settings} />
+              </Switch>
+            </AppLayout>
           </WouterRouter>
           <Toaster />
         </I18nProvider>

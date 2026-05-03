@@ -1,7 +1,36 @@
 import { MoonPhase } from "./day-entry.types";
 
+export function getLocalStartOfDay(input?: Date): Date {
+  const date = input ? new Date(input) : new Date();
+
+  if (isNaN(date.getTime())) {
+    return new Date();
+  }
+
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    0,
+    0,
+    0,
+    0,
+  );
+}
+
 export function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0];
+  const localDate = getLocalStartOfDay(date);
+  const year = localDate.getFullYear();
+  const month = String(localDate.getMonth() + 1).padStart(2, "0");
+  const day = String(localDate.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+export function parseLocalDate(date: string): Date {
+  const [year, month, day] = date.split("-").map(Number);
+
+  return getLocalStartOfDay(new Date(year, month - 1, day));
 }
 
 export function getMonthDays(year: number, month: number): Date[] {

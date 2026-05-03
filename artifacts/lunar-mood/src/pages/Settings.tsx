@@ -1,29 +1,44 @@
-import { useState } from "react";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Settings() {
-  const [language, setLanguage] = useState<"en" | "fr">("en");
+  const { t, language, setLanguage } = useTranslation();
 
   return (
-    <div className="flex bg-black/40 rounded-lg p-1 border border-white/10 gap-1">
-      <button
-        onClick={() => setLanguage("en")}
-        className={`flex-1 min-w-0 px-2 py-1 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 active:scale-95 truncate ${
-          language === "en"
-            ? "bg-[#7EEBFF]/20 border border-[#7EEBFF]/30 text-white"
-            : "text-muted-foreground hover:text-white"
-        }`}>
-        English
-      </button>
+    <div className="min-h-screen bg-[#0A1024] flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-[#1A234A]/70 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
+        {/* TITLE */}
+        <h1 className="text-center text-lg font-semibold text-white">
+          {t("settings")}
+        </h1>
 
-      <button
-        onClick={() => setLanguage("fr")}
-        className={`flex-1 min-w-0 px-2 py-1 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 active:scale-95 truncate ${
-          language === "fr"
-            ? "bg-[#7EEBFF]/20 border border-[#7EEBFF]/30 text-white"
-            : "text-muted-foreground hover:text-white"
-        }`}>
-        Français
-      </button>
+        {/* LANGUAGE */}
+        <div className="flex bg-black/40 rounded-lg p-1 border border-white/10 gap-1">
+          <button
+            onClick={() => setLanguage("en")}
+            className={`flex-1 py-2 text-sm rounded-md ${
+              language === "en"
+                ? "bg-[#7EEBFF]/20 border border-[#7EEBFF]/30 text-white"
+                : "text-gray-400"
+            }`}>
+            English
+          </button>
+
+          <button
+            onClick={() => setLanguage("fr")}
+            className={`flex-1 py-2 text-sm rounded-md ${
+              language === "fr"
+                ? "bg-[#7EEBFF]/20 border border-[#7EEBFF]/30 text-white"
+                : "text-gray-400"
+            }`}>
+            Français
+          </button>
+        </div>
+
+        {/* FOOTER */}
+        <div className="text-center text-xs text-gray-500">
+          LUN4RMOOD © 2026
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,249 +1,129 @@
+import React from "react";
 import { useTranslation } from "@/lib/i18n";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { getMoonPhase } from "../data/moon";
+import { fr, enUS } from "date-fns/locale";
+
 import { getDayEntry } from "../data/storage";
-import { formatDate } from "../data/calendar";
-import { getMoonPhaseIcon } from "@/components/getMoonPhaseIcon";
-import { analyzeHistory } from "@/core/crystaph3y/engine";
+import { formatDate, getLocalStartOfDay } from "../data/calendar";
+import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
+import type { MoonPhase } from "../data/day-entry.types";
 
-type MetricKey = "emotion" | "energy" | "consumption";
+// --- MOON NEON FULL (Pleine Lune Uniquement) ---
+function Moon() {
+  return (
+    <div className="relative w-32 h-32 md:w-40 md:h-40">
+      {/* 1. Halo extérieur (L'aura néon) */}
+      <div className="absolute -inset-3.75 rounded-full blur-3xl opacity-50 bg-linear-to-tr from-(--color-primary) via-(--color-secondary) to-(--color-accent)" />
 
-const PHASE_LABELS: Record<string, string> = {
-  new_moon: "Nouvelle Lune",
-  waxing_crescent: "Croissant Naissant",
-  first_quarter: "Premier Quartier",
-  waxing_gibbous: "Gibbeuse Croissante",
-  full_moon: "Pleine Lune",
-  waning_gibbous: "Gibbeuse Décroissante",
-  last_quarter: "Dernier Quartier",
-  waning_crescent: "Croissant Décroissant",
-};
+      {/* 2. Corps de la lune */}
+      <div className="absolute inset-0 rounded-full overflow-hidden border border-white/20 shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.4)]">
+        {/* 3. Surface éclairée (Pleine Lune) */}
+        <div className="absolute inset-0 bg-linear-to-tr from-(--color-primary) via-(--color-secondary) to-(--color-accent)" />
 
-function metricToPercent(value: number | null): number {
-  if (value === null) return 0;
-  return value * 20;
+        {/* 4. Texture et brillance subtile */}
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_30%,white_0%,transparent_70%)]" />
+      </div>
+
+      {/* 5. Cercle de contour "Edge Light" */}
+      <div className="absolute inset-0 rounded-full border border-white/30 pointer-events-none" />
+    </div>
+  );
 }
 
-function getAverageMetric(
-  entry: ReturnType<typeof getDayEntry>,
-  key: MetricKey,
-): number | null {
+// --- UTILITAIRES ---
+function getAverageMetric(entry: any, key: "emotion" | "energy") {
   if (!entry) return null;
-
-  const values = Object.values(entry.moments)
-    .map((moment) => moment?.[key] ?? null)
-    .filter((value) => value !== null) as number[];
-
-  if (!values.length) return null;
-
-  return Math.round(
-    values.reduce((sum, value) => sum + value, 0) / values.length,
-  ) as 1 | 2 | 3 | 4 | 5;
+  const values = Object.values(entry.moments || {})
+    .map((m: any) => m?.[key] ?? null)
+    .filter((v) => v !== null) as number[];
+  return values.length
+    ? Math.min(
+        100,
+        Math.max(
+          0,
+          Math.round(values.reduce((a, b) => a + b, 0) / values.length),
+        ),
+      )
+    : null;
 }
 
-function getEmotionLabel(value: number | null): string {
-  if (value === null) return "Non enregistré";
-  if (value <= 1) return "Très bas";
-  if (value <= 2) return "Bas";
-  if (value <= 3) return "Stable";
-  if (value <= 4) return "Bien";
-  return "Très bien";
-}
-
-function getEnergyLabel(value: number | null): string {
-  if (value === null) return "Non enregistré";
-  if (value <= 1) return "Très faible";
-  if (value <= 2) return "Faible";
-  if (value <= 3) return "Douce";
-  if (value <= 4) return "Bonne";
-  return "Élevée";
-}
-
-const cardStyle: React.CSSProperties = {
-  background: "rgba(26,35,74,0.12)",
-  backdropFilter: "blur(25px)",
-  WebkitBackdropFilter: "blur(16px)",
-  border: "1px solid rgba(126,235,255,0.08)",
-  borderRadius: "24px",
-  boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
-};
-
-const progressTrackStyle: React.CSSProperties = {
-  width: "100%",
-  height: "10px",
-  borderRadius: "999px",
-  background: "rgba(255,255,255,0.08)",
-  overflow: "hidden",
-  marginTop: "12px",
-};
-
+// --- DASHBOARD ---
 export default function Dashboard() {
-  const { language } = useTranslation();
-  const today = new Date();
+  const { t, language } = useTranslation();
+  const today = getLocalStartOfDay();
+  const locale = language === "fr" ? fr : enUS;
+  const dateLabel = format(today, "EEEE d MMMM", { locale });
   const dateStr = formatDate(today);
-  const moonPhase = getMoonPhase(today);
+
+  // Valeurs forcées pour ton test Pleine Lune
+  const moonPhaseLabel = t("phaseFullMoon");
+  const cycleDay = 15;
+
   const entry = getDayEntry(dateStr);
+  const mood = getAverageMetric(entry, "emotion");
+  const energy = getAverageMetric(entry, "energy");
 
-  const MoonIcon = getMoonPhaseIcon(moonPhase);
-
-  const emotionValue = getAverageMetric(entry, "emotion");
-  const energyValue = getAverageMetric(entry, "energy");
-  // 🧠 crystaph3y (version simple)
-  const result = analyzeHistory(
+  const insight = analyzeHistory(
     entry
-      ? [
-          {
-            date: dateStr,
-            mood: emotionValue ? emotionValue * 20 : 50,
-            consumption: 2,
-            tags: [],
-          },
-        ]
+      ? [{ date: dateStr, mood: mood ?? 50, consumption: 2, tags: [] }]
       : [],
-    {
-      mood: emotionValue ? emotionValue * 20 : 50,
-      consumption: 2,
-      tags: [],
-      date: dateStr,
-    },
+    { date: dateStr, mood: mood ?? 50, consumption: 2, tags: [] },
   );
 
-  const emotionLabel = getEmotionLabel(emotionValue);
-  const energyLabel = getEnergyLabel(energyValue);
-
   return (
-    <AppLayout>
-      <div style={{ padding: "16px", color: "#EAF4FF" }}>
-        <h1
-          style={{
-            fontSize: "24px",
-            fontWeight: "bold",
-            marginBottom: "4px",
-          }}>
-          Bonjour
-        </h1>
+    <div className="flex flex-col gap-4 p-4 text-(--text-primary) min-h-screen bg-(--bg-base)">
+      <header>
+        <h1 className="text-2xl font-bold">{t("hello")}</h1>
+        <p className="text-(--text-muted)">{dateLabel}</p>
+      </header>
 
-        <p style={{ opacity: 0.6, marginBottom: "24px" }}>
-          {format(today, "EEEE, d MMMM", {
-            locale: language === "fr" ? fr : undefined,
-          })}
-        </p>
+      {/* Carte Lune */}
+      <div className="flex flex-col items-center p-8 rounded-[2.5rem] border border-white/5 bg-white/5 shadow-2xl backdrop-blur-2xl relative overflow-hidden">
+        <Moon />
 
-        <div
-          style={{
-            ...cardStyle,
-            padding: "24px",
-            textAlign: "center",
-            marginBottom: "16px",
-          }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginBottom: "8px",
-              filter: "drop-shadow(0 0 4px rgba(126, 235, 255, 0.001))",
-            }}>
-            <MoonIcon className="w-20 h-20 text-[#ddebfa75]" />
-          </div>
-
-          <p
-            style={{
-              fontSize: "11px",
-              opacity: 0.6,
-              letterSpacing: "2px",
-              marginTop: "8px",
-              marginBottom: "4px",
-            }}>
-            PHASE ACTUELLE
+        <div className="mt-8 text-center">
+          <p className="text-[10px] uppercase tracking-widest text-(--text-muted) opacity-60">
+            {t("currentPhase")}
           </p>
-
-          <p
-            style={{
-              fontSize: "22px",
-              fontWeight: "bold",
-              marginTop: "4px",
-            }}>
-            {PHASE_LABELS[moonPhase]}
+          <p className="text-3xl font-bold bg-linear-to-r from-(--color-primary) via-(--color-secondary) to-(--color-accent) bg-clip-text text-transparent">
+            {moonPhaseLabel}
           </p>
-        </div>
-
-        <div
-          style={{
-            ...cardStyle,
-            padding: "20px",
-            marginBottom: "16px",
-          }}>
-          <p style={{ fontSize: "13px", opacity: 0.6, marginBottom: "6px" }}>
-            HUMEUR DU JOUR
-          </p>
-          <p style={{ fontSize: "20px", fontWeight: "bold", margin: 0 }}>
-            {emotionValue !== null ? `${metricToPercent(emotionValue)}%` : "--"}
-          </p>
-          <p style={{ opacity: 0.7, marginTop: "4px", marginBottom: 0 }}>
-            {emotionLabel}
-          </p>
-
-          <div style={progressTrackStyle}>
-            <div
-              style={{
-                width: `${metricToPercent(emotionValue)}%`,
-                height: "100%",
-                borderRadius: "999px",
-                background:
-                  "linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #22c55e 100%)",
-              }}
-            />
-          </div>
-        </div>
-
-        <div
-          style={{
-            ...cardStyle,
-            padding: "20px",
-            marginBottom: "16px",
-          }}>
-          <p style={{ fontSize: "13px", opacity: 0.6, marginBottom: "6px" }}>
-            ÉNERGIE
-          </p>
-          <p style={{ fontSize: "20px", fontWeight: "bold", margin: 0 }}>
-            {energyValue !== null ? `${metricToPercent(energyValue)}%` : "--"}
-          </p>
-          <p style={{ opacity: 0.7, marginTop: "4px", marginBottom: 0 }}>
-            {energyLabel}
-          </p>
-
-          <div style={progressTrackStyle}>
-            <div
-              style={{
-                width: `${metricToPercent(energyValue)}%`,
-                height: "100%",
-                borderRadius: "999px",
-                background: "linear-gradient(90deg, #7EEBFF 0%, #B78CFF 100%)",
-              }}
-            />
-          </div>
-        </div>
-
-        <div
-          style={{
-            ...cardStyle,
-            padding: "20px",
-          }}>
-          <p style={{ fontSize: "13px", opacity: 0.6, marginBottom: "10px" }}>
-            INSIGHT
-          </p>
-          <p
-            style={{
-              margin: 0,
-              lineHeight: 1.6,
-              color: "rgba(234,244,255,0.88)",
-            }}>
-            {result.insight}
+          <p className="mt-2 text-sm text-(--text-muted) bg-white/5 px-4 py-1 rounded-full border border-white/5 inline-block">
+            {t("cycleDay")} {cycleDay}
           </p>
         </div>
       </div>
-    </AppLayout>
+
+      {/* Métriques */}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="p-5 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl">
+          <p className="text-xs uppercase tracking-wider text-(--text-muted) mb-1">
+            {t("todayMood")}
+          </p>
+          <p className="text-2xl font-bold text-(--color-primary)">
+            {mood ?? "--"}%
+          </p>
+        </div>
+        <div className="p-5 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl">
+          <p className="text-xs uppercase tracking-wider text-(--text-muted) mb-1">
+            {t("energy")}
+          </p>
+          <p className="text-2xl font-bold text-(--color-secondary)">
+            {energy ?? "--"}%
+          </p>
+        </div>
+      </div>
+
+      {/* Insight */}
+      <div className="p-6 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg">✨</span>
+          <p className="text-xs font-bold uppercase tracking-widest text-(--text-muted)">
+            {t("insight")}
+          </p>
+        </div>
+        <p className="text-sm leading-relaxed opacity-90">{insight.insight}</p>
+      </div>
+    </div>
   );
 }

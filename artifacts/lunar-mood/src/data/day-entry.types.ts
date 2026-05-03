@@ -17,11 +17,20 @@ export type MomentEntry = {
   energy: MetricValue;
   consumption: MetricValue;
 };
-
+export type NormalizedSignal =
+  | "caffeine"
+  | "sugar"
+  | "alcohol"
+  | "cannabis"
+  | "junk_food"
+  | "hydration";
 export type DayEntry = {
   date: string;
+  // Snapshot historique de la phase au moment de la sauvegarde.
+  // Le dashboard affiche la phase courante via getMoonPhase(date).
   moonPhase: MoonPhase;
   moments: Partial<Record<MomentKey, MomentEntry>>;
   note: string;
+  normalized?: NormalizedSignal[];
   updatedAt: number;
 };

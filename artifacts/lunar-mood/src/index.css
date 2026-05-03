@@ -37,6 +37,14 @@
   --color-period-afternoon: hsl(var(--period-afternoon));
   --color-period-evening: hsl(var(--period-evening));
 
+  --color-bg-base: var(--bg-base, #070B18);
+  --color-bg-surface: var(--bg-surface, #0D1526);
+  --color-lunar-primary: var(--color-primary, #00E5FF);
+  --color-lunar-secondary: var(--color-secondary, #7B61FF);
+  --color-lunar-accent: var(--color-accent, #F040B5);
+  --color-text-primary: var(--text-primary, #E8EAF6);
+  --color-text-muted: var(--text-muted, #9196B8);
+
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 1rem;
@@ -45,6 +53,18 @@
 }
 
 :root {
+  color-scheme: dark;
+
+  --bg-base: #070B18;
+  --bg-surface: #0D1526;
+
+  --color-primary: #00E5FF;
+  --color-secondary: #7B61FF;
+  --color-accent: #F040B5;
+
+  --text-primary: #E8EAF6;
+  --text-muted: #9196B8;
+
   /* Dark Cosmic Theme */
   --background: 230 40% 5%;
   --foreground: 39 46% 88%;
@@ -87,116 +107,19 @@
   html,
   body {
     @apply bg-background text-foreground antialiased font-sans min-h-screen selection:bg-primary/30 selection:text-primary-foreground;
-    background-color: #070b16;
-    background-image:
-      radial-gradient(
-        circle at 50% 39%,
-        rgba(142, 242, 255, 0.12),
-        transparent 20rem
-      ),
-      radial-gradient(
-        circle at 54% 47%,
-        rgba(200, 140, 255, 0.085),
-        transparent 29rem
-      ),
-      radial-gradient(
-        circle at 46% 58%,
-        rgba(138, 93, 255, 0.06),
-        transparent 26rem
-      ),
-      radial-gradient(
-        circle at 50% 118%,
-        rgba(5, 8, 18, 0.94),
-        transparent 40rem
-      ),
-      linear-gradient(
-        180deg,
-        #0f1730 0%,
-        #0a1022 34%,
-        #070b16 72%,
-        #04070f 100%
-      );
+
+    background:
+      radial-gradient(circle at 50% 0%, rgba(123, 97, 255, 0.16), transparent 42%),
+      linear-gradient(180deg, #070B18 0%, #04070F 100%);
+
+    background-size: cover;
+    background-position: center;
     background-attachment: fixed;
     background-repeat: no-repeat;
+
     position: relative;
     isolation: isolate;
   }
-
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.1;
-    background-image:
-      linear-gradient(rgba(199, 246, 255, 0.01) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(199, 246, 255, 0.008) 1px, transparent 1px),
-      radial-gradient(
-        circle at 50% 50%,
-        rgba(199, 246, 255, 0.018),
-        transparent 68%
-      );
-    background-size:
-      4px 4px,
-      4px 4px,
-      100% 100%;
-    mix-blend-mode: soft-light;
-  }
-
-  body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.32;
-    background-image:
-      radial-gradient(
-        circle at 12% 88%,
-        rgba(199, 246, 255, 0.7) 0 1px,
-        transparent 1.8px
-      ),
-      radial-gradient(
-        circle at 20% 94%,
-        rgba(142, 242, 255, 0.55) 0 1px,
-        transparent 1.8px
-      ),
-      radial-gradient(
-        circle at 31% 90%,
-        rgba(200, 140, 255, 0.5) 0 1px,
-        transparent 1.9px
-      ),
-      radial-gradient(
-        circle at 45% 96%,
-        rgba(199, 246, 255, 0.45) 0 1px,
-        transparent 1.7px
-      ),
-      radial-gradient(
-        circle at 57% 89%,
-        rgba(142, 242, 255, 0.42) 0 1px,
-        transparent 1.9px
-      ),
-      radial-gradient(
-        circle at 68% 93%,
-        rgba(200, 140, 255, 0.48) 0 1px,
-        transparent 1.8px
-      ),
-      radial-gradient(
-        circle at 79% 87%,
-        rgba(199, 246, 255, 0.38) 0 1px,
-        transparent 1.7px
-      ),
-      radial-gradient(
-        circle at 88% 95%,
-        rgba(142, 242, 255, 0.44) 0 1px,
-        transparent 1.8px
-      );
-    background-repeat: no-repeat;
-    mask-image: linear-gradient(to bottom, transparent 0%, transparent 72%, rgba(0, 0, 0, 0.7) 86%, black 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 72%, rgba(0, 0, 0, 0.7) 86%, black 100%);
-  }
-
   #root {
     min-height: 100vh;
     position: relative;
@@ -268,13 +191,52 @@
   @apply bg-white/20;
 }
 
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+.pb-safe {
+  padding-bottom: env(
+    safe-area-inset-bottom,
+    0px
+  ); /* ========================= */
+  /* 🎚️ SLIDERS LUNARMOOD */
+  /* ========================= */
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    outline: none;
   }
 
-  @media (hover: none), (pointer: coarse) {
-    html,
-    body {
-      background-attachment: scroll;
-    }
+  /* ÉMOTION 🔴→🟢 */
+  input[type="range"].emotion {
+    background: linear-gradient(90deg, #ef4444, #f59e0b, #eab308, #22c55e);
   }
+
+  /* ÉNERGIE 🔴→🟡 */
+  input[type="range"].energy {
+    background: linear-gradient(90deg, #ef4444, #f97316, #eab308);
+  }
+
+  /* CURSEUR (thumb) */
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #7eebff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 12px rgba(126, 235, 255, 0.8);
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  html,
+  body {
+    background-attachment: scroll;
+  }
+}

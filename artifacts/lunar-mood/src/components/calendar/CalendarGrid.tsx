@@ -1,5 +1,10 @@
 import { DayCell } from "./DayCell";
-import { getMonthDays, isCurrentMonth, formatDate } from "../../data/calendar";
+import {
+  getLocalStartOfDay,
+  getMonthDays,
+  isCurrentMonth,
+  formatDate,
+} from "../../data/calendar";
 import { getMoonPhase } from "../../data/moon";
 import { getDayEntry } from "../../data/storage";
 
@@ -30,15 +35,16 @@ export function CalendarGrid({ year, month, onDayOpen }: Props) {
       ))}
 
       {days.map((date, i) => {
-        const dateStr = formatDate(date);
+        const localDate = getLocalStartOfDay(date);
+        const dateStr = formatDate(localDate);
         const entry = getDayEntry(dateStr);
-        const moonPhase = getMoonPhase(date);
+        const moonPhase = getMoonPhase(localDate);
 
         return (
           <DayCell
             key={i}
-            date={date}
-            isCurrentMonth={isCurrentMonth(date, year, month)}
+            date={localDate}
+            isCurrentMonth={isCurrentMonth(localDate, year, month)}
             moonPhase={entry?.moonPhase ?? moonPhase}
             moments={entry?.moments}
             onOpen={() => onDayOpen(dateStr)}
