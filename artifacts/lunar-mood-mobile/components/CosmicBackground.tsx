@@ -1,8 +1,10 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { ImageBackground, View, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import AnimatedStarfield from "./AnimatedStarfield";
 import Colors from "@/constants/colors";
+
+const appBackground = require("../assets/images/backgrounds/app-background.webp");
 
 interface CosmicBackgroundProps {
   starCount?: number;
@@ -16,12 +18,18 @@ function CosmicBackground({
   return (
     <View style={styles.container} pointerEvents="none">
       <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.dark.background }]} />
+      <ImageBackground
+        source={appBackground}
+        resizeMode="cover"
+        style={StyleSheet.absoluteFill}
+        imageStyle={styles.backgroundImage}
+      />
 
       <LinearGradient
         colors={[
-          "rgba(55, 0, 100, 0.35)",
-          "rgba(11, 14, 26, 0.1)",
-          "rgba(0, 40, 80, 0.25)",
+          "rgba(0, 0, 0, 0.24)",
+          "rgba(0, 0, 0, 0.08)",
+          "rgba(0, 0, 0, 0.34)",
         ]}
         locations={[0, 0.5, 1]}
         start={{ x: 0.2, y: 0 }}
@@ -32,9 +40,9 @@ function CosmicBackground({
       {variant === "login" && (
         <LinearGradient
           colors={[
-            "rgba(99, 102, 241, 0.12)",
-            "rgba(11, 14, 26, 0)",
-            "rgba(0, 180, 180, 0.08)",
+            "rgba(34, 211, 238, 0.12)",
+            "rgba(0, 0, 0, 0)",
+            "rgba(168, 85, 247, 0.12)",
           ]}
           locations={[0, 0.4, 1]}
           start={{ x: 0.8, y: 0.1 }}
@@ -46,8 +54,8 @@ function CosmicBackground({
       {variant === "sheet" && (
         <LinearGradient
           colors={[
-            "rgba(124, 106, 250, 0.08)",
-            "rgba(19, 23, 41, 0.95)",
+            "rgba(34, 211, 238, 0.08)",
+            "rgba(8, 5, 32, 0.95)",
           ]}
           locations={[0, 0.6]}
           start={{ x: 0.5, y: 0 }}
@@ -58,7 +66,7 @@ function CosmicBackground({
 
       <LinearGradient
         colors={[
-          "rgba(80, 20, 120, 0.15)",
+          "rgba(34, 211, 238, 0.09)",
           "transparent",
         ]}
         start={{ x: 0, y: 0 }}
@@ -69,7 +77,7 @@ function CosmicBackground({
       <LinearGradient
         colors={[
           "transparent",
-          "rgba(0, 60, 100, 0.12)",
+          "rgba(168, 85, 247, 0.10)",
         ]}
         start={{ x: 1, y: 0.3 }}
         end={{ x: 0, y: 1 }}
@@ -86,5 +94,8 @@ export default React.memo(CosmicBackground);
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
+  },
+  backgroundImage: {
+    opacity: 0.72,
   },
 });

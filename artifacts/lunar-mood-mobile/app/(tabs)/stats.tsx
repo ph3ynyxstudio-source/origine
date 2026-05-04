@@ -8,18 +8,15 @@ import {
   Dimensions,
   RefreshControl,
 } from "react-native";
-import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BarChart, LineChart } from "react-native-chart-kit";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMoods, type MoodEntry } from "@/contexts/MoodContext";
 import { useTranslation, getPhaseTranslationKey } from "@/lib/i18n";
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 import SwipeableTabView from "@/components/SwipeableTabView";
-
-const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
 
 interface PhaseStat {
   phase: string;
@@ -54,6 +51,58 @@ const PHASE_EMOJIS: Record<string, string> = {
   waning_crescent: "\uD83C\uDF18",
 };
 
+const PHASE_ORDER = [
+  "new_moon",
+  "waxing_crescent",
+  "first_quarter",
+  "waxing_gibbous",
+  "full_moon",
+  "waning_gibbous",
+  "last_quarter",
+  "waning_crescent",
+];
+
+function average(entries: MoodEntry[], key: "mood" | "energy" | "consumption"): number {
+  if (!entries.length) return 0;
+  const total = entries.reduce((sum, entry) => sum + entry[key], 0);
+  return Math.round((total / entries.length) * 10) / 10;
+}
+
+function buildLocalStats(entries: MoodEntry[]): StatsData {
+  const byPhase = PHASE_ORDER.map((phase) => {
+    const phaseEntries = entries.filter((entry) => entry.lunarPhase === phase);
+    return {
+      phase,
+      avgMood: average(phaseEntries, "mood"),
+      avgEnergy: average(phaseEntries, "energy"),
+      avgConsumption: average(phaseEntries, "consumption"),
+      count: phaseEntries.length,
+    };
+  });
+
+  const monthlyGroups = entries.reduce<Record<string, MoodEntry[]>>((groups, entry) => {
+    const month = entry.date.slice(0, 7);
+    groups[month] = [...(groups[month] || []), entry];
+    return groups;
+  }, {});
+
+  const monthlyTrends = Object.entries(monthlyGroups)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, monthEntries]) => ({
+      month,
+      avgMood: average(monthEntries, "mood"),
+      avgEnergy: average(monthEntries, "energy"),
+      avgConsumption: average(monthEntries, "consumption"),
+      count: monthEntries.length,
+    }));
+
+  return {
+    byPhase,
+    monthlyTrends,
+    totalEntries: entries.length,
+  };
+}
+
 const CHART_CONFIG = {
   backgroundGradientFrom: "rgba(19, 23, 41, 0.01)",
   backgroundGradientTo: "rgba(19, 23, 41, 0.01)",
@@ -76,54 +125,33 @@ const CHART_CONFIG = {
 export default function StatsScreen() {
   const insets = useSafeAreaInsets();
   const { user, isLoading: isAuthLoading } = useAuth();
+  const { moods, fetchMoods } = useMoods();
   const { t } = useTranslation();
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const screenWidth = Dimensions.get("window").width - 64;
+  const stats = useMemo(() => buildLocalStats(moods), [moods]);
 
   useEffect(() => {
-    if (!isAuthLoading && !user) {
-      router.replace("/login");
+    if (user) {
+      fetchMoods(new Date().getMonth() + 1, new Date().getFullYear());
     }
-  }, [user, isAuthLoading]);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const token = await AsyncStorage.getItem("auth_token");
-      const res = await fetch(`${API_BASE}/stats`, {
-        headers: token ? { Cookie: `token=${token}` } : {},
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch stats:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (user) fetchStats();
-  }, [user, fetchStats]);
+  }, [user, fetchMoods]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchStats();
+    await fetchMoods(new Date().getMonth() + 1, new Date().getFullYear());
     setRefreshing(false);
-  }, [fetchStats]);
+  }, [fetchMoods]);
 
   const phaseLabels = useMemo(() => {
     if (!stats) return [];
     return stats.byPhase.map((p) => PHASE_EMOJIS[p.phase] || "");
   }, [stats]);
 
-  const hasData = stats && stats.totalEntries > 0;
-  const phasesWithData = stats?.byPhase.filter((p) => p.count > 0) || [];
+  const hasData = stats.totalEntries > 0;
+  const phasesWithData = stats.byPhase.filter((p) => p.count > 0);
 
-  if (isLoading) {
+  if (isAuthLoading) {
     return (
       <View style={[styles.container, styles.center]}>
         <CosmicBackground starCount={60} />

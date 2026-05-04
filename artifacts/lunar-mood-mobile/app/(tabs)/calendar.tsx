@@ -78,12 +78,6 @@ export default function CalendarScreen() {
   }, [lunarPhases]);
 
   useEffect(() => {
-    if (!isAuthLoading && !user) {
-      router.replace("/login");
-    }
-  }, [user, isAuthLoading]);
-
-  useEffect(() => {
     if (user) {
       fetchMoods(month, year);
     }

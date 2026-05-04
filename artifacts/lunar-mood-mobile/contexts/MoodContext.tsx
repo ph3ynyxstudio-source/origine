@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getLunarPhase } from "@/lib/lunar";
 
-const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
+const MOODS_STORAGE_KEY = "local_moods";
+const LOCAL_USER_ID = 1;
 
 export interface MoodEntry {
   id: number;
@@ -28,40 +30,38 @@ interface MoodContextType {
 
 const MoodContext = createContext<MoodContextType | undefined>(undefined);
 
+async function readLocalMoods(): Promise<MoodEntry[]> {
+  const raw = await AsyncStorage.getItem(MOODS_STORAGE_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+async function writeLocalMoods(entries: MoodEntry[]): Promise<void> {
+  await AsyncStorage.setItem(MOODS_STORAGE_KEY, JSON.stringify(entries));
+}
+
 export function MoodProvider({ children }: { children: React.ReactNode }) {
   const [moods, setMoods] = useState<MoodEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const getToken = async () => {
-    return await AsyncStorage.getItem("auth_token");
-  };
-
-  const getHeaders = async () => {
-    const token = await getToken();
-    return {
-      "Content-Type": "application/json",
-      ...(token ? { Cookie: `token=${token}` } : {}),
-    };
-  };
-
-  const fetchMoods = useCallback(async (month: number, year: number) => {
+  const loadLocalMoods = useCallback(async () => {
     setIsLoading(true);
     try {
-      const headers = await getHeaders();
-      const res = await fetch(
-        `${API_BASE}/moods?month=${month}&year=${year}`,
-        { headers }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setMoods(data);
-      }
+      setMoods(await readLocalMoods());
     } catch (err) {
-      console.error("Failed to fetch moods:", err);
+      console.error("Failed to load local moods:", err);
+      setMoods([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    loadLocalMoods();
+  }, [loadLocalMoods]);
+
+  const fetchMoods = useCallback(async () => {
+    await loadLocalMoods();
+  }, [loadLocalMoods]);
 
   const createMood = async (
     date: string,
@@ -71,23 +71,24 @@ export function MoodProvider({ children }: { children: React.ReactNode }) {
     consumption: number,
     note: string | null
   ): Promise<MoodEntry> => {
-    const headers = await getHeaders();
-    const res = await fetch(`${API_BASE}/moods`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ date, period, mood, energy, consumption, note }),
-    });
+    const periodKey = period as MoodEntry["period"];
+    const entry: MoodEntry = {
+      id: Date.now(),
+      userId: LOCAL_USER_ID,
+      date,
+      period: periodKey,
+      mood,
+      energy,
+      consumption,
+      note,
+      lunarPhase: getLunarPhase(new Date(`${date}T12:00:00`)).phase,
+      createdAt: new Date().toISOString(),
+    };
 
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Failed to create mood");
-    }
-
-    const entry = await res.json();
-    setMoods((prev) => {
-      const filtered = prev.filter(m => !(m.date === date && m.period === period));
-      return [...filtered, entry];
-    });
+    const current = await readLocalMoods();
+    const next = [...current.filter((m) => !(m.date === date && m.period === periodKey)), entry];
+    setMoods(next);
+    await writeLocalMoods(next);
     return entry;
   };
 
@@ -98,45 +99,33 @@ export function MoodProvider({ children }: { children: React.ReactNode }) {
     consumption: number,
     note: string | null
   ): Promise<MoodEntry> => {
-    const headers = await getHeaders();
-    const res = await fetch(`${API_BASE}/moods/${id}`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ mood, energy, consumption, note }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Failed to update mood");
+    const current = await readLocalMoods();
+    const existing = current.find((m) => m.id === id);
+    if (!existing) {
+      throw new Error("Entry not found");
     }
 
-    const entry = await res.json();
-    setMoods((prev) => prev.map((m) => (m.id === id ? entry : m)));
+    const entry = { ...existing, mood, energy, consumption, note };
+    const next = current.map((m) => (m.id === id ? entry : m));
+    setMoods(next);
+    await writeLocalMoods(next);
     return entry;
   };
 
   const deleteMood = async (id: number) => {
-    const headers = await getHeaders();
-    const res = await fetch(`${API_BASE}/moods/${id}`, {
-      method: "DELETE",
-      headers,
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to delete mood");
-    }
-
-    setMoods((prev) => prev.filter((m) => m.id !== id));
+    const current = await readLocalMoods();
+    const next = current.filter((m) => m.id !== id);
+    setMoods(next);
+    await writeLocalMoods(next);
   };
 
   const clearMoods = () => {
     setMoods([]);
+    AsyncStorage.removeItem(MOODS_STORAGE_KEY).catch(console.warn);
   };
 
   return (
-    <MoodContext.Provider
-      value={{ moods, isLoading, fetchMoods, createMood, updateMood, deleteMood, clearMoods }}
-    >
+    <MoodContext.Provider value={{ moods, isLoading, fetchMoods, createMood, updateMood, deleteMood, clearMoods }}>
       {children}
     </MoodContext.Provider>
   );

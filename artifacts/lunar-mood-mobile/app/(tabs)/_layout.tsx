@@ -64,7 +64,7 @@ function GhostTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
                   <Ionicons
                     name={icon}
                     size={22}
-                    color={isFocused ? Colors.dark.primaryLight : Colors.dark.textMuted}
+                    color={isFocused ? Colors.dark.primary : Colors.dark.textMuted}
                     style={isFocused ? styles.iconGlow : undefined}
                   />
                 </View>
@@ -104,14 +104,14 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     overflow: "hidden",
     borderWidth: 0.5,
-    borderColor: "rgba(124, 106, 250, 0.06)",
+    borderColor: "rgba(34, 211, 238, 0.14)",
   },
   tabBarInner: {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
     paddingVertical: 10,
-    backgroundColor: "rgba(11, 14, 26, 0.45)",
+    backgroundColor: "rgba(8, 5, 32, 0.82)",
   },
   tabButton: {
     flex: 1,
@@ -127,10 +127,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   iconContainerActive: {
-    backgroundColor: "rgba(124, 106, 250, 0.12)",
+    backgroundColor: "rgba(34, 211, 238, 0.10)",
   },
   iconGlow: {
-    textShadowColor: "rgba(155, 139, 255, 0.6)",
+    textShadowColor: "rgba(34, 211, 238, 0.7)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
   },

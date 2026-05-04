@@ -12,7 +12,6 @@ import {
 import { router } from "expo-router";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMoods } from "@/contexts/MoodContext";
@@ -22,12 +21,10 @@ import { getNotificationsEnabled, setNotificationsEnabled } from "@/lib/notifica
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 
-const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
-
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { logout } = useAuth();
-  const { clearMoods, fetchMoods } = useMoods();
+  const { clearMoods, createMood, fetchMoods } = useMoods();
   const { consumptionTrackingEnabled, setConsumptionTrackingEnabled } = useSettings();
   const { t, language, setLanguage } = useTranslation();
   const [isSeeding, setIsSeeding] = useState(false);
@@ -42,7 +39,7 @@ export default function SettingsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     clearMoods();
     await logout();
-    router.replace("/login");
+    router.replace("/");
   };
 
   const toggleLang = async (lang: Language) => {
@@ -65,20 +62,18 @@ export default function SettingsScreen() {
   const handleDevSeed = async () => {
     setIsSeeding(true);
     try {
-      const token = await AsyncStorage.getItem("auth_token");
-      const res = await fetch(`${API_BASE}/dev/seed`, {
-        method: "POST",
-        headers: token ? { Cookie: `token=${token}` } : {},
-      });
-      if (res.ok) {
-        const data = await res.json();
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert(t("devGenerateSuccess"), `${data.count} ${t("devEntries")}`);
-        const now = new Date();
-        fetchMoods(now.getMonth() + 1, now.getFullYear());
-      } else {
-        throw new Error("Failed");
+      let count = 0;
+      for (let i = 0; i < 7; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().slice(0, 10);
+        await createMood(dateStr, "evening", ((i % 5) + 1), 50 + ((i % 3) * 25), i % 6, null);
+        count += 1;
       }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert(t("devGenerateSuccess"), `${count} ${t("devEntries")}`);
+      const now = new Date();
+      fetchMoods(now.getMonth() + 1, now.getFullYear());
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(t("devGenerateFailed"));
@@ -96,21 +91,11 @@ export default function SettingsScreen() {
         onPress: async () => {
           setIsClearing(true);
           try {
-            const token = await AsyncStorage.getItem("auth_token");
-            const res = await fetch(`${API_BASE}/dev/seed`, {
-              method: "DELETE",
-              headers: token ? { Cookie: `token=${token}` } : {},
-            });
-            if (res.ok) {
-              const data = await res.json();
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Alert.alert(t("devClearSuccess"), `${data.count} ${t("devEntriesDeleted")}`);
-              clearMoods();
-              const now = new Date();
-              fetchMoods(now.getMonth() + 1, now.getFullYear());
-            } else {
-              throw new Error("Failed");
-            }
+            clearMoods();
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert(t("devClearSuccess"), t("devEntriesDeleted"));
+            const now = new Date();
+            fetchMoods(now.getMonth() + 1, now.getFullYear());
           } catch {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(t("devClearFailed"));

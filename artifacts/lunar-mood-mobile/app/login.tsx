@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   StyleSheet,
   ActivityIndicator,
@@ -16,7 +15,6 @@ import {
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation, type Language } from "@/lib/i18n";
@@ -24,8 +22,6 @@ import { getNotificationsEnabled, setNotificationsEnabled } from "@/lib/notifica
 import Colors from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 import GlowingMoon from "@/components/GlowingMoon";
-
-const API_BASE = `https://${process.env.EXPO_PUBLIC_DOMAIN}/api`;
 
 interface FloatingParticle {
   x: number;
@@ -115,14 +111,10 @@ const particles = generateParticles(Platform.OS === "web" ? 8 : 12);
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
-  const { login, register } = useAuth();
+  const { login } = useAuth();
   const { t, language, setLanguage } = useTranslation();
-  const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
@@ -141,24 +133,11 @@ export default function LoginScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!username.trim() || !password.trim()) {
-      setError(t("fillAllFields"));
-      return;
-    }
-    if (password.length < 3) {
-      setError(t("passwordMinLength"));
-      return;
-    }
-
     setError("");
     setIsSubmitting(true);
 
     try {
-      if (isLogin) {
-        await login(username.trim(), password);
-      } else {
-        await register(username.trim(), password);
-      }
+      await login("Lun4rMood");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace("/");
     } catch (e: any) {
@@ -169,12 +148,6 @@ export default function LoginScreen() {
     }
   };
 
-  const toggleMode = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setIsLogin(!isLogin);
-    setError("");
-  };
-
   const toggleLang = (lang: Language) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setLanguage(lang);
@@ -183,18 +156,8 @@ export default function LoginScreen() {
   const handleDevSeed = async () => {
     setIsSeeding(true);
     try {
-      const token = await AsyncStorage.getItem("auth_token");
-      const res = await fetch(`${API_BASE}/dev/seed`, {
-        method: "POST",
-        headers: token ? { Cookie: `token=${token}` } : {},
-      });
-      if (res.ok) {
-        const data = await res.json();
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert(t("devGenerateSuccess"), `${data.count} ${t("devEntries")}`);
-      } else {
-        throw new Error("Failed");
-      }
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert(t("devGenerateSuccess"), t("localFirstAccess"));
     } catch {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert(t("devGenerateFailed"));
@@ -212,18 +175,8 @@ export default function LoginScreen() {
         onPress: async () => {
           setIsClearing(true);
           try {
-            const token = await AsyncStorage.getItem("auth_token");
-            const res = await fetch(`${API_BASE}/dev/seed`, {
-              method: "DELETE",
-              headers: token ? { Cookie: `token=${token}` } : {},
-            });
-            if (res.ok) {
-              const data = await res.json();
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              Alert.alert(t("devClearSuccess"), `${data.count} ${t("devEntriesDeleted")}`);
-            } else {
-              throw new Error("Failed");
-            }
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert(t("devClearSuccess"), t("localFirstAccess"));
           } catch {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             Alert.alert(t("devClearFailed"));
@@ -363,50 +316,13 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.formCard}>
-            <View style={styles.inputContainer}>
+            <View style={styles.localInfo}>
               <Ionicons
-                name="person-outline"
-                size={20}
-                color={Colors.dark.textMuted}
-                style={styles.inputIcon}
+                name="sparkles-outline"
+                size={22}
+                color={Colors.dark.primaryLight}
               />
-              <TextInput
-                style={styles.input}
-                placeholder={t("username")}
-                placeholderTextColor={Colors.dark.textMuted}
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={20}
-                color={Colors.dark.textMuted}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={[styles.input, { flex: 1 }]}
-                placeholder={t("password")}
-                placeholderTextColor={Colors.dark.textMuted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoCapitalize="none"
-              />
-              <Pressable
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeBtn}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={20}
-                  color={Colors.dark.textMuted}
-                />
-              </Pressable>
+              <Text style={styles.localInfoText}>{t("localFirstAccess")}</Text>
             </View>
 
             {error ? (
@@ -429,18 +345,9 @@ export default function LoginScreen() {
                 <ActivityIndicator color="#FFF" size="small" />
               ) : (
                 <Text style={styles.submitText}>
-                  {isLogin ? t("enterOrbit") : t("launchAccount")}
+                  {t("enterOrbit")}
                 </Text>
               )}
-            </Pressable>
-
-            <Pressable onPress={toggleMode} style={styles.toggleContainer}>
-              <Text style={styles.toggleText}>
-                {isLogin ? t("newToCosmos") : t("alreadyHaveAccount")}
-                <Text style={styles.toggleLink}>
-                  {isLogin ? t("createAccount") : t("logIn")}
-                </Text>
-              </Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -634,6 +541,24 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 20,
+  },
+  localInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: "rgba(34, 211, 238, 0.08)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(34, 211, 238, 0.22)",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  localInfoText: {
+    flex: 1,
+    color: Colors.dark.textSecondary,
+    fontSize: 14,
+    fontFamily: "Inter_400Regular",
+    lineHeight: 20,
   },
   inputContainer: {
     flexDirection: "row",
