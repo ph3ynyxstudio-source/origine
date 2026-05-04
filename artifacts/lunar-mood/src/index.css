@@ -147,7 +147,7 @@
   }
 
   .cosmic-gradient-text {
-    @apply bg-clip-text text-transparent gradient-to-r from-primary via-accent to-primary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary;
     background-size: 200% auto;
     animation: gradient 8s linear infinite;
   }
