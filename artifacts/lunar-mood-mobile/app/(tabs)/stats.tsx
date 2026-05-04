@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMoods, type MoodEntry } from "@/contexts/MoodContext";
 import { useTranslation, getPhaseTranslationKey } from "@/lib/i18n";
-import Colors from "@/constants/colors";
+import { Colors } from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 import SwipeableTabView from "@/components/SwipeableTabView";
 
@@ -124,7 +124,7 @@ const CHART_CONFIG = {
 
 export default function StatsScreen() {
   const insets = useSafeAreaInsets();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isAuthLoading } = useAuth();
   const { moods, fetchMoods } = useMoods();
   const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
@@ -132,10 +132,8 @@ export default function StatsScreen() {
   const stats = useMemo(() => buildLocalStats(moods), [moods]);
 
   useEffect(() => {
-    if (user) {
-      fetchMoods(new Date().getMonth() + 1, new Date().getFullYear());
-    }
-  }, [user, fetchMoods]);
+    fetchMoods(new Date().getMonth() + 1, new Date().getFullYear());
+  }, [fetchMoods]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

@@ -5,8 +5,9 @@ import { fr, enUS } from "date-fns/locale";
 
 import { getDayEntry } from "../data/storage";
 import { formatDate, getLocalStartOfDay } from "../data/calendar";
+import { getMoonPhase } from "../data/moon";
 import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
-import type { MoonPhase } from "../data/day-entry.types";
+import type { DayEntry, MomentEntry, MoonPhase } from "../data/day-entry.types";
 
 // --- MOON NEON FULL (Pleine Lune Uniquement) ---
 function Moon() {
@@ -30,12 +31,37 @@ function Moon() {
   );
 }
 
+const PHASE_LABEL_KEYS: Record<MoonPhase, string> = {
+  new_moon: "phaseNewMoon",
+  waxing_crescent: "phaseWaxingCrescent",
+  first_quarter: "phaseFirstQuarter",
+  waxing_gibbous: "phaseWaxingGibbous",
+  full_moon: "phaseFullMoon",
+  waning_gibbous: "phaseWaningGibbous",
+  last_quarter: "phaseLastQuarter",
+  waning_crescent: "phaseWaningCrescent",
+};
+
+function getLunarCycleDay(date: Date): number {
+  const known = new Date(2000, 0, 6);
+  const cycle = 29.53058867;
+  const diff = (date.getTime() - known.getTime()) / (1000 * 60 * 60 * 24);
+  const position = ((diff % cycle) + cycle) % cycle;
+
+  return Math.floor(position) + 1;
+}
+
 // --- UTILITAIRES ---
-function getAverageMetric(entry: any, key: "emotion" | "energy") {
+function getAverageMetric(
+  entry: DayEntry | null | undefined,
+  key: keyof Pick<MomentEntry, "emotion" | "energy">,
+): number | null {
   if (!entry) return null;
-  const values = Object.values(entry.moments || {})
-    .map((m: any) => m?.[key] ?? null)
-    .filter((v) => v !== null) as number[];
+
+  const values = (Object.values(entry.moments) as (MomentEntry | undefined)[])
+    .map((m) => m?.[key] ?? null)
+    .filter((v): v is number => v !== null);
+
   return values.length
     ? Math.min(
         100,
@@ -55,9 +81,9 @@ export default function Dashboard() {
   const dateLabel = format(today, "EEEE d MMMM", { locale });
   const dateStr = formatDate(today);
 
-  // Valeurs forcées pour ton test Pleine Lune
-  const moonPhaseLabel = t("phaseFullMoon");
-  const cycleDay = 15;
+  const moonPhase = getMoonPhase(today);
+  const moonPhaseLabel = t(PHASE_LABEL_KEYS[moonPhase]);
+  const cycleDay = getLunarCycleDay(today);
 
   const entry = getDayEntry(dateStr);
   const mood = getAverageMetric(entry, "emotion");
@@ -78,7 +104,7 @@ export default function Dashboard() {
       </header>
 
       {/* Carte Lune */}
-      <div className="flex flex-col items-center p-8 rounded-[2.5rem] border border-white/5 bg-white/5 shadow-2xl backdrop-blur-2xl relative overflow-hidden">
+      <div className="relative overflow-hidden rounded-[2.5rem] border border-white/8 bg-bg-surface p-8 shadow-2xl shadow-black/60 backdrop-blur-2xl flex flex-col items-center">
         <Moon />
 
         <div className="mt-8 text-center">
@@ -88,7 +114,7 @@ export default function Dashboard() {
           <p className="text-3xl font-bold bg-linear-to-r from-(--color-primary) via-(--color-secondary) to-(--color-accent) bg-clip-text text-transparent">
             {moonPhaseLabel}
           </p>
-          <p className="mt-2 text-sm text-(--text-muted) bg-white/5 px-4 py-1 rounded-full border border-white/5 inline-block">
+          <p className="mt-2 inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1 text-sm text-(--text-muted) shadow-[0_0_18px_rgba(34,211,238,0.16)]">
             {t("cycleDay")} {cycleDay}
           </p>
         </div>
@@ -96,7 +122,7 @@ export default function Dashboard() {
 
       {/* Métriques */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-5 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl">
+        <div className="rounded-2xl border border-white/8 bg-bg-surface p-5 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.35)]">
           <p className="text-xs uppercase tracking-wider text-(--text-muted) mb-1">
             {t("todayMood")}
           </p>
@@ -104,7 +130,7 @@ export default function Dashboard() {
             {mood ?? "--"}%
           </p>
         </div>
-        <div className="p-5 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl">
+        <div className="rounded-2xl border border-white/8 bg-bg-surface p-5 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.35)]">
           <p className="text-xs uppercase tracking-wider text-(--text-muted) mb-1">
             {t("energy")}
           </p>
@@ -115,7 +141,7 @@ export default function Dashboard() {
       </div>
 
       {/* Insight */}
-      <div className="p-6 rounded-2xl border border-white/5 bg-white/5 backdrop-blur-xl">
+      <div className="rounded-2xl border border-white/8 bg-bg-surface p-6 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.35)]">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">✨</span>
           <p className="text-xs font-bold uppercase tracking-widest text-(--text-muted)">

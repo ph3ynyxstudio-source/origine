@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
 
 import { getDayEntry, saveDayEntry } from "../data/storage";
@@ -44,11 +44,9 @@ export function MoodDialog({ date, onClose }: Props) {
     }));
   }
 
-  // 🔥 NORMALIZATION SIMPLE (TON SYSTÈME MVP)
-  function normalizeNote(note: string): NormalizedSignal[] {
+  function normalizeNote(value: string): NormalizedSignal[] {
     const normalized: NormalizedSignal[] = [];
-
-    const lower = note.toLowerCase();
+    const lower = value.toLowerCase();
 
     if (lower.includes("café")) normalized.push("caffeine");
     if (lower.includes("coffee")) normalized.push("caffeine");
@@ -68,7 +66,7 @@ export function MoodDialog({ date, onClose }: Props) {
       moonPhase: existing?.moonPhase ?? getMoonPhase(parseLocalDate(date)),
       note,
       moments,
-      normalized, // 🔥 ajouté
+      normalized,
       updatedAt: Date.now(),
     };
 
@@ -77,36 +75,39 @@ export function MoodDialog({ date, onClose }: Props) {
   }
 
   return (
-    <div style={overlay}>
-      <div style={modal}>
-        {/* HEADER */}
-        <div style={header}>
-          <h2>{date}</h2>
-          <button onClick={onClose} style={closeBtn}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div className="pb-safe flex max-h-[85vh] w-[90%] max-w-100 flex-col gap-4 overflow-y-auto rounded-2xl border border-white/10 bg-bg-surface p-6 text-white shadow-2xl shadow-black/50">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">{date}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-xl leading-none text-white/60 transition-colors hover:text-white"
+            aria-label="Fermer"
+          >
             ✕
           </button>
         </div>
 
-        {/* MOMENTS */}
-        <div style={row}>
+        <div className="flex gap-2">
           {MOMENTS.map((m) => (
             <button
               key={m}
+              type="button"
               onClick={() => setActiveMoment(m)}
-              style={{
-                ...pill,
-                background:
-                  activeMoment === m ? "#7c3aed" : "rgba(255,255,255,0.1)",
-              }}>
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium text-white transition-colors ${
+                activeMoment === m
+                  ? "bg-primary shadow-lg shadow-primary/20"
+                  : "bg-white/10 hover:bg-white/15"
+              }`}
+            >
               {t(m)}
             </button>
           ))}
         </div>
 
-        {/* EMOTION */}
-        <div style={section}>
-          <label>{t("emotion")}</label>
-
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-white/70">{t("emotion")}</label>
           <input
             type="range"
             min="0"
@@ -115,16 +116,13 @@ export function MoodDialog({ date, onClose }: Props) {
             onChange={(e) =>
               setMetric("emotion", Number(e.target.value) as MetricValue)
             }
-            style={slider}
+            className="emotion w-full cursor-pointer focus:outline-none"
           />
-
           <strong>{current.emotion ?? 50}%</strong>
         </div>
 
-        {/* ENERGY */}
-        <div style={section}>
-          <label>{t("energy")}</label>
-
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-white/70">{t("energy")}</label>
           <input
             type="range"
             min="0"
@@ -133,16 +131,13 @@ export function MoodDialog({ date, onClose }: Props) {
             onChange={(e) =>
               setMetric("energy", Number(e.target.value) as MetricValue)
             }
-            style={slider}
+            className="energy w-full cursor-pointer focus:outline-none"
           />
-
           <strong>{current.energy ?? 50}%</strong>
         </div>
 
-        {/* CONSUMPTION */}
-        <div style={section}>
-          <label>{t("consumption")}</label>
-
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-white/70">{t("consumption")}</label>
           <input
             type="range"
             min="0"
@@ -151,29 +146,35 @@ export function MoodDialog({ date, onClose }: Props) {
             onChange={(e) =>
               setMetric("consumption", Number(e.target.value) as MetricValue)
             }
-            style={slider}
+            className="w-full cursor-pointer focus:outline-none"
           />
-
           <strong>{current.consumption ?? 50}%</strong>
         </div>
 
-        {/* NOTE */}
-        <div style={section}>
-          <label>{t("note")}</label>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm text-white/70">{t("note")}</label>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            style={textarea}
+            rows={3}
+            className="w-full resize-none rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-white transition-colors focus:border-white/30 focus:outline-none"
           />
         </div>
 
-        {/* ACTIONS */}
-        <div style={row}>
-          <button onClick={onClose} style={btnSecondary}>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-xl bg-white/10 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/15"
+          >
             {t("cancel")}
           </button>
 
-          <button onClick={handleSave} style={btnPrimary}>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="flex-1 rounded-xl bg-linear-to-r from-[#22D3EE] to-[#A855F7] px-4 py-3 text-sm font-medium text-white shadow-[0_0_24px_rgba(34,211,238,0.22)] transition-all hover:brightness-110 hover:shadow-[0_0_32px_rgba(34,211,238,0.34)]"
+          >
             {t("save")}
           </button>
         </div>
@@ -181,59 +182,3 @@ export function MoodDialog({ date, onClose }: Props) {
     </div>
   );
 }
-
-/* styles (inchangés) */
-const overlay: CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,0.7)",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-};
-const modal: CSSProperties = {
-  width: "90%",
-  maxWidth: "400px",
-  maxHeight: "85vh",
-  overflowY: "auto",
-  background: "#1a1a2e",
-  borderRadius: "16px",
-  padding: "24px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
-};
-const header: CSSProperties = { display: "flex", justifyContent: "space-between" };
-const row: CSSProperties = { display: "flex", gap: "8px" };
-const section: CSSProperties = { display: "flex", flexDirection: "column", gap: "8px" };
-const pill: CSSProperties = {
-  flex: 1,
-  padding: "8px",
-  borderRadius: "8px",
-  border: "none",
-  color: "white",
-};
-const slider: CSSProperties = { width: "100%", cursor: "pointer" };
-const textarea: CSSProperties = { width: "100%", padding: "8px", borderRadius: "8px" };
-const btnPrimary: CSSProperties = {
-  flex: 1,
-  background: "#7c3aed",
-  padding: "12px",
-  borderRadius: "8px",
-  border: "none",
-  color: "white",
-};
-const btnSecondary: CSSProperties = {
-  flex: 1,
-  background: "rgba(255,255,255,0.1)",
-  padding: "12px",
-  borderRadius: "8px",
-  border: "none",
-  color: "white",
-};
-const closeBtn: CSSProperties = {
-  background: "none",
-  border: "none",
-  color: "white",
-  fontSize: "20px",
-};

@@ -1,14 +1,17 @@
 import React, { useEffect, useRef } from "react";
 import { View, StyleSheet, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Colors from "@/constants/colors";
+import { Colors } from "@/constants/colors";
 
 interface GlowingMoonProps {
   size?: number;
   iconSize?: number;
 }
 
-export default function GlowingMoon({ size = 96, iconSize = 52 }: GlowingMoonProps) {
+export default function GlowingMoon({
+  size = 96,
+  iconSize = 52,
+}: GlowingMoonProps) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -24,7 +27,7 @@ export default function GlowingMoon({ size = 96, iconSize = 52 }: GlowingMoonPro
           duration: 3000,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
     animation.start();
     return () => animation.stop();
@@ -63,8 +66,7 @@ export default function GlowingMoon({ size = 96, iconSize = 52 }: GlowingMoonPro
             height: size,
             borderRadius: size / 2,
           },
-        ]}
-      >
+        ]}>
         <Ionicons name="moon" size={iconSize} color={Colors.dark.moon} />
       </View>
     </View>

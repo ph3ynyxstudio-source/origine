@@ -15,8 +15,12 @@ import * as Haptics from "expo-haptics";
 import { useMoods, type MoodEntry } from "@/contexts/MoodContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { getMoodColor } from "@/lib/lunar";
-import { useTranslation, getMoodTranslationKey, getConsumptionTranslationKey } from "@/lib/i18n";
-import Colors from "@/constants/colors";
+import {
+  useTranslation,
+  getMoodTranslationKey,
+  getConsumptionTranslationKey,
+} from "@/lib/i18n";
+import { Colors } from "@/constants/colors";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import CosmicBackground from "@/components/CosmicBackground";
@@ -49,7 +53,9 @@ export default function MoodEntryScreen() {
   const { moods, createMood, updateMood, deleteMood, fetchMoods } = useMoods();
   const { consumptionTrackingEnabled } = useSettings();
   const { t, language } = useTranslation();
-  const [selectedPeriod, setSelectedPeriod] = useState<"morning" | "afternoon" | "evening">(getCurrentPeriod());
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    "morning" | "afternoon" | "evening"
+  >(getCurrentPeriod());
   const [selectedMood, setSelectedMood] = useState<number>(0);
   const [energy, setEnergy] = useState<number>(50);
   const [consumption, setConsumption] = useState<number>(0);
@@ -62,18 +68,26 @@ export default function MoodEntryScreen() {
       { key: "afternoon" as const, label: t("afternoon"), color: "#3B82F6" },
       { key: "evening" as const, label: t("evening"), color: "#8B5CF6" },
     ],
-    [t]
+    [t],
   );
 
   const dateObj = params.date ? parseISO(params.date) : new Date();
   const dateLocale = language === "fr" ? fr : undefined;
-  const formattedDate = format(dateObj, "EEEE, MMMM d, yyyy", { locale: dateLocale });
+  const formattedDate = format(dateObj, "EEEE, MMMM d, yyyy", {
+    locale: dateLocale,
+  });
   const monthNum = dateObj.getMonth() + 1;
   const yearNum = dateObj.getFullYear();
   const dateStr = params.date || format(new Date(), "yyyy-MM-dd");
 
-  const dayEntries = useMemo(() => moods.filter(m => m.date === dateStr), [moods, dateStr]);
-  const existingEntry = useMemo(() => dayEntries.find(m => m.period === selectedPeriod), [dayEntries, selectedPeriod]);
+  const dayEntries = useMemo(
+    () => moods.filter((m) => m.date === dateStr),
+    [moods, dateStr],
+  );
+  const existingEntry = useMemo(
+    () => dayEntries.find((m) => m.period === selectedPeriod),
+    [dayEntries, selectedPeriod],
+  );
   const isEditing = !!existingEntry;
 
   useEffect(() => {
@@ -109,16 +123,23 @@ export default function MoodEntryScreen() {
           selectedMood,
           energy,
           consumption,
-          note.trim() || null
+          note.trim() || null,
         );
       } else {
-        await createMood(dateStr, selectedPeriod, selectedMood, energy, consumption, note.trim() || null);
+        await createMood(
+          dateStr,
+          selectedPeriod,
+          selectedMood,
+          energy,
+          consumption,
+          note.trim() || null,
+        );
       }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await fetchMoods(monthNum, yearNum);
       router.back();
     } catch (e: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       Alert.alert(t("saveFailed"), e.message || "");
     } finally {
       setIsSubmitting(false);
@@ -134,7 +155,7 @@ export default function MoodEntryScreen() {
         onPress: async () => {
           try {
             await deleteMood(existingEntry!.id);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             await fetchMoods(monthNum, yearNum);
             router.back();
           } catch (e: any) {
@@ -148,7 +169,10 @@ export default function MoodEntryScreen() {
   return (
     <View style={styles.container}>
       <CosmicBackground variant="sheet" starCount={50} />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.dateText}>{formattedDate}</Text>
           {params.phaseEmoji ? (
@@ -163,18 +187,31 @@ export default function MoodEntryScreen() {
         <View style={styles.periodRow}>
           {PERIODS.map((p) => {
             const isSelected = selectedPeriod === p.key;
-            const hasEntry = dayEntries.some(m => m.period === p.key);
+            const hasEntry = dayEntries.some((m) => m.period === p.key);
             return (
               <Pressable
                 key={p.key}
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setSelectedPeriod(p.key); }}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSelectedPeriod(p.key);
+                }}
                 style={[
                   styles.periodOption,
-                  isSelected && { borderColor: p.color, backgroundColor: p.color + "20" },
-                ]}
-              >
-                <View style={[styles.periodDot, { backgroundColor: p.color }]} />
-                <Text style={[styles.periodLabel, isSelected && { color: p.color }]}>{p.label}</Text>
+                  isSelected && {
+                    borderColor: p.color,
+                    backgroundColor: p.color + "20",
+                  },
+                ]}>
+                <View
+                  style={[styles.periodDot, { backgroundColor: p.color }]}
+                />
+                <Text
+                  style={[
+                    styles.periodLabel,
+                    isSelected && { color: p.color },
+                  ]}>
+                  {p.label}
+                </Text>
                 {hasEntry && <View style={styles.checkDot} />}
               </Pressable>
             );
@@ -199,14 +236,19 @@ export default function MoodEntryScreen() {
                     shadowOpacity: 0.4,
                     shadowRadius: 10,
                   },
-                ]}
-              >
+                ]}>
                 <Ionicons
                   name={MOOD_ICONS[level]}
                   size={24}
-                  color={isSelected ? getMoodColor(level) : Colors.dark.textMuted}
+                  color={
+                    isSelected ? getMoodColor(level) : Colors.dark.textMuted
+                  }
                 />
-                <Text style={[styles.moodLabel, isSelected && { color: getMoodColor(level) }]}>
+                <Text
+                  style={[
+                    styles.moodLabel,
+                    isSelected && { color: getMoodColor(level) },
+                  ]}>
                   {t(getMoodTranslationKey(level))}
                 </Text>
               </Pressable>
@@ -221,14 +263,29 @@ export default function MoodEntryScreen() {
             return (
               <Pressable
                 key={e}
-                onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setEnergy(e); }}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setEnergy(e);
+                }}
                 style={[
                   styles.energyOption,
-                  isSelected && { borderColor: "#3B82F6", backgroundColor: "rgba(59, 130, 246, 0.2)" },
-                ]}
-              >
-                <Ionicons name="flash" size={16} color={isSelected ? "#93C5FD" : Colors.dark.textMuted} />
-                <Text style={[styles.energyLabel, isSelected && { color: "#93C5FD" }]}>{e}%</Text>
+                  isSelected && {
+                    borderColor: "#3B82F6",
+                    backgroundColor: "rgba(59, 130, 246, 0.2)",
+                  },
+                ]}>
+                <Ionicons
+                  name="flash"
+                  size={16}
+                  color={isSelected ? "#93C5FD" : Colors.dark.textMuted}
+                />
+                <Text
+                  style={[
+                    styles.energyLabel,
+                    isSelected && { color: "#93C5FD" },
+                  ]}>
+                  {e}%
+                </Text>
               </Pressable>
             );
           })}
@@ -243,14 +300,29 @@ export default function MoodEntryScreen() {
                 return (
                   <Pressable
                     key={c}
-                    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setConsumption(c); }}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setConsumption(c);
+                    }}
                     style={[
                       styles.consumptionOption,
-                      isSelected && { borderColor: "#F59E0B", backgroundColor: "rgba(245, 158, 11, 0.2)" },
-                    ]}
-                  >
-                    <Text style={[styles.consumptionValue, isSelected && { color: "#FCD34D" }]}>{c}</Text>
-                    <Text style={[styles.consumptionLabel, isSelected && { color: "#FCD34D" }]}>
+                      isSelected && {
+                        borderColor: "#F59E0B",
+                        backgroundColor: "rgba(245, 158, 11, 0.2)",
+                      },
+                    ]}>
+                    <Text
+                      style={[
+                        styles.consumptionValue,
+                        isSelected && { color: "#FCD34D" },
+                      ]}>
+                      {c}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.consumptionLabel,
+                        isSelected && { color: "#FCD34D" },
+                      ]}>
                       {t(getConsumptionTranslationKey(c))}
                     </Text>
                   </Pressable>
@@ -280,8 +352,7 @@ export default function MoodEntryScreen() {
               isSubmitting && styles.buttonDisabled,
             ]}
             onPress={handleSave}
-            disabled={isSubmitting}
-          >
+            disabled={isSubmitting}>
             {isSubmitting ? (
               <ActivityIndicator color="#FFF" size="small" />
             ) : (
@@ -297,9 +368,12 @@ export default function MoodEntryScreen() {
                 styles.deleteButton,
                 pressed && styles.buttonPressed,
               ]}
-              onPress={handleDelete}
-            >
-              <Ionicons name="trash-outline" size={18} color={Colors.dark.mood1} />
+              onPress={handleDelete}>
+              <Ionicons
+                name="trash-outline"
+                size={18}
+                color={Colors.dark.mood1}
+              />
               <Text style={styles.deleteText}>{t("delete")}</Text>
             </Pressable>
           )}

@@ -17,11 +17,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMoods } from "@/contexts/MoodContext";
 import { getLunarPhase } from "@/lib/lunar";
 import { useTranslation, getPhaseTranslationKey } from "@/lib/i18n";
-import Colors from "@/constants/colors";
-import CosmicBackground from "@/components/CosmicBackground";
 import SwipeableTabView from "@/components/SwipeableTabView";
-
-const appLogo = require("../../assets/images/logo/logo-ui-128.png");
+import { Colors } from "@/constants/colors";
+import CosmicBackground from "@/components/CosmicBackground";
 
 function getLunarCycleDay(date: Date): number {
   const known = new Date(2000, 0, 6);
@@ -34,7 +32,7 @@ function getLunarCycleDay(date: Date): number {
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isAuthLoading } = useAuth();
   const { moods } = useMoods();
   const { t, language } = useTranslation();
 
@@ -48,7 +46,7 @@ export default function HomeScreen() {
         day: "numeric",
         month: "long",
       }),
-    [language, today]
+    [language, today],
   );
 
   const stats = useMemo(() => {
@@ -58,7 +56,10 @@ export default function HomeScreen() {
 
     const totalMood = moods.reduce((sum, m) => sum + m.mood, 0);
     const totalEnergy = moods.reduce((sum, m) => sum + (m.energy || 0), 0);
-    const totalConsumption = moods.reduce((sum, m) => sum + (m.consumption || 0), 0);
+    const totalConsumption = moods.reduce(
+      (sum, m) => sum + (m.consumption || 0),
+      0,
+    );
 
     return {
       avgMood: Math.round((totalMood / moods.length / 5) * 100),
@@ -77,8 +78,6 @@ export default function HomeScreen() {
     );
   }
 
-  if (!user) return null;
-
   return (
     <SwipeableTabView>
       <View style={styles.container}>
@@ -90,79 +89,82 @@ export default function HomeScreen() {
             paddingBottom: insets.bottom + 112,
             paddingHorizontal: 16,
           }}
-          showsVerticalScrollIndicator={false}
-        >
+          showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
-            <View>
-              <Text style={styles.greeting}>{t("hello")}</Text>
-              <Text style={styles.dateLabel}>{dateLabel}</Text>
-            </View>
+            <Pressable style={styles.circleIconButton}>
+              <Ionicons name="person-outline" size={20} color={Colors.dark.text} />
+            </Pressable>
+            <Text style={styles.brandTitle}>LUNARMOOD</Text>
             <Pressable
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push("/settings");
               }}
-              style={styles.settingsButton}
-            >
-              <Ionicons name="settings-outline" size={20} color={Colors.dark.textSecondary} />
+              style={styles.circleIconButton}>
+              <Ionicons name="notifications-outline" size={20} color={Colors.dark.text} />
+              <View style={styles.notificationDot} />
             </Pressable>
           </View>
 
-          <View style={styles.lunarCard}>
-            <View style={styles.logoHalo} />
-            <Image source={appLogo} style={styles.logo} resizeMode="contain" />
+          <View style={styles.heroBlock}>
+            <View style={styles.logoHaloOuter} />
+            <View style={styles.logoHaloInner} />
+            <Image
+              source={require("../../assets/images/moons/moon_full.webp")}
+              style={styles.logo}
+              resizeMode="contain"
+            />
 
             <View style={styles.phaseBlock}>
-              <Text style={styles.eyebrow}>{t("currentPhase")}</Text>
               <Text style={styles.phaseTitle}>
                 {t(getPhaseTranslationKey(todayPhase.phase))}
               </Text>
-              <View style={styles.cyclePill}>
-                <Text style={styles.cycleText}>
-                  {t("cycleDay")} {cycleDay}
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>{t("emotion")}</Text>
-              <Text style={[styles.metricValue, styles.metricPrimary]}>
-                {stats.avgMood ?? "--"}%
-              </Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>{t("energy")}</Text>
-              <Text style={[styles.metricValue, styles.metricSecondary]}>
-                {stats.avgEnergy ?? "--"}%
-              </Text>
+              <Text style={styles.cycleText}>{t("cycleDay")} {cycleDay}</Text>
+              <Text style={styles.dateLabel}>{dateLabel}</Text>
             </View>
           </View>
 
           <View style={styles.insightCard}>
             <View style={styles.insightHeader}>
-              <Ionicons name="sparkles-outline" size={18} color={Colors.dark.primary} />
-              <Text style={styles.insightLabel}>{t("lunarInfluence")}</Text>
+              <Ionicons name="sparkles" size={20} color={Colors.dark.cyan} />
+              <Text style={styles.insightLabel}>Insight du jour</Text>
             </View>
             <Text style={styles.insightText}>
               {stats.count > 0
-                ? `${stats.count} ${t("entries")} · ${t(getPhaseTranslationKey(todayPhase.phase))}`
+                ? `${t("lunarInfluence")} · ${t(getPhaseTranslationKey(todayPhase.phase))}`
                 : t("noDataMessage")}
             </Text>
           </View>
 
+          <View style={styles.metricsGrid}>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricLabel}>Humeur</Text>
+              <Text style={[styles.metricValue, styles.metricPrimary]}>
+                {stats.avgMood ?? "--"}%
+              </Text>
+              <Text style={styles.metricSub}>{stats.avgMood && stats.avgMood >= 70 ? "HARMONIEUSE" : "EN ÉVOLUTION"}</Text>
+            </View>
+            <View style={styles.metricCard}>
+              <Text style={styles.metricLabel}>Énergie</Text>
+              <Text style={[styles.metricValue, styles.metricSecondary]}>
+                {stats.avgEnergy ?? "--"}%
+              </Text>
+              <Text style={styles.metricSub}>{stats.avgEnergy && stats.avgEnergy >= 60 ? "STABLE" : "VARIABLE"}</Text>
+            </View>
+          </View>
+
           <Pressable
             onPress={() => router.push("/calendar")}
-            style={({ pressed }) => [styles.primaryButton, pressed && styles.primaryButtonPressed]}
-          >
+            style={({ pressed }) => [
+              styles.primaryButton,
+              pressed && styles.primaryButtonPressed,
+            ]}>
             <LinearGradient
-              colors={[Colors.dark.primary, Colors.dark.secondary]}
+              colors={[Colors.dark.cyan, Colors.dark.violet, Colors.dark.magenta]}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
-              style={styles.primaryButtonGradient}
-            >
-              <Text style={styles.primaryButtonText}>{t("calendar")}</Text>
+              style={styles.primaryButtonGradient}>
+              <Text style={styles.primaryButtonText}>COMMENCER LE RITUEL DU SOIR</Text>
             </LinearGradient>
           </Pressable>
         </ScrollView>
@@ -185,100 +187,96 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "flex-start",
+    alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 24,
   },
-  greeting: {
+  brandTitle: {
+    fontSize: 34,
+    letterSpacing: 8,
+    color: Colors.dark.cyan,
+    fontFamily: "Inter_500Medium",
+  },
+  circleIconButton: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 1,
+    borderColor: Colors.dark.border,
+    backgroundColor: "rgba(8, 5, 32, 0.55)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  notificationDot: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Colors.dark.violet,
+  },
+  heroBlock: {
+    alignItems: "center",
+    paddingTop: 8,
+    paddingBottom: 20,
+    marginBottom: 16,
+  },
+  logoHaloOuter: {
+    position: "absolute",
+    top: 56,
+    width: 360,
+    height: 360,
+    borderRadius: 180,
+    backgroundColor: "rgba(34, 211, 238, 0.06)",
+    shadowColor: Colors.dark.cyan,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.28,
+    shadowRadius: 56,
+  },
+  logoHaloInner: {
+    position: "absolute",
+    top: 82,
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    backgroundColor: "rgba(168, 85, 247, 0.08)",
+    shadowColor: Colors.dark.violet,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.32,
+    shadowRadius: 40,
+  },
+  logo: {
+    width: 330,
+    height: 330,
+  },
+  phaseBlock: {
+    alignItems: "center",
+    marginTop: -18,
+  },
+  phaseTitle: {
     color: Colors.dark.text,
     fontFamily: "Inter_700Bold",
-    fontSize: 32,
-    letterSpacing: 0,
+    fontSize: 58,
+    marginTop: 8,
+    textAlign: "center",
+    textShadowColor: "rgba(168, 85, 247, 0.35)",
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 22,
+  },
+  cycleText: {
+    color: Colors.dark.violet,
+    textTransform: "uppercase",
+    letterSpacing: 4,
+    fontSize: 30,
+    fontFamily: "Inter_500Medium",
   },
   dateLabel: {
     color: Colors.dark.textSecondary,
     fontFamily: "Inter_400Regular",
-    fontSize: 17,
-    marginTop: 4,
-    textTransform: "capitalize",
-  },
-  settingsButton: {
-    width: 42,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 21,
-    backgroundColor: "rgba(8, 5, 32, 0.82)",
-    borderColor: Colors.dark.border,
-    borderWidth: 1,
-  },
-  lunarCard: {
-    alignItems: "center",
-    overflow: "hidden",
-    borderRadius: 36,
-    borderWidth: 1,
-    borderColor: Colors.dark.border,
-    backgroundColor: "rgba(8, 5, 32, 0.9)",
-    paddingHorizontal: 24,
-    paddingTop: 36,
-    paddingBottom: 30,
-    marginBottom: 16,
-    shadowColor: Colors.dark.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 30,
-    elevation: 8,
-  },
-  logoHalo: {
-    position: "absolute",
-    top: 40,
-    width: 210,
-    height: 210,
-    borderRadius: 105,
-    backgroundColor: "rgba(34, 211, 238, 0.13)",
-    shadowColor: Colors.dark.secondary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 42,
-  },
-  logo: {
-    width: 166,
-    height: 166,
-  },
-  phaseBlock: {
-    alignItems: "center",
-    marginTop: 24,
-  },
-  eyebrow: {
-    color: Colors.dark.textMuted,
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 11,
-    letterSpacing: 2.5,
-    textTransform: "uppercase",
-  },
-  phaseTitle: {
-    color: Colors.dark.primary,
-    fontFamily: "Inter_700Bold",
-    fontSize: 34,
+    fontSize: 18,
     marginTop: 8,
-    textAlign: "center",
-    textShadowColor: "rgba(34, 211, 238, 0.34)",
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 18,
-  },
-  cyclePill: {
-    marginTop: 12,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(34, 211, 238, 0.22)",
-    backgroundColor: "rgba(34, 211, 238, 0.08)",
-    paddingHorizontal: 18,
-    paddingVertical: 7,
-  },
-  cycleText: {
-    color: Colors.dark.textSecondary,
-    fontFamily: "Inter_500Medium",
-    fontSize: 14,
+    textTransform: "capitalize",
   },
   metricsGrid: {
     flexDirection: "row",
@@ -287,12 +285,12 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
-    minHeight: 128,
+    minHeight: 170,
     justifyContent: "space-between",
-    borderRadius: 24,
+    borderRadius: 28,
     borderWidth: 1,
     borderColor: Colors.dark.border,
-    backgroundColor: "rgba(8, 5, 32, 0.9)",
+    backgroundColor: "rgba(8, 5, 32, 0.76)",
     padding: 20,
   },
   metricLabel: {
@@ -304,20 +302,27 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     fontFamily: "Inter_700Bold",
-    fontSize: 34,
+    fontSize: 82,
+    lineHeight: 90,
   },
   metricPrimary: {
     color: Colors.dark.primary,
   },
   metricSecondary: {
-    color: Colors.dark.secondary,
+    color: Colors.dark.violet,
+  },
+  metricSub: {
+    fontFamily: "Inter_500Medium",
+    color: Colors.dark.violet,
+    letterSpacing: 2.5,
+    fontSize: 14,
   },
   insightCard: {
-    borderRadius: 24,
+    borderRadius: 28,
     borderWidth: 1,
     borderColor: Colors.dark.border,
-    backgroundColor: "rgba(8, 5, 32, 0.9)",
-    padding: 22,
+    backgroundColor: "rgba(8, 5, 32, 0.72)",
+    padding: 24,
     marginBottom: 16,
   },
   insightHeader: {
@@ -336,13 +341,13 @@ const styles = StyleSheet.create({
   insightText: {
     color: Colors.dark.text,
     fontFamily: "Inter_400Regular",
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 20,
+    lineHeight: 34,
   },
   primaryButton: {
-    borderRadius: 18,
+    borderRadius: 24,
     overflow: "hidden",
-    shadowColor: Colors.dark.primary,
+    shadowColor: Colors.dark.violet,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.32,
     shadowRadius: 22,
@@ -354,12 +359,13 @@ const styles = StyleSheet.create({
   primaryButtonGradient: {
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 56,
+    minHeight: 78,
     paddingHorizontal: 22,
   },
   primaryButtonText: {
     color: "#FFFFFF",
-    fontFamily: "Inter_700Bold",
-    fontSize: 16,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 30,
+    letterSpacing: 3,
   },
 });

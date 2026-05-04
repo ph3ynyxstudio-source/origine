@@ -52,7 +52,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300",
                     isActive 
-                      ? "bg-white/10 text-primary shadow-lg border border-white/10" 
+                      ? "bg-primary/10 text-primary shadow-[0_0_24px_rgba(34,211,238,0.22)] border border-primary/20" 
                       : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
                   )}
                 >
@@ -106,7 +106,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <item.icon 
                   className={cn(
                     "w-6 h-6 transition-colors duration-300",
-                    isActive ? "text-primary" : "text-muted-foreground"
+                    isActive ? "text-primary drop-shadow-[0_0_12px_rgba(34,211,238,0.45)]" : "text-muted-foreground"
                   )}
                   style={
                     !isActive && hoverAccent
@@ -123,12 +123,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 )}>
                   {item.label}
                 </span>
-                {isActive && (
-                  <motion.div 
-                    layoutId="bottom-nav-active"
-                    className="absolute -top-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_8px_rgba(124,106,250,1)]"
-                  />
-                )}
+                  {isActive && (
+                    <motion.div 
+                      layoutId="bottom-nav-active"
+                      className="absolute -top-1 w-1 h-1 bg-primary rounded-full shadow-[0_0_12px_rgba(34,211,238,0.9)]"
+                    />
+                  )}
               </div>
             </Link>
           )

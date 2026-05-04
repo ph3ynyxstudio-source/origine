@@ -24,11 +24,7 @@
         "backgroundColor": "#0B0E1A"
       },
       "permissions": [
-        "android.permission.POST_NOTIFICATIONS",
-        "android.permission.RECEIVE_BOOT_COMPLETED",
-        "android.permission.VIBRATE",
-        "android.permission.WAKE_LOCK",
-        "android.permission.SCHEDULE_EXACT_ALARM"
+        "android.permission.VIBRATE"
       ]
     },
     "web": {
@@ -42,14 +38,7 @@
         }
       ],
       "expo-font",
-      "expo-web-browser",
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/icon.png",
-          "color": "#7C6AFA"
-        }
-      ]
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

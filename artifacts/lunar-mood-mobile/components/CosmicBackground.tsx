@@ -1,10 +1,8 @@
 import React from "react";
-import { ImageBackground, View, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import AnimatedStarfield from "./AnimatedStarfield";
-import Colors from "@/constants/colors";
-
-const appBackground = require("../assets/images/backgrounds/app-background.webp");
+import { Colors } from "@/constants/colors";
 
 interface CosmicBackgroundProps {
   starCount?: number;
@@ -17,12 +15,11 @@ function CosmicBackground({
 }: CosmicBackgroundProps) {
   return (
     <View style={styles.container} pointerEvents="none">
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: Colors.dark.background }]} />
-      <ImageBackground
-        source={appBackground}
-        resizeMode="cover"
-        style={StyleSheet.absoluteFill}
-        imageStyle={styles.backgroundImage}
+      <View
+        style={[
+          StyleSheet.absoluteFill,
+          { backgroundColor: Colors.dark.background },
+        ]}
       />
 
       <LinearGradient
@@ -53,10 +50,7 @@ function CosmicBackground({
 
       {variant === "sheet" && (
         <LinearGradient
-          colors={[
-            "rgba(34, 211, 238, 0.08)",
-            "rgba(8, 5, 32, 0.95)",
-          ]}
+          colors={["rgba(34, 211, 238, 0.08)", "rgba(8, 5, 32, 0.95)"]}
           locations={[0, 0.6]}
           start={{ x: 0.5, y: 0 }}
           end={{ x: 0.5, y: 1 }}
@@ -65,20 +59,14 @@ function CosmicBackground({
       )}
 
       <LinearGradient
-        colors={[
-          "rgba(34, 211, 238, 0.09)",
-          "transparent",
-        ]}
+        colors={["rgba(34, 211, 238, 0.09)", "transparent"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0.5 }}
         style={[StyleSheet.absoluteFill, { opacity: 0.6 }]}
       />
 
       <LinearGradient
-        colors={[
-          "transparent",
-          "rgba(168, 85, 247, 0.10)",
-        ]}
+        colors={["transparent", "rgba(168, 85, 247, 0.10)"]}
         start={{ x: 1, y: 0.3 }}
         end={{ x: 0, y: 1 }}
         style={[StyleSheet.absoluteFill, { opacity: 0.5 }]}
@@ -94,8 +82,5 @@ export default React.memo(CosmicBackground);
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-  },
-  backgroundImage: {
-    opacity: 0.72,
   },
 });

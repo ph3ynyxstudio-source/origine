@@ -1,4 +1,3 @@
-import { AppLayout } from "@/components/layout/AppLayout";
 import { useTranslation } from "@/lib/i18n";
 import { getMonthEntries } from "../data/storage";
 import {
@@ -29,21 +28,10 @@ export default function Statistics() {
 
   if (entries.length === 0) {
     return (
-      <AppLayout>
-        <div
-          style={{
-            padding: "32px",
-            color: "white",
-            textAlign: "center",
-            opacity: 0.5,
-          }}
-        >
-          <p style={{ fontSize: "20px" }}>{t("noDataYet")}</p>
-          <p style={{ fontSize: "14px", marginTop: "8px" }}>
-            {t("startLoggingMoods")}
-          </p>
-        </div>
-      </AppLayout>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 p-8 text-center text-white/50">
+        <p className="text-xl">{t("noDataYet")}</p>
+        <p className="text-sm">{t("startLoggingMoods")}</p>
+      </div>
     );
   }
 
@@ -72,88 +60,61 @@ export default function Statistics() {
   });
 
   return (
-    <AppLayout>
-      <div style={{ padding: "16px", color: "white" }}>
-        <h1
-          style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "4px" }}
-        >
-          {t("statistics")}
-        </h1>
-        <p style={{ opacity: 0.5, marginBottom: "24px" }}>
-          {entries.length} {t("entriesThisMonth")}
-        </p>
+    <div className="p-4 text-white">
+      <h1 className="mb-1 text-2xl font-bold">{t("statistics")}</h1>
+      <p className="mb-6 text-white/50">
+        {entries.length} {t("entriesThisMonth")}
+      </p>
 
-        <div
-          style={{
-            background: "rgba(255,255,255,0.07)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: "16px",
-            padding: "20px",
-            marginBottom: "16px",
-          }}
-        >
-          <p style={{ marginBottom: "16px", opacity: 0.7 }}>
-            {t("emotionByPhase")}
-          </p>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={phaseData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.05)"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="name"
-                stroke="rgba(255,255,255,0.3)"
-                tick={{ fontSize: 14 }}
-              />
-              <YAxis
-                stroke="rgba(255,255,255,0.3)"
-                domain={[0, 5]}
-                tick={{ fontSize: 10 }}
-              />
-              <Tooltip />
-              <Bar dataKey="emotion" fill="#a78bfa" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div
-          style={{
-            background: "rgba(255,255,255,0.07)",
-            backdropFilter: "blur(8px)",
-            border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: "16px",
-            padding: "20px",
-          }}
-        >
-          <p style={{ marginBottom: "16px", opacity: 0.7 }}>
-            {t("energyByPhase")}
-          </p>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={phaseData}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.05)"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="name"
-                stroke="rgba(255,255,255,0.3)"
-                tick={{ fontSize: 14 }}
-              />
-              <YAxis
-                stroke="rgba(255,255,255,0.3)"
-                domain={[0, 5]}
-                tick={{ fontSize: 10 }}
-              />
-              <Tooltip />
-              <Bar dataKey="energy" fill="#60a5fa" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      <div className="mb-4 rounded-2xl border border-white/8 bg-bg-surface p-5 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.35)]">
+        <p className="mb-4 text-sm text-white/70">{t("emotionByPhase")}</p>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={phaseData}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.05)"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="name"
+              stroke="rgba(255,255,255,0.3)"
+              tick={{ fontSize: 14 }}
+            />
+            <YAxis
+              stroke="rgba(255,255,255,0.3)"
+              domain={[0, 5]}
+              tick={{ fontSize: 10 }}
+            />
+            <Tooltip />
+            <Bar dataKey="emotion" fill="#a78bfa" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
-    </AppLayout>
+
+      <div className="rounded-2xl border border-white/8 bg-bg-surface p-5 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.35)]">
+        <p className="mb-4 text-sm text-white/70">{t("energyByPhase")}</p>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={phaseData}>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.05)"
+              vertical={false}
+            />
+            <XAxis
+              dataKey="name"
+              stroke="rgba(255,255,255,0.3)"
+              tick={{ fontSize: 14 }}
+            />
+            <YAxis
+              stroke="rgba(255,255,255,0.3)"
+              domain={[0, 5]}
+              tick={{ fontSize: 10 }}
+            />
+            <Tooltip />
+            <Bar dataKey="energy" fill="#60a5fa" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 }

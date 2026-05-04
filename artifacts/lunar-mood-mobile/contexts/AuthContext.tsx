@@ -81,7 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     const storedUser = await AsyncStorage.getItem(LOCAL_USER_KEY);
-    setUser(storedUser ? JSON.parse(storedUser) : null);
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+      return;
+    }
+
+    await AsyncStorage.setItem(LOCAL_USER_KEY, JSON.stringify(DEFAULT_LOCAL_USER));
+    setUser(DEFAULT_LOCAL_USER);
   };
 
   return (

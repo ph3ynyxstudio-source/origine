@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -17,23 +17,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMoods } from "@/contexts/MoodContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useTranslation, type Language } from "@/lib/i18n";
-import { getNotificationsEnabled, setNotificationsEnabled } from "@/lib/notifications";
-import Colors from "@/constants/colors";
+import { Colors } from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { logout } = useAuth();
   const { clearMoods, createMood, fetchMoods } = useMoods();
-  const { consumptionTrackingEnabled, setConsumptionTrackingEnabled } = useSettings();
+  const { consumptionTrackingEnabled, setConsumptionTrackingEnabled } =
+    useSettings();
   const { t, language, setLanguage } = useTranslation();
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  const [notifEnabled, setNotifEnabled] = useState(true);
-
-  useEffect(() => {
-    getNotificationsEnabled().then(setNotifEnabled);
-  }, []);
 
   const handleLogout = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -45,18 +40,6 @@ export default function SettingsScreen() {
   const toggleLang = async (lang: Language) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setLanguage(lang);
-    if (notifEnabled) {
-      const { scheduleReminders } = await import("@/lib/notifications");
-      scheduleReminders(lang).catch(console.warn);
-    }
-  };
-
-  const handleToggleNotif = async () => {
-    const newVal = !notifEnabled;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setNotifEnabled(newVal);
-    const result = await setNotificationsEnabled(newVal, language);
-    setNotifEnabled(result);
   };
 
   const handleDevSeed = async () => {
@@ -67,15 +50,22 @@ export default function SettingsScreen() {
         const date = new Date();
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().slice(0, 10);
-        await createMood(dateStr, "evening", ((i % 5) + 1), 50 + ((i % 3) * 25), i % 6, null);
+        await createMood(
+          dateStr,
+          "evening",
+          (i % 5) + 1,
+          50 + (i % 3) * 25,
+          i % 6,
+          null,
+        );
         count += 1;
       }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       Alert.alert(t("devGenerateSuccess"), `${count} ${t("devEntries")}`);
       const now = new Date();
       fetchMoods(now.getMonth() + 1, now.getFullYear());
     } catch {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       Alert.alert(t("devGenerateFailed"));
     } finally {
       setIsSeeding(false);
@@ -92,12 +82,12 @@ export default function SettingsScreen() {
           setIsClearing(true);
           try {
             clearMoods();
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
             Alert.alert(t("devClearSuccess"), t("devEntriesDeleted"));
             const now = new Date();
             fetchMoods(now.getMonth() + 1, now.getFullYear());
           } catch {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
             Alert.alert(t("devClearFailed"));
           } finally {
             setIsClearing(false);
@@ -117,8 +107,7 @@ export default function SettingsScreen() {
           paddingBottom: insets.bottom + 40,
           paddingHorizontal: 16,
         }}
-        showsVerticalScrollIndicator={false}
-      >
+        showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="chevron-back" size={24} color={Colors.dark.text} />
@@ -132,17 +121,29 @@ export default function SettingsScreen() {
           <View style={styles.langRow}>
             <Pressable
               onPress={() => toggleLang("en")}
-              style={[styles.langChip, language === "en" && styles.langChipActive]}
-            >
-              <Text style={[styles.langText, language === "en" && styles.langTextActive]}>
+              style={[
+                styles.langChip,
+                language === "en" && styles.langChipActive,
+              ]}>
+              <Text
+                style={[
+                  styles.langText,
+                  language === "en" && styles.langTextActive,
+                ]}>
                 {t("english")}
               </Text>
             </Pressable>
             <Pressable
               onPress={() => toggleLang("fr")}
-              style={[styles.langChip, language === "fr" && styles.langChipActive]}
-            >
-              <Text style={[styles.langText, language === "fr" && styles.langTextActive]}>
+              style={[
+                styles.langChip,
+                language === "fr" && styles.langChipActive,
+              ]}>
+              <Text
+                style={[
+                  styles.langText,
+                  language === "fr" && styles.langTextActive,
+                ]}>
                 {t("french")}
               </Text>
             </Pressable>
@@ -152,32 +153,27 @@ export default function SettingsScreen() {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>{t("consumptionTracking")}</Text>
           <View style={styles.toggleRow}>
-            <Text style={styles.toggleDescription}>{t("consumptionTrackingDesc")}</Text>
+            <Text style={styles.toggleDescription}>
+              {t("consumptionTrackingDesc")}
+            </Text>
             <Switch
               value={consumptionTrackingEnabled}
               onValueChange={(val) => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setConsumptionTrackingEnabled(val);
               }}
-              trackColor={{ false: "rgba(37, 43, 69, 0.8)", true: "rgba(124, 106, 250, 0.4)" }}
-              thumbColor={consumptionTrackingEnabled ? Colors.dark.primaryLight : Colors.dark.textMuted}
+              trackColor={{
+                false: "rgba(37, 43, 69, 0.8)",
+                true: "rgba(124, 106, 250, 0.4)",
+              }}
+              thumbColor={
+                consumptionTrackingEnabled
+                  ? Colors.dark.primaryLight
+                  : Colors.dark.textMuted
+              }
               ios_backgroundColor="rgba(37, 43, 69, 0.8)"
             />
           </View>
-        </View>
-
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>{t("notifications")}</Text>
-          <Pressable onPress={handleToggleNotif} style={styles.notifRow}>
-            <Ionicons
-              name={notifEnabled ? "notifications" : "notifications-off-outline"}
-              size={20}
-              color={notifEnabled ? Colors.dark.primaryLight : Colors.dark.textMuted}
-            />
-            <Text style={[styles.notifText, notifEnabled && { color: Colors.dark.primaryLight }]}>
-              {notifEnabled ? t("notificationsOn") : t("notificationsOff")}
-            </Text>
-          </Pressable>
         </View>
 
         {__DEV__ && (
@@ -186,22 +182,32 @@ export default function SettingsScreen() {
             <Pressable
               onPress={handleDevSeed}
               disabled={isSeeding}
-              style={({ pressed }) => [styles.devButton, styles.devButtonSeed, pressed && styles.buttonPressed, isSeeding && styles.buttonDisabled]}
-            >
+              style={({ pressed }) => [
+                styles.devButton,
+                styles.devButtonSeed,
+                pressed && styles.buttonPressed,
+                isSeeding && styles.buttonDisabled,
+              ]}>
               {isSeeding ? (
                 <ActivityIndicator color="#FFF" size="small" />
               ) : (
                 <>
                   <Ionicons name="flask-outline" size={18} color="#FFF" />
-                  <Text style={styles.devButtonText}>{t("devGenerateData")}</Text>
+                  <Text style={styles.devButtonText}>
+                    {t("devGenerateData")}
+                  </Text>
                 </>
               )}
             </Pressable>
             <Pressable
               onPress={handleDevClear}
               disabled={isClearing}
-              style={({ pressed }) => [styles.devButton, styles.devButtonClear, pressed && styles.buttonPressed, isClearing && styles.buttonDisabled]}
-            >
+              style={({ pressed }) => [
+                styles.devButton,
+                styles.devButtonClear,
+                pressed && styles.buttonPressed,
+                isClearing && styles.buttonDisabled,
+              ]}>
               {isClearing ? (
                 <ActivityIndicator color="#FFF" size="small" />
               ) : (
@@ -308,17 +314,6 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     color: Colors.dark.textSecondary,
     lineHeight: 20,
-  },
-  notifRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingVertical: 4,
-  },
-  notifText: {
-    fontSize: 14,
-    fontFamily: "Inter_500Medium",
-    color: Colors.dark.textMuted,
   },
   devSection: {
     backgroundColor: "rgba(19, 23, 41, 0.5)",

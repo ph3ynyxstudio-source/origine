@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
+  Image,
   Pressable,
   StyleSheet,
   ScrollView,
@@ -9,7 +10,7 @@ import {
   Platform,
   RefreshControl,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,7 +31,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMoods } from "@/contexts/MoodContext";
 import { getMonthPhases } from "@/lib/lunar";
 import { useTranslation, getPhaseTranslationKey } from "@/lib/i18n";
-import Colors from "@/constants/colors";
+import { Colors } from "@/constants/colors";
 import CosmicBackground from "@/components/CosmicBackground";
 import SwipeableTabView from "@/components/SwipeableTabView";
 
@@ -43,13 +44,31 @@ const PERIOD_COLORS = {
   evening: "#8B5CF6",
 };
 
+const PHASE_MOON_ASSETS: Record<string, number> = {
+  new_moon: require("../../assets/images/moons/moon_new.webp"),
+  waxing_crescent: require("../../assets/images/moons/moon_waxing_crescent.webp"),
+  first_quarter: require("../../assets/images/moons/moon_first_quarter.webp"),
+  waxing_gibbous: require("../../assets/images/moons/moon_waxing_gibbous.webp"),
+  full_moon: require("../../assets/images/moons/moon_full.webp"),
+  waning_gibbous: require("../../assets/images/moons/moon_waning_gibbous.webp"),
+  last_quarter: require("../../assets/images/moons/moon_last_quarter.webp"),
+  waning_crescent: require("../../assets/images/moons/moon_waning_crescent.webp"),
+};
+
 export default function CalendarScreen() {
   const insets = useSafeAreaInsets();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isAuthLoading } = useAuth();
   const { moods, isLoading: isMoodsLoading, fetchMoods } = useMoods();
   const { t, language } = useTranslation();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      const now = new Date();
+      setCurrentMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+    }, []),
+  );
 
   const month = currentMonth.getMonth() + 1;
   const year = currentMonth.getFullYear();
@@ -57,11 +76,23 @@ export default function CalendarScreen() {
 
   const PERIODS = useMemo(
     () => [
-      { key: "morning" as const, label: t("morning"), color: PERIOD_COLORS.morning },
-      { key: "afternoon" as const, label: t("afternoon"), color: PERIOD_COLORS.afternoon },
-      { key: "evening" as const, label: t("evening"), color: PERIOD_COLORS.evening },
+      {
+        key: "morning" as const,
+        label: t("morning"),
+        color: PERIOD_COLORS.morning,
+      },
+      {
+        key: "afternoon" as const,
+        label: t("afternoon"),
+        color: PERIOD_COLORS.afternoon,
+      },
+      {
+        key: "evening" as const,
+        label: t("evening"),
+        color: PERIOD_COLORS.evening,
+      },
     ],
-    [t]
+    [t],
   );
 
   const lunarPhases = useMemo(() => getMonthPhases(year, month), [year, month]);
@@ -78,10 +109,8 @@ export default function CalendarScreen() {
   }, [lunarPhases]);
 
   useEffect(() => {
-    if (user) {
-      fetchMoods(month, year);
-    }
-  }, [user, month, year, fetchMoods]);
+    fetchMoods(month, year);
+  }, [month, year, fetchMoods]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -124,140 +153,165 @@ export default function CalendarScreen() {
     );
   }
 
-  if (!user) return null;
-
   return (
     <SwipeableTabView>
-    <View style={styles.container}>
-      <CosmicBackground starCount={80} />
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={{
-          paddingTop: insets.top + 16,
-          paddingBottom: insets.bottom + 100,
-          paddingHorizontal: 16,
-        }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={Colors.dark.primary}
-          />
-        }
-      >
-        {todayPhase && (
-          <View style={styles.phaseHeader}>
-            <Text style={styles.phaseEmoji}>{todayPhase.emoji}</Text>
-            <Text style={styles.phaseText}>{t(getPhaseTranslationKey(todayPhase.phase))}</Text>
-          </View>
-        )}
-
-        <View style={styles.monthNav}>
-          <Pressable onPress={handlePrevMonth} style={styles.navBtn}>
-            <Ionicons name="chevron-back" size={24} color={Colors.dark.text} />
-          </Pressable>
-          <Text style={styles.monthTitle}>
-            {format(currentMonth, "MMMM yyyy", { locale: language === "fr" ? fr : undefined })}
-          </Text>
-          <Pressable onPress={handleNextMonth} style={styles.navBtn}>
-            <Ionicons name="chevron-forward" size={24} color={Colors.dark.text} />
-          </Pressable>
-        </View>
-
-        <View style={styles.calendarCard}>
-          <View style={styles.weekHeader}>
-            {DAYS.map((day) => (
-              <View key={day} style={styles.weekDay}>
-                <Text style={styles.weekDayText}>{day}</Text>
-              </View>
-            ))}
-          </View>
-
-          {isMoodsLoading ? (
-            <View style={styles.loadingCalendar}>
-              <ActivityIndicator size="small" color={Colors.dark.primary} />
-            </View>
-          ) : (
-            <View style={styles.daysGrid}>
-              {calendarDays.map((date) => {
-                const dateStr = format(date, "yyyy-MM-dd");
-                const isCurrentMonth = isSameMonth(date, currentMonth);
-                const today = isToday(date);
-                const dayEntries = moods.filter((m) => m.date === dateStr);
-                const phase = lunarPhases.find((p) => p.date === dateStr);
-
-                return (
-                  <Pressable
-                    key={dateStr}
-                    onPress={() => handleDayPress(date)}
-                    disabled={!isCurrentMonth}
-                    style={({ pressed }) => [
-                      styles.dayCell,
-                      !isCurrentMonth && styles.dayCellDisabled,
-                      today && styles.dayCellToday,
-                      pressed && isCurrentMonth && styles.dayCellPressed,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.dayNumber,
-                        !isCurrentMonth && styles.dayNumberDisabled,
-                        today && styles.dayNumberToday,
-                      ]}
-                    >
-                      {format(date, "d")}
-                    </Text>
-
-                    {phase && isCurrentMonth && (
-                      <Text style={styles.calPhaseEmoji}>{phase.emoji}</Text>
-                    )}
-
-                    {dayEntries.length > 0 && (
-                      <View style={styles.dotsRow}>
-                        {PERIODS.map((p) => {
-                          const hasEntry = dayEntries.some((e) => e.period === p.key);
-                          return (
-                            <View
-                              key={p.key}
-                              style={[
-                                styles.periodDot,
-                                {
-                                  backgroundColor: hasEntry ? p.color : "transparent",
-                                  borderWidth: hasEntry ? 0 : 1,
-                                  borderColor: "rgba(255,255,255,0.15)",
-                                },
-                              ]}
-                            />
-                          );
-                        })}
-                      </View>
-                    )}
-                  </Pressable>
-                );
-              })}
+      <View style={styles.container}>
+        <CosmicBackground starCount={80} />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={{
+            paddingTop: insets.top + 16,
+            paddingBottom: insets.bottom + 100,
+            paddingHorizontal: 16,
+          }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={Colors.dark.primary}
+            />
+          }>
+          {todayPhase && (
+            <View style={styles.phaseHeader}>
+              <Image
+                source={
+                  PHASE_MOON_ASSETS[todayPhase.phase] ??
+                  PHASE_MOON_ASSETS.full_moon
+                }
+                style={styles.phaseMoon}
+                resizeMode="contain"
+              />
+              <Text style={styles.phaseText}>
+                {t(getPhaseTranslationKey(todayPhase.phase))}
+              </Text>
             </View>
           )}
-        </View>
 
-        <View style={styles.legendCard}>
-          <Text style={styles.legendTitle}>{t("periods")}</Text>
-          <View style={styles.legendRow}>
-            {PERIODS.map((p) => (
-              <View key={p.key} style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: p.color }]} />
-                <Text style={styles.legendLabel}>{p.label}</Text>
-              </View>
-            ))}
-          </View>
-          <View style={styles.consumptionLabelRow}>
-            <Text style={styles.consumptionLabelText}>
-              {t("conso")}
+          <View style={styles.monthNav}>
+            <Pressable onPress={handlePrevMonth} style={styles.navBtn}>
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color={Colors.dark.text}
+              />
+            </Pressable>
+            <Text style={styles.monthTitle}>
+              {format(currentMonth, "MMMM yyyy", {
+                locale: language === "fr" ? fr : undefined,
+              })}
             </Text>
+            <Pressable onPress={handleNextMonth} style={styles.navBtn}>
+              <Ionicons
+                name="chevron-forward"
+                size={24}
+                color={Colors.dark.text}
+              />
+            </Pressable>
           </View>
-        </View>
-      </ScrollView>
-    </View>
+
+          <View style={styles.calendarCard}>
+            <View style={styles.weekHeader}>
+              {DAYS.map((day) => (
+                <View key={day} style={styles.weekDay}>
+                  <Text style={styles.weekDayText}>{day}</Text>
+                </View>
+              ))}
+            </View>
+
+            {isMoodsLoading ? (
+              <View style={styles.loadingCalendar}>
+                <ActivityIndicator size="small" color={Colors.dark.primary} />
+              </View>
+            ) : (
+              <View style={styles.daysGrid}>
+                {calendarDays.map((date) => {
+                  const dateStr = format(date, "yyyy-MM-dd");
+                  const isCurrentMonth = isSameMonth(date, currentMonth);
+                  const today = isToday(date);
+                  const dayEntries = moods.filter((m) => m.date === dateStr);
+                  const phase = lunarPhases.find((p) => p.date === dateStr);
+
+                  return (
+                    <Pressable
+                      key={dateStr}
+                      onPress={() => handleDayPress(date)}
+                      disabled={!isCurrentMonth}
+                      style={({ pressed }) => [
+                        styles.dayCell,
+                        !isCurrentMonth && styles.dayCellDisabled,
+                        today && styles.dayCellToday,
+                        pressed && isCurrentMonth && styles.dayCellPressed,
+                      ]}>
+                      <Text
+                        style={[
+                          styles.dayNumber,
+                          !isCurrentMonth && styles.dayNumberDisabled,
+                          today && styles.dayNumberToday,
+                        ]}>
+                        {format(date, "d")}
+                      </Text>
+
+                      {phase && isCurrentMonth && (
+                        <Image
+                          source={
+                            PHASE_MOON_ASSETS[phase.phase] ??
+                            PHASE_MOON_ASSETS.full_moon
+                          }
+                          style={styles.calPhaseMoon}
+                          resizeMode="contain"
+                        />
+                      )}
+
+                      {dayEntries.length > 0 && (
+                        <View style={styles.dotsRow}>
+                          {PERIODS.map((p) => {
+                            const hasEntry = dayEntries.some(
+                              (e) => e.period === p.key,
+                            );
+                            return (
+                              <View
+                                key={p.key}
+                                style={[
+                                  styles.periodDot,
+                                  {
+                                    backgroundColor: hasEntry
+                                      ? p.color
+                                      : "transparent",
+                                    borderWidth: hasEntry ? 0 : 1,
+                                    borderColor: "rgba(255,255,255,0.15)",
+                                  },
+                                ]}
+                              />
+                            );
+                          })}
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+
+          <View style={styles.legendCard}>
+            <Text style={styles.legendTitle}>{t("periods")}</Text>
+            <View style={styles.legendRow}>
+              {PERIODS.map((p) => (
+                <View key={p.key} style={styles.legendItem}>
+                  <View
+                    style={[styles.legendDot, { backgroundColor: p.color }]}
+                  />
+                  <Text style={styles.legendLabel}>{p.label}</Text>
+                </View>
+              ))}
+            </View>
+            <View style={styles.consumptionLabelRow}>
+              <Text style={styles.consumptionLabelText}>{t("conso")}</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </View>
     </SwipeableTabView>
   );
 }
@@ -281,11 +335,9 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 16,
   },
-  phaseEmoji: {
-    fontSize: 20,
-    textShadowColor: Colors.dark.moon,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+  phaseMoon: {
+    width: 22,
+    height: 22,
   },
   phaseText: {
     fontSize: 15,
@@ -385,8 +437,9 @@ const styles = StyleSheet.create({
     color: Colors.dark.primaryLight,
     fontFamily: "Inter_700Bold",
   },
-  calPhaseEmoji: {
-    fontSize: 14,
+  calPhaseMoon: {
+    width: 16,
+    height: 16,
   },
   dotsRow: {
     flexDirection: "row",
