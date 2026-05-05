@@ -127,7 +127,7 @@ export default function Dashboard() {
             {t("todayMood")}
           </p>
           <p className="text-2xl font-bold text-(--color-primary)">
-            {mood ?? "--"}%
+            {mood !== null ? `${mood}%` : "—"}
           </p>
         </div>
         <div className="rounded-2xl border border-white/8 bg-bg-surface p-5 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.35)]">
@@ -135,7 +135,7 @@ export default function Dashboard() {
             {t("energy")}
           </p>
           <p className="text-2xl font-bold text-(--color-secondary)">
-            {energy ?? "--"}%
+            {energy !== null ? `${energy}%` : "—"}{" "}
           </p>
         </div>
       </div>
@@ -148,7 +148,21 @@ export default function Dashboard() {
             {t("insight")}
           </p>
         </div>
-        <p className="text-sm leading-relaxed opacity-90">{insight.insight}</p>
+        <p className="text-sm leading-relaxed opacity-90">
+          {insight?.insight && insight.insight !== "Test Crystaph3y actif"
+            ? insight.insight
+            : mood !== null && energy !== null
+              ? energy < 40 && mood < 40
+                ? "Baisse d’énergie et d’humeur détectée. Ralentir aujourd’hui pourrait t’aider à stabiliser ton état."
+                : energy > 60 && mood < 40
+                  ? "Ton énergie est présente mais ton humeur reste basse. Un désalignement possible à observer."
+                  : energy < 40 && mood > 60
+                    ? "Bonne humeur mais énergie basse. Pense à te préserver pour éviter un crash plus tard."
+                    : energy > 60 && mood > 60
+                      ? "État global positif. Bon moment pour avancer sur ce qui compte vraiment."
+                      : "État équilibré. Continue à observer tes variations au fil des jours."
+              : "Commence à enregistrer tes états pour révéler des patterns progressifs."}
+        </p>
       </div>
     </div>
   );
