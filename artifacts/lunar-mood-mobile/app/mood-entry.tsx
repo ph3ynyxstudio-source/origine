@@ -1,39 +1,30 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  StyleSheet,
   ActivityIndicator,
   Alert,
+  GestureResponderEvent,
+  LayoutChangeEvent,
+  Pressable,
   ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
-import { useMoods, type MoodEntry } from "@/contexts/MoodContext";
-import { useSettings } from "@/contexts/SettingsContext";
-import { getMoodColor } from "@/lib/lunar";
-import {
-  useTranslation,
-  getMoodTranslationKey,
-  getConsumptionTranslationKey,
-} from "@/lib/i18n";
-import { Colors } from "@/constants/colors";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useLocalSearchParams } from "expo-router";
+import * as Haptics from "expo-haptics";
+
 import CosmicBackground from "@/components/CosmicBackground";
+import { Colors } from "@/constants/colors";
+import { useMoods } from "@/contexts/MoodContext";
+import { parseInput } from "@/lib/inputParser";
+import { useTranslation } from "@/lib/i18n";
 
-const MOOD_ICONS: Record<number, keyof typeof Ionicons.glyphMap> = {
-  1: "sad-outline",
-  2: "cloudy-outline",
-  3: "remove-circle-outline",
-  4: "happy-outline",
-  5: "star-outline",
-};
-
-const ENERGY_STEPS = [0, 25, 50, 75, 100];
+const TAG_OPTIONS = ["fatigue", "caffeine", "stress", "sleep", "focus"];
 
 function getCurrentPeriod(): "morning" | "afternoon" | "evening" {
   const hour = new Date().getHours();
@@ -42,125 +33,188 @@ function getCurrentPeriod(): "morning" | "afternoon" | "evening" {
   return "evening";
 }
 
+function SliderBar({
+  label,
+  value,
+  onChange,
+  accent,
+  icon,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  accent: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}) {
+  const [width, setWidth] = useState(1);
+
+  const updateFromEvent = (event: GestureResponderEvent) => {
+    const next = Math.max(
+      0,
+      Math.min(100, Math.round((event.nativeEvent.locationX / width) * 100)),
+    );
+    onChange(next);
+  };
+
+  const handleLayout = (event: LayoutChangeEvent) => {
+    setWidth(Math.max(event.nativeEvent.layout.width, 1));
+  };
+
+  return (
+    <View style={styles.sliderBlock}>
+      <View style={styles.sliderHeader}>
+        <View style={styles.sliderLabelRow}>
+          <Ionicons name={icon} size={18} color={accent} />
+          <Text style={styles.sectionTitle}>{label}</Text>
+        </View>
+        <Text style={[styles.sliderValue, { color: accent }]}>{value}%</Text>
+      </View>
+      <Pressable
+        onLayout={handleLayout}
+        onPress={updateFromEvent}
+        onPressIn={updateFromEvent}
+        style={styles.sliderTrack}>
+        <View
+          style={[
+            styles.sliderFill,
+            { width: `${value}%`, backgroundColor: accent },
+          ]}
+        />
+        <View
+          style={[
+            styles.sliderThumb,
+            {
+              left: `${value}%`,
+              borderColor: accent,
+              shadowColor: accent,
+            },
+          ]}
+        />
+      </Pressable>
+    </View>
+  );
+}
+
 export default function MoodEntryScreen() {
   const params = useLocalSearchParams<{
     date: string;
     phaseEmoji: string;
     phaseLabel: string;
-    consumptionLabel: string;
   }>();
-
   const { moods, createMood, updateMood, deleteMood, fetchMoods } = useMoods();
-  const { consumptionTrackingEnabled } = useSettings();
   const { t, language } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState<
     "morning" | "afternoon" | "evening"
   >(getCurrentPeriod());
-  const [selectedMood, setSelectedMood] = useState<number>(0);
-  const [energy, setEnergy] = useState<number>(50);
-  const [consumption, setConsumption] = useState<number>(0);
+  const [mood, setMood] = useState(50);
+  const [energy, setEnergy] = useState(50);
+  const [tags, setTags] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const PERIODS = useMemo(
+  const dateObj = params.date ? parseISO(params.date) : new Date();
+  const dateStr = params.date || format(new Date(), "yyyy-MM-dd");
+  const monthNum = dateObj.getMonth() + 1;
+  const yearNum = dateObj.getFullYear();
+  const formattedDate = format(dateObj, "EEEE, MMMM d, yyyy", {
+    locale: language === "fr" ? fr : undefined,
+  });
+
+  const periods = useMemo(
     () => [
       { key: "morning" as const, label: t("morning"), color: "#F59E0B" },
-      { key: "afternoon" as const, label: t("afternoon"), color: "#3B82F6" },
-      { key: "evening" as const, label: t("evening"), color: "#8B5CF6" },
+      { key: "afternoon" as const, label: t("afternoon"), color: Colors.dark.cyan },
+      { key: "evening" as const, label: t("evening"), color: Colors.dark.violet },
     ],
     [t],
   );
 
-  const dateObj = params.date ? parseISO(params.date) : new Date();
-  const dateLocale = language === "fr" ? fr : undefined;
-  const formattedDate = format(dateObj, "EEEE, MMMM d, yyyy", {
-    locale: dateLocale,
-  });
-  const monthNum = dateObj.getMonth() + 1;
-  const yearNum = dateObj.getFullYear();
-  const dateStr = params.date || format(new Date(), "yyyy-MM-dd");
-
   const dayEntries = useMemo(
-    () => moods.filter((m) => m.date === dateStr),
+    () => moods.filter((entry) => entry.date === dateStr),
     [moods, dateStr],
   );
   const existingEntry = useMemo(
-    () => dayEntries.find((m) => m.period === selectedPeriod),
+    () => dayEntries.find((entry) => entry.period === selectedPeriod),
     [dayEntries, selectedPeriod],
   );
   const isEditing = !!existingEntry;
 
   useEffect(() => {
     if (existingEntry) {
-      setSelectedMood(existingEntry.mood);
+      setMood(existingEntry.mood);
       setEnergy(existingEntry.energy);
-      setConsumption(existingEntry.consumption);
-      setNote(existingEntry.note || "");
-    } else {
-      setSelectedMood(0);
-      setEnergy(50);
-      setConsumption(0);
-      setNote("");
-    }
-  }, [existingEntry, selectedPeriod]);
-
-  const handleMoodSelect = (mood: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedMood(mood);
-  };
-
-  const handleSave = async () => {
-    if (selectedMood === 0) {
-      Alert.alert(t("selectEmotion"), t("selectEmotionMessage"));
+      setTags(existingEntry.tags ?? []);
+      setNote(existingEntry.note ?? "");
       return;
     }
 
+    setMood(50);
+    setEnergy(50);
+    setTags([]);
+    setNote("");
+  }, [existingEntry]);
+
+  const signal = useMemo(
+    () => parseInput({ mood, energy, tags, note }),
+    [mood, energy, tags, note],
+  );
+
+  const toggleTag = (tag: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setTags((current) => {
+      if (current.includes(tag)) {
+        return current.filter((item) => item !== tag);
+      }
+      return current.length >= 5 ? current : [...current, tag];
+    });
+  };
+
+  const handleSave = async () => {
     setIsSubmitting(true);
     try {
+      const trimmedNote = note.trim();
       if (isEditing) {
         await updateMood(
-          existingEntry!.id,
-          selectedMood,
+          existingEntry.id,
+          mood,
           energy,
-          consumption,
-          note.trim() || null,
+          0,
+          trimmedNote || null,
+          tags,
         );
       } else {
         await createMood(
           dateStr,
           selectedPeriod,
-          selectedMood,
+          mood,
           energy,
-          consumption,
-          note.trim() || null,
+          0,
+          trimmedNote || null,
+          tags,
         );
       }
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       await fetchMoods(monthNum, yearNum);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       router.back();
-    } catch (e: any) {
+    } catch (error: any) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      Alert.alert(t("saveFailed"), e.message || "");
+      Alert.alert(t("saveFailed"), error.message || "");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDelete = () => {
+    if (!existingEntry) return;
     Alert.alert(t("deleteConfirmTitle"), t("deleteConfirmMessage"), [
       { text: t("cancel"), style: "cancel" },
       {
         text: t("delete"),
         style: "destructive",
         onPress: async () => {
-          try {
-            await deleteMood(existingEntry!.id);
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            await fetchMoods(monthNum, yearNum);
-            router.back();
-          } catch (e: any) {
-            Alert.alert(t("deleteFailed"), e.message || "");
-          }
+          await deleteMood(existingEntry.id);
+          await fetchMoods(monthNum, yearNum);
+          router.back();
         },
       },
     ]);
@@ -183,34 +237,25 @@ export default function MoodEntryScreen() {
           ) : null}
         </View>
 
-        <Text style={styles.sectionTitle}>{t("period")}</Text>
+        <Text style={styles.sectionTitle}>Period</Text>
         <View style={styles.periodRow}>
-          {PERIODS.map((p) => {
-            const isSelected = selectedPeriod === p.key;
-            const hasEntry = dayEntries.some((m) => m.period === p.key);
+          {periods.map((period) => {
+            const isSelected = selectedPeriod === period.key;
+            const hasEntry = dayEntries.some((entry) => entry.period === period.key);
             return (
               <Pressable
-                key={p.key}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setSelectedPeriod(p.key);
-                }}
+                key={period.key}
+                onPress={() => setSelectedPeriod(period.key)}
                 style={[
                   styles.periodOption,
                   isSelected && {
-                    borderColor: p.color,
-                    backgroundColor: p.color + "20",
+                    borderColor: period.color,
+                    backgroundColor: `${period.color}20`,
                   },
                 ]}>
-                <View
-                  style={[styles.periodDot, { backgroundColor: p.color }]}
-                />
-                <Text
-                  style={[
-                    styles.periodLabel,
-                    isSelected && { color: p.color },
-                  ]}>
-                  {p.label}
+                <View style={[styles.periodDot, { backgroundColor: period.color }]} />
+                <Text style={[styles.periodLabel, isSelected && { color: period.color }]}>
+                  {period.label}
                 </Text>
                 {hasEntry && <View style={styles.checkDot} />}
               </Pressable>
@@ -218,119 +263,40 @@ export default function MoodEntryScreen() {
           })}
         </View>
 
-        <Text style={styles.sectionTitle}>{t("emotion")}</Text>
-        <View style={styles.moodRow}>
-          {[1, 2, 3, 4, 5].map((level) => {
-            const isSelected = selectedMood === level;
+        <SliderBar
+          label="Mood"
+          value={mood}
+          onChange={setMood}
+          accent={Colors.dark.magenta}
+          icon="heart-outline"
+        />
+        <SliderBar
+          label="Energy"
+          value={energy}
+          onChange={setEnergy}
+          accent={Colors.dark.cyan}
+          icon="flash-outline"
+        />
+
+        <View style={styles.tagsHeader}>
+          <Text style={styles.sectionTitle}>Tags</Text>
+          <Text style={styles.tagCount}>{tags.length}/5</Text>
+        </View>
+        <View style={styles.tagsRow}>
+          {TAG_OPTIONS.map((tag) => {
+            const isSelected = tags.includes(tag);
             return (
               <Pressable
-                key={level}
-                onPress={() => handleMoodSelect(level)}
-                style={[
-                  styles.moodOption,
-                  isSelected && {
-                    backgroundColor: getMoodColor(level) + "20",
-                    borderColor: getMoodColor(level),
-                    shadowColor: getMoodColor(level),
-                    shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.4,
-                    shadowRadius: 10,
-                  },
-                ]}>
-                <Ionicons
-                  name={MOOD_ICONS[level]}
-                  size={24}
-                  color={
-                    isSelected ? getMoodColor(level) : Colors.dark.textMuted
-                  }
-                />
-                <Text
-                  style={[
-                    styles.moodLabel,
-                    isSelected && { color: getMoodColor(level) },
-                  ]}>
-                  {t(getMoodTranslationKey(level))}
+                key={tag}
+                onPress={() => toggleTag(tag)}
+                style={[styles.tagPill, isSelected && styles.tagPillActive]}>
+                <Text style={[styles.tagText, isSelected && styles.tagTextActive]}>
+                  {tag}
                 </Text>
               </Pressable>
             );
           })}
         </View>
-
-        <Text style={styles.sectionTitle}>{t("energy")}</Text>
-        <View style={styles.energyRow}>
-          {ENERGY_STEPS.map((e) => {
-            const isSelected = energy === e;
-            return (
-              <Pressable
-                key={e}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setEnergy(e);
-                }}
-                style={[
-                  styles.energyOption,
-                  isSelected && {
-                    borderColor: "#3B82F6",
-                    backgroundColor: "rgba(59, 130, 246, 0.2)",
-                  },
-                ]}>
-                <Ionicons
-                  name="flash"
-                  size={16}
-                  color={isSelected ? "#93C5FD" : Colors.dark.textMuted}
-                />
-                <Text
-                  style={[
-                    styles.energyLabel,
-                    isSelected && { color: "#93C5FD" },
-                  ]}>
-                  {e}%
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {consumptionTrackingEnabled && (
-          <>
-            <Text style={styles.sectionTitle}>{t("conso")}</Text>
-            <View style={styles.consumptionRow}>
-              {[0, 1, 2, 3, 4, 5].map((c) => {
-                const isSelected = consumption === c;
-                return (
-                  <Pressable
-                    key={c}
-                    onPress={() => {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setConsumption(c);
-                    }}
-                    style={[
-                      styles.consumptionOption,
-                      isSelected && {
-                        borderColor: "#F59E0B",
-                        backgroundColor: "rgba(245, 158, 11, 0.2)",
-                      },
-                    ]}>
-                    <Text
-                      style={[
-                        styles.consumptionValue,
-                        isSelected && { color: "#FCD34D" },
-                      ]}>
-                      {c}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.consumptionLabel,
-                        isSelected && { color: "#FCD34D" },
-                      ]}>
-                      {t(getConsumptionTranslationKey(c))}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </>
-        )}
 
         <Text style={styles.sectionTitle}>{t("noteOptional")}</Text>
         <TextInput
@@ -340,9 +306,24 @@ export default function MoodEntryScreen() {
           value={note}
           onChangeText={setNote}
           multiline
-          numberOfLines={3}
+          numberOfLines={4}
           textAlignVertical="top"
         />
+
+        <View style={styles.outputCard}>
+          <View style={styles.outputHeader}>
+            <Ionicons name="sparkles" size={18} color={Colors.dark.cyan} />
+            <Text style={styles.outputTitle}>Signal {signal.score}%</Text>
+          </View>
+          <Text style={styles.outputSummary}>{signal.summary}</Text>
+          <Text style={styles.outputLine}>{signal.insight}</Text>
+          <Text style={styles.outputSuggestion}>{signal.suggestion}</Text>
+          {signal.autoTags.length > 0 && (
+            <Text style={styles.autoTags}>
+              Auto-tags: {signal.autoTags.join(", ")}
+            </Text>
+          )}
+        </View>
 
         <View style={styles.actions}>
           <Pressable
@@ -353,13 +334,19 @@ export default function MoodEntryScreen() {
             ]}
             onPress={handleSave}
             disabled={isSubmitting}>
-            {isSubmitting ? (
-              <ActivityIndicator color="#FFF" size="small" />
-            ) : (
-              <Text style={styles.saveText}>
-                {isEditing ? t("editEntry") : t("saveEntry")}
-              </Text>
-            )}
+            <LinearGradient
+              colors={[Colors.dark.cyan, Colors.dark.violet, Colors.dark.magenta]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.saveGradient}>
+              {isSubmitting ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.saveText}>
+                  {isEditing ? t("editEntry") : t("saveEntry")}
+                </Text>
+              )}
+            </LinearGradient>
           </Pressable>
 
           {isEditing && (
@@ -369,11 +356,7 @@ export default function MoodEntryScreen() {
                 pressed && styles.buttonPressed,
               ]}
               onPress={handleDelete}>
-              <Ionicons
-                name="trash-outline"
-                size={18}
-                color={Colors.dark.mood1}
-              />
+              <Ionicons name="trash-outline" size={18} color={Colors.dark.mood1} />
               <Text style={styles.deleteText}>{t("delete")}</Text>
             </Pressable>
           )}
@@ -386,7 +369,7 @@ export default function MoodEntryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.dark.surface,
+    backgroundColor: Colors.dark.background,
   },
   scroll: {
     flex: 1,
@@ -397,15 +380,13 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 22,
   },
   dateText: {
-    fontSize: 16,
-    fontFamily: "Inter_600SemiBold",
     color: Colors.dark.text,
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 16,
+    textTransform: "capitalize",
   },
   phaseRow: {
     flexDirection: "row",
@@ -415,38 +396,35 @@ const styles = StyleSheet.create({
   },
   phaseEmoji: {
     fontSize: 20,
-    textShadowColor: Colors.dark.moon,
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
   },
   phaseLabel: {
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
     color: Colors.dark.textSecondary,
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
     color: Colors.dark.textSecondary,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 12,
+    letterSpacing: 0.6,
     marginBottom: 10,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
   },
   periodRow: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 20,
+    marginBottom: 22,
   },
   periodOption: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 12,
+    borderColor: Colors.dark.overlayBorderStrong,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: "rgba(37, 43, 69, 0.8)",
-    backgroundColor: "rgba(22, 27, 48, 0.6)",
+    backgroundColor: Colors.dark.overlayControl,
     gap: 4,
+    minHeight: 70,
     position: "relative",
   },
   periodDot: {
@@ -455,125 +433,177 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   periodLabel: {
-    fontSize: 11,
-    fontFamily: "Inter_500Medium",
     color: Colors.dark.textMuted,
+    fontFamily: "Inter_500Medium",
+    fontSize: 11,
   },
   checkDot: {
     position: "absolute",
-    top: 4,
-    right: 4,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#22C55E",
+    right: 7,
+    top: 7,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: Colors.dark.cyan,
   },
-  moodRow: {
+  sliderBlock: {
+    marginBottom: 24,
+  },
+  sliderHeader: {
     flexDirection: "row",
-    gap: 6,
-    marginBottom: 20,
-  },
-  moodOption: {
-    flex: 1,
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: "rgba(37, 43, 69, 0.8)",
-    backgroundColor: "rgba(22, 27, 48, 0.6)",
-    gap: 4,
   },
-  moodLabel: {
-    fontSize: 9,
-    fontFamily: "Inter_500Medium",
-    color: Colors.dark.textMuted,
-  },
-  energyRow: {
+  sliderLabelRow: {
     flexDirection: "row",
-    gap: 6,
-    marginBottom: 20,
-  },
-  energyOption: {
-    flex: 1,
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
+    gap: 8,
+  },
+  sliderValue: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 22,
+  },
+  sliderTrack: {
+    height: 24,
     borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "rgba(37, 43, 69, 0.8)",
-    backgroundColor: "rgba(22, 27, 48, 0.6)",
-    gap: 3,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    justifyContent: "center",
+    overflow: "visible",
   },
-  energyLabel: {
-    fontSize: 11,
-    fontFamily: "Inter_500Medium",
+  sliderFill: {
+    position: "absolute",
+    left: 0,
+    height: 8,
+    borderRadius: 4,
+  },
+  sliderThumb: {
+    position: "absolute",
+    width: 24,
+    height: 24,
+    marginLeft: -12,
+    borderRadius: 12,
+    borderWidth: 3,
+    backgroundColor: Colors.dark.background,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+  },
+  tagsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  tagCount: {
     color: Colors.dark.textMuted,
+    fontFamily: "Inter_500Medium",
+    fontSize: 12,
   },
-  consumptionRow: {
+  tagsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
-    marginBottom: 20,
+    gap: 8,
+    marginBottom: 22,
   },
-  consumptionOption: {
-    width: "31%",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: "rgba(37, 43, 69, 0.8)",
-    backgroundColor: "rgba(22, 27, 48, 0.6)",
-    gap: 2,
+  tagPill: {
+    borderColor: Colors.dark.overlayBorderStrong,
+    borderRadius: 16,
+    borderWidth: 1,
+    backgroundColor: Colors.dark.overlayControl,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
   },
-  consumptionValue: {
-    fontSize: 16,
-    fontFamily: "Inter_700Bold",
+  tagPillActive: {
+    borderColor: Colors.dark.cyan,
+    backgroundColor: "rgba(34, 211, 238, 0.14)",
+  },
+  tagText: {
     color: Colors.dark.textMuted,
+    fontFamily: "Inter_500Medium",
+    fontSize: 13,
+    textTransform: "capitalize",
   },
-  consumptionLabel: {
-    fontSize: 9,
-    fontFamily: "Inter_400Regular",
-    color: Colors.dark.textMuted,
+  tagTextActive: {
+    color: Colors.dark.cyan,
   },
   noteInput: {
-    backgroundColor: "rgba(22, 27, 48, 0.6)",
+    minHeight: 96,
+    marginBottom: 18,
+    padding: 16,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(37, 43, 69, 0.8)",
-    padding: 16,
+    borderColor: Colors.dark.overlayBorderStrong,
+    backgroundColor: Colors.dark.overlayControl,
     color: Colors.dark.text,
-    fontSize: 15,
     fontFamily: "Inter_400Regular",
-    minHeight: 70,
+    fontSize: 15,
+  },
+  outputCard: {
+    borderColor: Colors.dark.border,
+    borderRadius: 18,
+    borderWidth: 1,
+    backgroundColor: Colors.dark.surfaceSoft,
     marginBottom: 20,
+    padding: 16,
+    gap: 8,
+  },
+  outputHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  outputTitle: {
+    color: Colors.dark.cyan,
+    fontFamily: "Inter_700Bold",
+    fontSize: 13,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
+  },
+  outputSummary: {
+    color: Colors.dark.text,
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 17,
+    lineHeight: 24,
+  },
+  outputLine: {
+    color: Colors.dark.textSecondary,
+    fontFamily: "Inter_400Regular",
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  outputSuggestion: {
+    color: Colors.dark.magenta,
+    fontFamily: "Inter_500Medium",
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  autoTags: {
+    color: Colors.dark.textMuted,
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
   },
   actions: {
     gap: 12,
   },
   saveButton: {
-    backgroundColor: Colors.dark.primary,
     borderRadius: 16,
-    height: 52,
+    overflow: "hidden",
+  },
+  saveGradient: {
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#7C6AFA",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    height: 54,
   },
   buttonPressed: {
-    opacity: 0.85,
+    opacity: 0.86,
     transform: [{ scale: 0.98 }],
   },
   buttonDisabled: {
-    opacity: 0.5,
+    opacity: 0.55,
   },
   saveText: {
-    color: "#FFF",
+    color: "#FFFFFF",
+    fontFamily: "Inter_700Bold",
     fontSize: 16,
-    fontFamily: "Inter_600SemiBold",
   },
   deleteButton: {
     flexDirection: "row",
@@ -582,13 +612,13 @@ const styles = StyleSheet.create({
     gap: 8,
     height: 48,
     borderRadius: 14,
-    backgroundColor: "rgba(239, 68, 68, 0.08)",
     borderWidth: 1,
     borderColor: "rgba(239, 68, 68, 0.2)",
+    backgroundColor: Colors.dark.overlayDangerSoft,
   },
   deleteText: {
     color: Colors.dark.mood1,
-    fontSize: 15,
     fontFamily: "Inter_500Medium",
+    fontSize: 15,
   },
 });

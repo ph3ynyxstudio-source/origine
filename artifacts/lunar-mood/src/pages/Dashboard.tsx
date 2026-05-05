@@ -9,23 +9,41 @@ import { getMoonPhase } from "../data/moon";
 import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
 import type { DayEntry, MomentEntry, MoonPhase } from "../data/day-entry.types";
 
-// --- MOON NEON FULL (Pleine Lune Uniquement) ---
-function Moon() {
+// --- MOON NEON PHASE ---
+function Moon({ phase = "full_moon" }: { phase?: MoonPhase }) {
+  const phaseMask: Record<MoonPhase, string> = {
+    new_moon: "left-0 w-full",
+    waxing_crescent: "left-1/4 w-full",
+    first_quarter: "left-1/2 w-full",
+    waxing_gibbous: "left-3/4 w-full",
+    full_moon: "hidden",
+    waning_gibbous: "left-[-75%] w-full",
+    last_quarter: "left-[-50%] w-full",
+    waning_crescent: "left-[-25%] w-full",
+  };
+
   return (
     <div className="relative w-32 h-32 md:w-40 md:h-40">
-      {/* 1. Halo extérieur (L'aura néon) */}
+      {/* Halo */}
       <div className="absolute -inset-3.75 rounded-full blur-3xl opacity-50 bg-linear-to-tr from-(--color-primary) via-(--color-secondary) to-(--color-accent)" />
 
-      {/* 2. Corps de la lune */}
+      {/* Lune */}
       <div className="absolute inset-0 rounded-full overflow-hidden border border-white/20 shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.4)]">
-        {/* 3. Surface éclairée (Pleine Lune) */}
+        {/* Surface */}
         <div className="absolute inset-0 bg-linear-to-tr from-(--color-primary) via-(--color-secondary) to-(--color-accent)" />
 
-        {/* 4. Texture et brillance subtile */}
+        {/* Masque phase */}
+        {phase !== "full_moon" && (
+          <div
+            className={`absolute inset-y-0 bg-[#0A0A0F] rounded-full ${phaseMask[phase]}`}
+          />
+        )}
+
+        {/* Texture */}
         <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_30%,white_0%,transparent_70%)]" />
       </div>
 
-      {/* 5. Cercle de contour "Edge Light" */}
+      {/* Edge */}
       <div className="absolute inset-0 rounded-full border border-white/30 pointer-events-none" />
     </div>
   );
@@ -105,7 +123,7 @@ export default function Dashboard() {
 
       {/* Carte Lune */}
       <div className="relative overflow-hidden rounded-[2.5rem] border border-white/8 bg-bg-surface p-8 shadow-2xl shadow-black/60 backdrop-blur-2xl flex flex-col items-center">
-        <Moon />
+        <Moon phase={moonPhase} />
 
         <div className="mt-8 text-center">
           <p className="text-[10px] uppercase tracking-widest text-(--text-muted) opacity-60">

@@ -83,8 +83,7 @@ export function MoodDialog({ date, onClose }: Props) {
             type="button"
             onClick={onClose}
             className="text-xl leading-none text-white/60 transition-colors hover:text-white"
-            aria-label="Fermer"
-          >
+            aria-label="Fermer">
             ✕
           </button>
         </div>
@@ -99,8 +98,7 @@ export function MoodDialog({ date, onClose }: Props) {
                 activeMoment === m
                   ? "bg-primary shadow-lg shadow-primary/20"
                   : "bg-white/10 hover:bg-white/15"
-              }`}
-            >
+              }`}>
               {t(m)}
             </button>
           ))}
@@ -165,16 +163,14 @@ export function MoodDialog({ date, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl bg-white/10 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/15"
-          >
+            className="flex-1 rounded-xl bg-white/10 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/15">
             {t("cancel")}
           </button>
 
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 rounded-xl bg-linear-to-r from-[#22D3EE] to-[#A855F7] px-4 py-3 text-sm font-medium text-white shadow-[0_0_24px_rgba(34,211,238,0.22)] transition-all hover:brightness-110 hover:shadow-[0_0_32px_rgba(34,211,238,0.34)]"
-          >
+            className="flex-1 rounded-xl bg-linear-to-r from-[#22D3EE] to-[#A855F7] px-4 py-3 text-sm font-medium text-white shadow-[0_0_24px_rgba(34,211,238,0.22)] transition-all hover:brightness-110 hover:shadow-[0_0_32px_rgba(34,211,238,0.34)]">
             {t("save")}
           </button>
         </div>
@@ -182,3 +178,4 @@ export function MoodDialog({ date, onClose }: Props) {
     </div>
   );
 }
+//review

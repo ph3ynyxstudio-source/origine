@@ -193,7 +193,7 @@ export default function StatsScreen() {
           <>
             <View style={styles.chartCard}>
               <Text style={styles.chartTitle}>{t("emotionByPhase")}</Text>
-              <Text style={styles.chartSubtitle}>{t("avg")} 1-5</Text>
+              <Text style={styles.chartSubtitle}>{t("avg")} 0-100%</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <BarChart
                   data={{
@@ -280,7 +280,7 @@ export default function StatsScreen() {
                       labels: stats!.monthlyTrends.map((m) => m.month.substring(5)),
                       datasets: [
                         {
-                          data: stats!.monthlyTrends.map((m) => m.avgMood || 0),
+                          data: stats!.monthlyTrends.map((m) => (m.avgMood || 0) / 20),
                           color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
                           strokeWidth: 2,
                         },
@@ -295,7 +295,7 @@ export default function StatsScreen() {
                           strokeWidth: 2,
                         },
                       ],
-                      legend: [t("emotion"), t("energy") + " /5", t("consumption")],
+                      legend: [t("emotion") + " /5", t("energy") + " /5", t("consumption")],
                     }}
                     width={Math.max(screenWidth, stats!.monthlyTrends.length * 70)}
                     height={220}

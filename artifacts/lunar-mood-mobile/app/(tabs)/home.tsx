@@ -30,6 +30,13 @@ function getLunarCycleDay(date: Date): number {
   return Math.floor(position) + 1;
 }
 
+function formatDateForEntry(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { isLoading: isAuthLoading } = useAuth();
@@ -62,12 +69,21 @@ export default function HomeScreen() {
     );
 
     return {
-      avgMood: Math.round((totalMood / moods.length / 5) * 100),
+      avgMood: Math.round(totalMood / moods.length),
       avgEnergy: Math.round(totalEnergy / moods.length),
       avgConsumption: Math.round((totalConsumption / moods.length) * 10) / 10,
       count: moods.length,
     };
   }, [moods]);
+
+  const latestEntry = useMemo(
+    () =>
+      [...moods].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )[0],
+    [moods],
+  );
 
   if (isAuthLoading) {
     return (
@@ -130,10 +146,16 @@ export default function HomeScreen() {
               <Text style={styles.insightLabel}>Insight du jour</Text>
             </View>
             <Text style={styles.insightText}>
-              {stats.count > 0
-                ? `${t("lunarInfluence")} · ${t(getPhaseTranslationKey(todayPhase.phase))}`
-                : t("noDataMessage")}
+              {latestEntry?.signal?.insight ??
+                (stats.count > 0
+                  ? `${t("lunarInfluence")} · ${t(getPhaseTranslationKey(todayPhase.phase))}`
+                  : t("noDataMessage"))}
             </Text>
+            {latestEntry?.signal?.suggestion ? (
+              <Text style={styles.suggestionText}>
+                {latestEntry.signal.suggestion}
+              </Text>
+            ) : null}
           </View>
 
           <View style={styles.metricsGrid}>
@@ -154,7 +176,12 @@ export default function HomeScreen() {
           </View>
 
           <Pressable
-            onPress={() => router.push("/calendar")}
+            onPress={() =>
+              router.push({
+                pathname: "/mood-entry",
+                params: { date: formatDateForEntry(today) },
+              })
+            }
             style={({ pressed }) => [
               styles.primaryButton,
               pressed && styles.primaryButtonPressed,
@@ -343,6 +370,13 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 20,
     lineHeight: 34,
+  },
+  suggestionText: {
+    color: Colors.dark.magenta,
+    fontFamily: "Inter_500Medium",
+    fontSize: 15,
+    lineHeight: 24,
+    marginTop: 10,
   },
   primaryButton: {
     borderRadius: 24,

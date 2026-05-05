@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getLunarPhase } from "@/lib/lunar";
+import { normalizeTags, parseInput, type InputSignal } from "@/lib/inputParser";
 
 const MOODS_STORAGE_KEY = "local_moods";
 const LOCAL_USER_ID = 1;
@@ -14,16 +15,23 @@ export interface MoodEntry {
   energy: number;
   consumption: number;
   note: string | null;
+  tags: string[];
+  signal: InputSignal;
   lunarPhase: string;
   createdAt: string;
 }
+
+type StoredMoodEntry = Omit<MoodEntry, "tags" | "signal"> & {
+  tags?: string[];
+  signal?: InputSignal;
+};
 
 interface MoodContextType {
   moods: MoodEntry[];
   isLoading: boolean;
   fetchMoods: (month: number, year: number) => Promise<void>;
-  createMood: (date: string, period: string, mood: number, energy: number, consumption: number, note: string | null) => Promise<MoodEntry>;
-  updateMood: (id: number, mood: number, energy: number, consumption: number, note: string | null) => Promise<MoodEntry>;
+  createMood: (date: string, period: string, mood: number, energy: number, consumption: number, note: string | null, tags?: string[]) => Promise<MoodEntry>;
+  updateMood: (id: number, mood: number, energy: number, consumption: number, note: string | null, tags?: string[]) => Promise<MoodEntry>;
   deleteMood: (id: number) => Promise<void>;
   clearMoods: () => void;
 }
@@ -32,7 +40,15 @@ const MoodContext = createContext<MoodContextType | undefined>(undefined);
 
 async function readLocalMoods(): Promise<MoodEntry[]> {
   const raw = await AsyncStorage.getItem(MOODS_STORAGE_KEY);
-  return raw ? JSON.parse(raw) : [];
+  const entries = raw ? (JSON.parse(raw) as StoredMoodEntry[]) : [];
+  return entries.map((entry): MoodEntry => {
+    const tags = normalizeTags(entry.tags);
+    return {
+      ...entry,
+      tags,
+      signal: entry.signal ?? parseInput({ mood: entry.mood, energy: entry.energy, tags, note: entry.note }),
+    };
+  });
 }
 
 async function writeLocalMoods(entries: MoodEntry[]): Promise<void> {
@@ -69,9 +85,12 @@ export function MoodProvider({ children }: { children: React.ReactNode }) {
     mood: number,
     energy: number,
     consumption: number,
-    note: string | null
+    note: string | null,
+    tags: string[] = []
   ): Promise<MoodEntry> => {
     const periodKey = period as MoodEntry["period"];
+    const normalizedTags = normalizeTags(tags);
+    const signal = parseInput({ mood, energy, tags: normalizedTags, note });
     const entry: MoodEntry = {
       id: Date.now(),
       userId: LOCAL_USER_ID,
@@ -81,6 +100,8 @@ export function MoodProvider({ children }: { children: React.ReactNode }) {
       energy,
       consumption,
       note,
+      tags: normalizedTags,
+      signal,
       lunarPhase: getLunarPhase(new Date(`${date}T12:00:00`)).phase,
       createdAt: new Date().toISOString(),
     };
@@ -97,7 +118,8 @@ export function MoodProvider({ children }: { children: React.ReactNode }) {
     mood: number,
     energy: number,
     consumption: number,
-    note: string | null
+    note: string | null,
+    tags?: string[]
   ): Promise<MoodEntry> => {
     const current = await readLocalMoods();
     const existing = current.find((m) => m.id === id);
@@ -105,7 +127,16 @@ export function MoodProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Entry not found");
     }
 
-    const entry = { ...existing, mood, energy, consumption, note };
+    const nextTags = normalizeTags(tags ?? existing.tags);
+    const entry = {
+      ...existing,
+      mood,
+      energy,
+      consumption,
+      note,
+      tags: nextTags,
+      signal: parseInput({ mood, energy, tags: nextTags, note }),
+    };
     const next = current.map((m) => (m.id === id ? entry : m));
     setMoods(next);
     await writeLocalMoods(next);
