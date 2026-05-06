@@ -10,14 +10,14 @@ import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
 import type { DayEntry, MomentEntry, MoonPhase } from "../data/day-entry.types";
 
 const MOON_PHASE_ASSETS: Record<MoonPhase, string> = {
-  new_moon: "/branding/moons/moon_new.webp",
-  waxing_crescent: "/branding/moons/moon_waxing_crescent.webp",
-  first_quarter: "/branding/moons/moon_first_quarter.webp",
-  waxing_gibbous: "/branding/moons/moon_waxing_gibbous.webp",
-  full_moon: "/branding/moons/moon_full.webp",
-  waning_gibbous: "/branding/moons/moon_waning_gibbous.webp",
-  last_quarter: "/branding/moons/moon_last_quarter.webp",
-  waning_crescent: "/branding/moons/moon_waning_crescent.webp",
+  new_moon: "/moons/moon_new.webp",
+  waxing_crescent: "/moons/moon_waxing_crescent.webp",
+  first_quarter: "/moons/moon_first_quarter.webp",
+  waxing_gibbous: "/moons/moon_waxing_gibbous.webp",
+  full_moon: "/moons/moon_full.webp",
+  waning_gibbous: "/moons/moon_waning_gibbous.webp",
+  last_quarter: "/moons/moon_last_quarter.webp",
+  waning_crescent: "/moons/moon_waning_crescent.webp",
 };
 
 function Moon({ phase }: { phase: MoonPhase }) {
