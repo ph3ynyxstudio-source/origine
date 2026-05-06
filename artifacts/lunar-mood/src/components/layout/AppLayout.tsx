@@ -36,7 +36,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   ]
 
   return (
-    <div className="app-shell min-h-screen flex flex-col md:flex-row relative overflow-hidden">
+    <div className="app-shell min-h-screen flex flex-col md:flex-row relative overflow-hidden bg-black">
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex w-64 flex-col border-r border-white/5 glass-panel z-10 rounded-none h-screen fixed left-0 top-0">
         <div className="p-6 flex items-center gap-3">
@@ -72,7 +72,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:ml-64 pb-24 md:pb-0 min-h-screen relative overflow-x-hidden">
+      <main className="relative z-10 flex-1 md:ml-64 pb-24 md:pb-0 min-h-screen overflow-x-hidden bg-transparent">
         <div className="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
           <motion.div
             key={location}

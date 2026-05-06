@@ -9,42 +9,29 @@ import { getMoonPhase } from "../data/moon";
 import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
 import type { DayEntry, MomentEntry, MoonPhase } from "../data/day-entry.types";
 
-// --- MOON NEON PHASE ---
-function Moon({ phase = "full_moon" }: { phase?: MoonPhase }) {
-  const phaseMask: Record<MoonPhase, string> = {
-    new_moon: "left-0 w-full",
-    waxing_crescent: "left-1/4 w-full",
-    first_quarter: "left-1/2 w-full",
-    waxing_gibbous: "left-3/4 w-full",
-    full_moon: "hidden",
-    waning_gibbous: "left-[-75%] w-full",
-    last_quarter: "left-[-50%] w-full",
-    waning_crescent: "left-[-25%] w-full",
-  };
+const MOON_PHASE_ASSETS: Record<MoonPhase, string> = {
+  new_moon: "/branding/moons/moon_new.webp",
+  waxing_crescent: "/branding/moons/moon_waxing_crescent.webp",
+  first_quarter: "/branding/moons/moon_first_quarter.webp",
+  waxing_gibbous: "/branding/moons/moon_waxing_gibbous.webp",
+  full_moon: "/branding/moons/moon_full.webp",
+  waning_gibbous: "/branding/moons/moon_waning_gibbous.webp",
+  last_quarter: "/branding/moons/moon_last_quarter.webp",
+  waning_crescent: "/branding/moons/moon_waning_crescent.webp",
+};
 
+function Moon({ phase }: { phase: MoonPhase }) {
   return (
-    <div className="relative w-32 h-32 md:w-40 md:h-40">
-      {/* Halo */}
-      <div className="absolute -inset-3.75 rounded-full blur-3xl opacity-50 bg-linear-to-tr from-(--color-primary) via-(--color-secondary) to-(--color-accent)" />
-
-      {/* Lune */}
-      <div className="absolute inset-0 rounded-full overflow-hidden border border-white/20 shadow-[0_0_30px_rgba(var(--color-primary-rgb),0.4)]">
-        {/* Surface */}
-        <div className="absolute inset-0 bg-linear-to-tr from-(--color-primary) via-(--color-secondary) to-(--color-accent)" />
-
-        {/* Masque phase */}
-        {phase !== "full_moon" && (
-          <div
-            className={`absolute inset-y-0 bg-[#0A0A0F] rounded-full ${phaseMask[phase]}`}
-          />
-        )}
-
-        {/* Texture */}
-        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_30%,white_0%,transparent_70%)]" />
-      </div>
-
-      {/* Edge */}
-      <div className="absolute inset-0 rounded-full border border-white/30 pointer-events-none" />
+    <div className="relative flex h-40 w-40 items-center justify-center">
+      <div className="absolute inset-5 rounded-full bg-cyan-300/20 blur-2xl" />
+      <img
+        src={MOON_PHASE_ASSETS[phase]}
+        alt={phase}
+        width={160}
+        height={160}
+        className="relative h-40 w-40 object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.35)]"
+        decoding="async"
+      />
     </div>
   );
 }
@@ -91,6 +78,30 @@ function getAverageMetric(
     : null;
 }
 
+function getFallbackInsight(mood: number | null, energy: number | null): string {
+  if (mood === null || energy === null) {
+    return "Enregistre tes premiers signaux pour commencer à révéler ton rythme personnel.";
+  }
+
+  if (energy < 40 && mood < 40) {
+    return "Ton système semble demander moins de pression aujourd’hui. Une journée plus lente pourrait aider à stabiliser ton énergie.";
+  }
+
+  if (energy > 60 && mood < 40) {
+    return "Ton énergie est disponible, mais ton humeur suit moins. Oriente-la vers une action simple plutôt qu’une surcharge.";
+  }
+
+  if (energy < 40 && mood > 60) {
+    return "Ton humeur est bonne, mais ton énergie est basse. Protège ce calme en gardant un rythme doux.";
+  }
+
+  if (energy > 60 && mood > 60) {
+    return "Ton état global est aligné. C’est un bon moment pour avancer sur une priorité claire.";
+  }
+
+  return "Ton état est relativement stable. Continue à observer tes variations pour mieux repérer tes cycles.";
+}
+
 // --- DASHBOARD ---
 export default function Dashboard() {
   const { t, language } = useTranslation();
@@ -115,14 +126,14 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4 text-(--text-primary) min-h-screen bg-(--bg-base)">
+    <div className="flex min-h-screen flex-col gap-4 bg-transparent p-4 text-(--text-primary)">
       <header>
         <h1 className="text-2xl font-bold">{t("hello")}</h1>
         <p className="text-(--text-muted)">{dateLabel}</p>
       </header>
 
       {/* Carte Lune */}
-      <div className="relative overflow-hidden rounded-[2.5rem] border border-white/8 bg-bg-surface p-8 shadow-2xl shadow-black/60 backdrop-blur-2xl flex flex-col items-center">
+      <div className="lunar-card relative overflow-hidden rounded-[2.5rem] p-8 flex flex-col items-center">
         <Moon phase={moonPhase} />
 
         <div className="mt-8 text-center">
@@ -140,7 +151,7 @@ export default function Dashboard() {
 
       {/* Métriques */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-white/8 bg-bg-surface p-5 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.35)]">
+        <div className="lunar-card rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wider text-(--text-muted) mb-1">
             {t("todayMood")}
           </p>
@@ -148,7 +159,7 @@ export default function Dashboard() {
             {mood !== null ? `${mood}%` : "—"}
           </p>
         </div>
-        <div className="rounded-2xl border border-white/8 bg-bg-surface p-5 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.35)]">
+        <div className="lunar-card rounded-2xl p-5">
           <p className="text-xs uppercase tracking-wider text-(--text-muted) mb-1">
             {t("energy")}
           </p>
@@ -159,7 +170,7 @@ export default function Dashboard() {
       </div>
 
       {/* Insight */}
-      <div className="rounded-2xl border border-white/8 bg-bg-surface p-6 backdrop-blur-xl shadow-[0_0_30px_rgba(0,0,0,0.35)]">
+      <div className="lunar-card rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">✨</span>
           <p className="text-xs font-bold uppercase tracking-widest text-(--text-muted)">
@@ -169,17 +180,7 @@ export default function Dashboard() {
         <p className="text-sm leading-relaxed opacity-90">
           {insight?.insight && insight.insight !== "Test Crystaph3y actif"
             ? insight.insight
-            : mood !== null && energy !== null
-              ? energy < 40 && mood < 40
-                ? "Baisse d’énergie et d’humeur détectée. Ralentir aujourd’hui pourrait t’aider à stabiliser ton état."
-                : energy > 60 && mood < 40
-                  ? "Ton énergie est présente mais ton humeur reste basse. Un désalignement possible à observer."
-                  : energy < 40 && mood > 60
-                    ? "Bonne humeur mais énergie basse. Pense à te préserver pour éviter un crash plus tard."
-                    : energy > 60 && mood > 60
-                      ? "État global positif. Bon moment pour avancer sur ce qui compte vraiment."
-                      : "État équilibré. Continue à observer tes variations au fil des jours."
-              : "Commence à enregistrer tes états pour révéler des patterns progressifs."}
+            : getFallbackInsight(mood, energy)}
         </p>
       </div>
     </div>

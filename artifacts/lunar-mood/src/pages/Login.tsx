@@ -55,7 +55,7 @@ export default function Login() {
         <div className="h-28 w-28 rounded-full border border-white/12 bg-[radial-gradient(circle_at_30%_30%,rgba(142,242,255,0.3),transparent_42%),radial-gradient(circle_at_70%_68%,rgba(200,140,255,0.26),transparent_48%),linear-gradient(180deg,rgba(15,23,48,0.95),rgba(7,11,22,0.92))] shadow-[0_0_40px_rgba(126,235,255,0.08)] sm:h-36 sm:w-36" />
       </motion.div>
 
-      <Card className="border-white/10 backdrop-blur-2xl bg-black/40">
+      <Card className="lunar-card">
         <CardContent className="pt-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (

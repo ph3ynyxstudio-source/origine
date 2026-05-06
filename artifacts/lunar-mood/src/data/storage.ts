@@ -12,6 +12,15 @@ export function saveDayEntry(entry: DayEntry): void {
   localStorage.setItem(PREFIX + entry.date, JSON.stringify(entry));
 }
 
+export function getEntriesForDates(
+  dates: string[],
+): Record<string, DayEntry | null> {
+  return dates.reduce<Record<string, DayEntry | null>>((entries, date) => {
+    entries[date] = getDayEntry(date);
+    return entries;
+  }, {});
+}
+
 export function getMonthEntries(year: number, month: number): DayEntry[] {
   const entries: DayEntry[] = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();

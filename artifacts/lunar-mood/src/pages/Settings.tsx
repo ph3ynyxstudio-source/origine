@@ -4,8 +4,8 @@ export default function Settings() {
   const { t, language, setLanguage } = useTranslation();
 
   return (
-    <div className="min-h-screen bg-[#0A1024] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#1A234A]/70 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl space-y-6">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="lunar-card w-full max-w-sm rounded-2xl p-6 space-y-6">
         {/* TITLE */}
         <h1 className="text-center text-lg font-semibold text-white">
           {t("settings")}

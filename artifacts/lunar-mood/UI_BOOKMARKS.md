@@ -48,7 +48,8 @@
 
 ## Ecrans
 
-- [src/pages/Dashboard.tsx](/c:/Users/Ph3yN/PH3Y%20NYX/02_APPS/LunarMood_local/origine/artifacts/lunar-mood/src/pages/Dashboard.tsx:13)
+- [src/pages/Dashboard.tsx](/c:/Users/Ph3yN/PH3Y%20NYX/02_APPS/LunarMood_local/origine/artifacts/lunar-mood/src/pages/Dashboard.tsx:
+13)
 
   `Moon()` dessine la lune hero: halo neon, disque lumineux, contour brillant.
 

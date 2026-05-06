@@ -1,8 +1,10 @@
 import { MoonPhase, MomentEntry } from "../../data/day-entry.types";
-import { getMoonPhaseIcon } from "../getMoonPhaseIcon";
+import { MOON_PHASE_EMOJI_ASSETS } from "./moonPhaseEmojiAssets";
 
 export type DayCellProps = {
   date: Date;
+  isSelected: boolean;
+  isToday: boolean;
   isCurrentMonth: boolean;
   moonPhase: MoonPhase;
   moments?: {
@@ -27,40 +29,56 @@ function getPresenceDotColor(hasEntry: boolean): string {
   return hasEntry ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.18)";
 }
 
+function shouldShowCalendarMoon(phase: MoonPhase): boolean {
+  return phase === "new_moon" || phase === "full_moon";
+}
+
 export function DayCell({
   date,
+  isSelected,
+  isToday,
   isCurrentMonth,
   moonPhase,
   moments,
   onOpen,
 }: DayCellProps) {
-  const MoonIcon = getMoonPhaseIcon(moonPhase);
   const morningFilled = hasMomentEntry(moments?.morning);
   const middayFilled = hasMomentEntry(moments?.midday);
   const eveningFilled = hasMomentEntry(moments?.evening);
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onOpen}
-      style={{
-        opacity: isCurrentMonth ? 1 : 0.3,
-        cursor: "pointer",
-        padding: "6px 4px",
-        borderRadius: "12px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "2px",
-        background: "rgba(255, 255, 255, 0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        boxShadow: "none",
-        minHeight: "60px",
-        justifyContent: "space-between",
-      }}>
-      <div>{date.getDate()}</div>
-      <MoonIcon className="h-5 w-5 text-slate-300/70" />
+      className={`flex min-h-16 cursor-pointer flex-col items-center justify-between gap-1 rounded-xl border bg-bg-surface p-1.5 text-(--text-primary) transition-colors hover:border-primary/25 hover:bg-white/[0.06] ${
+        isSelected
+          ? "border-cyan-200/45 bg-cyan-300/10 shadow-[0_0_24px_rgba(34,211,238,0.24)]"
+          : isToday
+          ? "border-cyan-300/35 shadow-[0_0_18px_rgba(34,211,238,0.22)]"
+          : "border-white/8 shadow-[0_0_18px_rgba(0,0,0,0.28)]"
+      } ${
+        isCurrentMonth ? "opacity-100" : "opacity-30"
+      }`}>
+      <span
+        className={`text-xs font-medium ${
+          isSelected || isToday ? "text-(--color-primary)" : ""
+        }`}>
+        {date.getDate()}
+      </span>
+      {shouldShowCalendarMoon(moonPhase) ? (
+        <img
+          src={MOON_PHASE_EMOJI_ASSETS[moonPhase]}
+          alt={moonPhase}
+          width={20}
+          height={20}
+          className="h-5 w-5 object-contain"
+          decoding="async"
+        />
+      ) : (
+        <div className="h-5 w-5" aria-hidden="true" />
+      )}
 
-      <div style={{ display: "flex", gap: "3px" }}>
+      <div className="flex gap-1">
         <div
           style={{
             width: "4px",
@@ -86,6 +104,6 @@ export function DayCell({
           }}
         />
       </div>
-    </div>
+    </button>
   );
 }

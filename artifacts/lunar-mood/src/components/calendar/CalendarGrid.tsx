@@ -11,24 +11,20 @@ import { getDayEntry } from "../../data/storage";
 type Props = {
   year: number;
   month: number;
+  selectedDate: string;
   onDayOpen: (date: string) => void;
 };
 
-export function CalendarGrid({ year, month, onDayOpen }: Props) {
+export function CalendarGrid({ year, month, selectedDate, onDayOpen }: Props) {
   const days = getMonthDays(year, month);
+  const todayStr = formatDate(getLocalStartOfDay());
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(7, 1fr)",
-        gap: "4px",
-      }}
-    >
+    <div className="grid grid-cols-7 gap-1">
       {["D", "L", "M", "M", "J", "V", "S"].map((d, i) => (
         <div
           key={i}
-          style={{ textAlign: "center", fontSize: "11px", opacity: 0.5 }}
+          className="pb-2 text-center text-[11px] font-medium uppercase text-(--text-muted) opacity-70"
         >
           {d}
         </div>
@@ -44,6 +40,8 @@ export function CalendarGrid({ year, month, onDayOpen }: Props) {
           <DayCell
             key={i}
             date={localDate}
+            isSelected={dateStr === selectedDate}
+            isToday={dateStr === todayStr}
             isCurrentMonth={isCurrentMonth(localDate, year, month)}
             moonPhase={entry?.moonPhase ?? moonPhase}
             moments={entry?.moments}

@@ -1,22 +1,23 @@
 import { useTranslation } from "@/lib/i18n";
 import { useState } from "react";
 
-import {
-  FullMoon,
-  WaningCrescent,
-  WaxingCrescent,
-} from "@/components/moon-phases";
-
 import { CalendarGrid } from "../components/calendar/CalendarGrid";
+import { formatDate, getLocalStartOfDay } from "../data/calendar";
 import { MoodDialog } from "./MoodDialog";
+import { QuickDayEntry } from "./QuickDayEntry";
 
 export default function Calendar() {
-  const { t, language } = useTranslation(); // ✅ FIX
+  const { language } = useTranslation();
 
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(
+    formatDate(getLocalStartOfDay()),
+  );
+  const [journalDate, setJournalDate] = useState<string | null>(null);
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
+  const [quickEntryRefreshKey, setQuickEntryRefreshKey] = useState(0);
 
   function prevMonth() {
     if (month === 0) {
@@ -42,33 +43,71 @@ export default function Calendar() {
     year: "numeric",
   });
 
+  function openJournal(dateStr: string) {
+    setSelectedDate(dateStr);
+    setJournalDate(dateStr);
+  }
+
+  function refreshEntries() {
+    setCalendarRefreshKey((key) => key + 1);
+  }
+
+  function refreshAfterJournalClose() {
+    setCalendarRefreshKey((key) => key + 1);
+    setQuickEntryRefreshKey((key) => key + 1);
+  }
+
   return (
-    <div style={{ padding: "16px", color: "white" }}>
-      {/* ✅ TITLE */}
-      <h1 className="text-center mb-4">{t("calendar")}</h1>
-
-      <div className="mb-4 flex items-center justify-center gap-4 rounded-full border border-white/10 bg-black/20 px-4 py-2 backdrop-blur-md">
-        <WaxingCrescent className="h-5 w-5 text-slate-300/70" />
-        <FullMoon className="h-5 w-5 text-[#7EEBFF] drop-shadow-[0_0_6px_rgba(126,235,255,0.6)]" />
-        <WaningCrescent className="h-5 w-5 text-[#B78CFF]" />
-      </div>
-
-      <div className="flex justify-between items-center mb-4">
-        <button onClick={prevMonth} className="text-white text-xl">
+    <div className="relative flex min-h-screen flex-col gap-4 overflow-hidden bg-transparent p-4 text-(--text-primary)">
+      <div className="lunar-card relative z-10 flex items-center justify-between rounded-2xl p-3">
+        <button
+          type="button"
+          onClick={prevMonth}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-2xl leading-none text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
+          aria-label="Mois precedent">
           ‹
         </button>
 
-        <span className="capitalize">{monthName}</span>
+        <span className="bg-linear-to-r from-(--color-primary) via-(--color-secondary) to-(--color-accent) bg-clip-text text-lg font-bold capitalize text-transparent">
+          {monthName}
+        </span>
 
-        <button onClick={nextMonth} className="text-white text-xl">
+        <button
+          type="button"
+          onClick={nextMonth}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-2xl leading-none text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
+          aria-label="Mois suivant">
           ›
         </button>
       </div>
 
-      <CalendarGrid year={year} month={month} onDayOpen={setSelectedDate} />
+      <div className="lunar-card relative z-10 overflow-hidden rounded-2xl p-4">
+        <div className="pointer-events-none absolute inset-0 rounded-full bg-violet-500/10 opacity-25 blur-3xl" />
+        <div className="relative z-10">
+          <CalendarGrid
+            key={calendarRefreshKey}
+            year={year}
+            month={month}
+            selectedDate={selectedDate}
+            onDayOpen={openJournal}
+          />
+        </div>
+      </div>
 
-      {selectedDate && (
-        <MoodDialog date={selectedDate} onClose={() => setSelectedDate(null)} />
+      <QuickDayEntry
+        date={selectedDate}
+        refreshKey={quickEntryRefreshKey}
+        onSaved={refreshEntries}
+      />
+
+      {journalDate && (
+        <MoodDialog
+          date={journalDate}
+          onClose={() => {
+            setJournalDate(null);
+            refreshAfterJournalClose();
+          }}
+        />
       )}
     </div>
   );
