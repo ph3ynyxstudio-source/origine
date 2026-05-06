@@ -36,9 +36,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   ]
 
   return (
-    <div className="app-shell min-h-screen flex flex-col md:flex-row relative overflow-hidden bg-black">
+    <div className="app-shell min-h-screen flex flex-col md:flex-row relative overflow-hidden bg-background text-foreground">
       {/* Sidebar (Desktop) */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-white/5 glass-panel z-10 rounded-none h-screen fixed left-0 top-0">
+      <aside className="hidden md:flex w-64 flex-col border-r border-border glass-panel z-10 rounded-none h-screen fixed left-0 top-0">
         <div className="p-6 flex items-center gap-3">
           <MoonStar className="w-8 h-8 text-primary" />
           <span className="font-display text-xl font-bold cosmic-gradient-text tracking-wider">Lun4rMood</span>
@@ -53,7 +53,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     "flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300",
                     isActive 
                       ? "bg-primary/10 text-primary shadow-[0_0_24px_rgba(34,211,238,0.22)] border border-primary/20" 
-                      : "text-muted-foreground hover:bg-white/5 hover:text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
@@ -87,7 +87,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Bottom Nav (Mobile) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-white/10 z-50 px-6 py-4 pb-safe flex justify-between items-center rounded-t-3xl">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-border z-50 px-6 py-3 pb-safe flex justify-between items-center rounded-t-3xl">
         {navItems.map((item) => {
           const isActive = location === item.href
           const hoverAccent = mobileHoverAccent[item.href]
@@ -95,7 +95,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className="relative p-2"
+              className="relative p-1.5"
               onMouseEnter={() => pickMobileAccent(item.href)}
               onMouseLeave={() => clearMobileAccent(item.href)}
               onTouchStart={() => pickMobileAccent(item.href)}

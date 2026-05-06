@@ -22,8 +22,13 @@ export type NormalizedSignal =
   | "sugar"
   | "alcohol"
   | "cannabis"
+  | "fast_food"
   | "junk_food"
-  | "hydration";
+  | "hydration"
+  | "water"
+  | "screen"
+  | "exercise"
+  | "medication";
 export type DayEntry = {
   date: string;
   // Snapshot historique de la phase au moment de la sauvegarde.

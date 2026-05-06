@@ -49,8 +49,8 @@ export function MoodDialog({ date, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-md">
-      <div className="lunar-card pb-safe flex max-h-[85vh] w-full max-w-md flex-col gap-5 overflow-y-auto rounded-2xl border-cyan-200/35 p-6 text-white shadow-[0_0_42px_rgba(34,211,238,0.18),0_24px_60px_rgba(0,0,0,0.62)]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/55 p-4 backdrop-blur-md">
+      <div className="lunar-card pb-safe flex max-h-[85vh] w-full max-w-md flex-col gap-5 overflow-y-auto rounded-2xl border-primary/35 p-6 text-foreground shadow-[0_0_42px_rgba(34,211,238,0.18),0_24px_60px_rgba(0,0,0,0.28)]">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
@@ -61,19 +61,19 @@ export function MoodDialog({ date, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="text-xl leading-none text-white/60 transition-colors hover:text-white"
+            className="text-xl leading-none text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Fermer">
             ✕
           </button>
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm text-white/70">{t("noteOptional")}</label>
+          <label className="text-sm text-foreground/70">{t("noteOptional")}</label>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={9}
-            className="w-full resize-none rounded-xl border border-cyan-200/20 bg-black/20 p-4 text-sm leading-relaxed text-white shadow-inner shadow-black/30 transition-colors placeholder:text-white/25 focus:border-cyan-200/45 focus:outline-none"
+            className="w-full resize-none rounded-xl border border-primary/20 bg-background/40 p-4 text-sm leading-relaxed text-foreground shadow-inner shadow-black/10 transition-colors placeholder:text-muted-foreground focus:border-primary/45 focus:outline-none"
             placeholder={t("journalPlaceholder")}
           />
         </div>
@@ -82,7 +82,7 @@ export function MoodDialog({ date, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl bg-white/10 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/15">
+            className="flex-1 rounded-xl bg-muted px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted/80">
             {t("cancel")}
           </button>
 

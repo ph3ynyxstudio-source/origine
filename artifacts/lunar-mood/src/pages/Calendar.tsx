@@ -63,7 +63,7 @@ export default function Calendar() {
         <button
           type="button"
           onClick={prevMonth}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-2xl leading-none text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted text-2xl leading-none text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
           aria-label="Mois precedent">
           ‹
         </button>
@@ -75,7 +75,7 @@ export default function Calendar() {
         <button
           type="button"
           onClick={nextMonth}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-2xl leading-none text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted text-2xl leading-none text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
           aria-label="Mois suivant">
           ›
         </button>

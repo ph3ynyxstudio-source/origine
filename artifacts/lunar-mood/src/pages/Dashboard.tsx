@@ -78,28 +78,28 @@ function getAverageMetric(
     : null;
 }
 
-function getFallbackInsight(mood: number | null, energy: number | null): string {
+function getFallbackInsightKey(mood: number | null, energy: number | null): string {
   if (mood === null || energy === null) {
-    return "Enregistre tes premiers signaux pour commencer à révéler ton rythme personnel.";
+    return "insightStartLogging";
   }
 
   if (energy < 40 && mood < 40) {
-    return "Ton système semble demander moins de pression aujourd’hui. Une journée plus lente pourrait aider à stabiliser ton énergie.";
+    return "insightLowMoodLowEnergy";
   }
 
   if (energy > 60 && mood < 40) {
-    return "Ton énergie est disponible, mais ton humeur suit moins. Oriente-la vers une action simple plutôt qu’une surcharge.";
+    return "insightLowMoodHighEnergy";
   }
 
   if (energy < 40 && mood > 60) {
-    return "Ton humeur est bonne, mais ton énergie est basse. Protège ce calme en gardant un rythme doux.";
+    return "insightHighMoodLowEnergy";
   }
 
   if (energy > 60 && mood > 60) {
-    return "Ton état global est aligné. C’est un bon moment pour avancer sur une priorité claire.";
+    return "insightHighMoodHighEnergy";
   }
 
-  return "Ton état est relativement stable. Continue à observer tes variations pour mieux repérer tes cycles.";
+  return "insightStable";
 }
 
 // --- DASHBOARD ---
@@ -180,7 +180,7 @@ export default function Dashboard() {
         <p className="text-sm leading-relaxed opacity-90">
           {insight?.insight && insight.insight !== "Test Crystaph3y actif"
             ? insight.insight
-            : getFallbackInsight(mood, energy)}
+            : t(getFallbackInsightKey(mood, energy))}
         </p>
       </div>
     </div>

@@ -148,7 +148,7 @@ export default function Statistics() {
 
   if (!hasData) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 p-8 text-center text-white/50">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
         <p className="text-xl">{t("noDataYet")}</p>
         <p className="text-sm">{t("startLoggingMoods")}</p>
       </div>
@@ -156,27 +156,27 @@ export default function Statistics() {
   }
 
   return (
-    <div className="p-4 text-white">
+    <div className="p-4 text-foreground">
       <h1 className="mb-1 text-2xl font-bold">{t("statistics")}</h1>
-      <p className="mb-6 text-white/50">{t("sevenDayReport")}</p>
+      <p className="mb-6 text-muted-foreground">{t("sevenDayReport")}</p>
 
       <div className="lunar-card rounded-2xl p-5">
         <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2">
+          <div className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-2">
             <span className="h-2.5 w-2.5 rounded-sm bg-[#EC4899]" />
-            <span className="text-white/70">{t("emotion")}</span>
+            <span className="text-muted-foreground">{t("emotion")}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2">
+          <div className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-2">
             <span className="h-0.5 w-4 rounded-full bg-[#22D3EE]" />
-            <span className="text-white/70">{t("energy")}</span>
+            <span className="text-muted-foreground">{t("energy")}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2">
+          <div className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-2">
             <span className="h-0.5 w-4 rounded-full bg-[#A855F7]" />
-            <span className="text-white/70">{t("consumption")}</span>
+            <span className="text-muted-foreground">{t("consumption")}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2">
-            <span className="h-0.5 w-4 rounded-full bg-white/70" />
-            <span className="text-white/70">{t("currentPhase")}</span>
+          <div className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-2">
+            <span className="h-0.5 w-4 rounded-full bg-foreground/70" />
+            <span className="text-muted-foreground">{t("currentPhase")}</span>
           </div>
         </div>
 
@@ -184,26 +184,26 @@ export default function Statistics() {
           <ComposedChart data={chartData}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.08)"
+              stroke="hsl(var(--border))"
               vertical={false}
             />
             <XAxis
               dataKey="label"
-              stroke="rgba(255,255,255,0.3)"
+              stroke="hsl(var(--muted-foreground))"
               tick={{ fontSize: 12 }}
             />
             <YAxis
-              stroke="rgba(255,255,255,0.3)"
+              stroke="hsl(var(--muted-foreground))"
               domain={[0, 100]}
               tick={{ fontSize: 10 }}
             />
             <Tooltip
-              cursor={{ stroke: "rgba(255,255,255,0.12)" }}
+              cursor={{ stroke: "hsl(var(--border))" }}
               contentStyle={{
-                background: "rgba(8,5,32,0.96)",
-                border: "1px solid rgba(103,232,249,0.18)",
+                background: "hsl(var(--popover))",
+                border: "1px solid hsl(var(--border))",
                 borderRadius: "12px",
-                color: "#ffffff",
+                color: "hsl(var(--popover-foreground))",
               }}
             />
             <Bar
@@ -233,7 +233,7 @@ export default function Statistics() {
             <Line
               type="monotone"
               dataKey="moonPhaseScore"
-              stroke="rgba(255,255,255,0.65)"
+              stroke="hsl(var(--muted-foreground))"
               strokeWidth={1.5}
               dot={false}
               name={t("currentPhase")}
@@ -268,7 +268,7 @@ export default function Statistics() {
           </div>
         </div>
 
-        <p className="mt-4 rounded-xl border border-white/10 bg-white/[0.05] p-3 text-sm leading-relaxed text-white/80">
+        <p className="mt-4 rounded-xl border border-border bg-muted p-3 text-sm leading-relaxed text-foreground/80">
           {t(trendKey)}
         </p>
       </div>

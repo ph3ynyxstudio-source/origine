@@ -1,15 +1,22 @@
 import { DayEntry } from "./day-entry.types";
+import { validateDayEntry } from "./validator";
 
 const PREFIX = "lun4rmood:day:";
 
 export function getDayEntry(date: string): DayEntry | null {
   const raw = localStorage.getItem(PREFIX + date);
   if (!raw) return null;
-  return JSON.parse(raw) as DayEntry;
+
+  try {
+    return validateDayEntry(JSON.parse(raw));
+  } catch {
+    return validateDayEntry({ date });
+  }
 }
 
 export function saveDayEntry(entry: DayEntry): void {
-  localStorage.setItem(PREFIX + entry.date, JSON.stringify(entry));
+  const safeEntry = validateDayEntry(entry);
+  localStorage.setItem(PREFIX + safeEntry.date, JSON.stringify(safeEntry));
 }
 
 export function getEntriesForDates(

@@ -7,6 +7,8 @@ export type DayCellProps = {
   isToday: boolean;
   isCurrentMonth: boolean;
   moonPhase: MoonPhase;
+  showFullMoonMarker: boolean;
+  showNewMoonMarker: boolean;
   moments?: {
     morning?: MomentEntry;
     midday?: MomentEntry;
@@ -26,11 +28,18 @@ function hasMomentEntry(moment?: MomentEntry): boolean {
 }
 
 function getPresenceDotColor(hasEntry: boolean): string {
-  return hasEntry ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.18)";
+  return hasEntry ? "var(--text-primary)" : "hsl(var(--border))";
 }
 
-function shouldShowCalendarMoon(phase: MoonPhase): boolean {
-  return phase === "new_moon" || phase === "full_moon";
+function shouldShowCalendarMoon(
+  phase: MoonPhase,
+  showFullMoonMarker: boolean,
+  showNewMoonMarker: boolean,
+): boolean {
+  if (phase === "full_moon") return showFullMoonMarker;
+  if (phase === "new_moon") return showNewMoonMarker;
+
+  return false;
 }
 
 export function DayCell({
@@ -39,6 +48,8 @@ export function DayCell({
   isToday,
   isCurrentMonth,
   moonPhase,
+  showFullMoonMarker,
+  showNewMoonMarker,
   moments,
   onOpen,
 }: DayCellProps) {
@@ -50,12 +61,12 @@ export function DayCell({
     <button
       type="button"
       onClick={onOpen}
-      className={`flex min-h-16 cursor-pointer flex-col items-center justify-between gap-1 rounded-xl border bg-bg-surface p-1.5 text-(--text-primary) transition-colors hover:border-primary/25 hover:bg-white/[0.06] ${
+      className={`flex min-h-16 cursor-pointer flex-col items-center justify-between gap-1 rounded-xl border bg-bg-surface p-1.5 text-(--text-primary) transition-colors hover:border-primary/25 hover:bg-muted ${
         isSelected
           ? "border-cyan-200/45 bg-cyan-300/10 shadow-[0_0_24px_rgba(34,211,238,0.24)]"
           : isToday
           ? "border-cyan-300/35 shadow-[0_0_18px_rgba(34,211,238,0.22)]"
-          : "border-white/8 shadow-[0_0_18px_rgba(0,0,0,0.28)]"
+          : "border-border shadow-[0_0_18px_rgba(0,0,0,0.18)]"
       } ${
         isCurrentMonth ? "opacity-100" : "opacity-30"
       }`}>
@@ -65,7 +76,11 @@ export function DayCell({
         }`}>
         {date.getDate()}
       </span>
-      {shouldShowCalendarMoon(moonPhase) ? (
+      {shouldShowCalendarMoon(
+        moonPhase,
+        showFullMoonMarker,
+        showNewMoonMarker,
+      ) ? (
         <img
           src={MOON_PHASE_EMOJI_ASSETS[moonPhase]}
           alt={moonPhase}

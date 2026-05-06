@@ -64,6 +64,9 @@
 
   --text-primary: #f5f7ff;
   --text-muted: #8a90b8;
+  --rose-gold-border: rgba(244, 190, 160, 0.22);
+  --rose-gold-border-strong: rgba(244, 190, 160, 0.38);
+  --slider-track: rgba(255, 255, 255, 0.18);
 
   /* Dark Cosmic Theme */
   --background: 0 0% 0%;
@@ -99,6 +102,51 @@
   --period-evening: 270 80% 65%;
 }
 
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg-base: #F6F7FB;
+  --bg-surface: #ffffff;
+
+  --color-primary: #2563eb;
+  --color-secondary: #7c3aed;
+  --color-accent: #7c3aed;
+
+  --text-primary: #101321;
+  --text-muted: #5c637a;
+  --rose-gold-border: rgba(244, 190, 160, 0.22);
+  --rose-gold-border-strong: rgba(244, 190, 160, 0.38);
+  --slider-track: rgba(16, 19, 33, 0.16);
+
+  --background: 225 38% 97%;
+  --foreground: 231 35% 10%;
+
+  --card: 218 46% 96%;
+  --card-foreground: 231 35% 10%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 231 35% 10%;
+
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 262 83% 58%;
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 218 46% 96%;
+  --muted-foreground: 229 14% 42%;
+
+  --accent: 262 83% 58%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 224 50% 16% / 0.12;
+  --input: 224 50% 16% / 0.12;
+  --ring: 221 83% 53%;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -108,7 +156,7 @@
   body {
     @apply bg-background text-foreground antialiased font-sans min-h-screen selection:bg-primary/30 selection:text-primary-foreground;
 
-    background: #000000;
+    background: var(--bg-base);
 
     position: relative;
     isolation: isolate;
@@ -117,11 +165,11 @@
     min-height: 100vh;
     position: relative;
     z-index: 1;
-    background: #000000;
+    background: var(--bg-base);
   }
 
   .app-shell {
-    background-color: #000000 !important;
+    background-color: var(--bg-base) !important;
   }
 
   .app-shell::before {
@@ -143,6 +191,10 @@
     z-index: 0;
   }
 
+  [data-theme="light"] .app-shell::before {
+    opacity: 0.18;
+  }
+
   h1,
   h2,
   h3,
@@ -155,8 +207,8 @@
 
 @layer utilities {
   .lunar-card {
-    background-color: rgba(8, 5, 32, 0.86);
-    border: 1px solid rgba(103, 232, 249, 0.12);
+    background-color: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+    border: 1px solid var(--rose-gold-border);
     box-shadow:
       0 0 18px rgba(34, 211, 238, 0.07),
       0 14px 30px rgba(0, 0, 0, 0.42);
@@ -164,7 +216,7 @@
   }
 
   .glass-panel {
-    @apply bg-bg-surface/95 backdrop-blur-xl border border-white/8 shadow-2xl shadow-black/60;
+    @apply bg-bg-surface/95 backdrop-blur-xl border border-border shadow-2xl shadow-black/20;
   }
 
   .glass-panel-hover {

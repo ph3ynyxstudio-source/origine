@@ -9,6 +9,7 @@ import type {
   MetricValue,
   MomentEntry,
   MomentKey,
+  NormalizedSignal,
 } from "../data/day-entry.types";
 
 type Props = {
@@ -24,6 +25,29 @@ const EMPTY_MOMENT: MomentEntry = {
   energy: null,
   consumption: null,
 };
+
+type ConsumptionTag = Extract<
+  NormalizedSignal,
+  | "caffeine"
+  | "sugar"
+  | "alcohol"
+  | "fast_food"
+  | "water"
+  | "screen"
+  | "exercise"
+  | "medication"
+>;
+
+const CONSUMPTION_TAGS: { key: ConsumptionTag; labelKey: string }[] = [
+  { key: "caffeine", labelKey: "tagCaffeine" },
+  { key: "sugar", labelKey: "tagSugar" },
+  { key: "alcohol", labelKey: "tagAlcohol" },
+  { key: "fast_food", labelKey: "tagFastFood" },
+  { key: "water", labelKey: "tagWater" },
+  { key: "screen", labelKey: "tagScreen" },
+  { key: "exercise", labelKey: "tagExercise" },
+  { key: "medication", labelKey: "tagMedication" },
+];
 
 type MetricConfig = {
   key: keyof MomentEntry;
@@ -57,11 +81,15 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
   const { t, language } = useTranslation();
   const [activeMoment, setActiveMoment] = useState<MomentKey>("morning");
   const [moments, setMoments] = useState<DayEntry["moments"]>({});
+  const [selectedTags, setSelectedTags] = useState<ConsumptionTag[]>([]);
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
+    const existing = getDayEntry(date);
+
     setActiveMoment("morning");
-    setMoments(getDayEntry(date)?.moments ?? {});
+    setMoments(existing?.moments ?? {});
+    setSelectedTags(getSelectedConsumptionTags(existing?.normalized));
     setSavedAt(null);
   }, [date, refreshKey]);
 
@@ -102,9 +130,47 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
     onSaved();
   }
 
+  function getSelectedConsumptionTags(
+    normalized: NormalizedSignal[] | undefined,
+  ): ConsumptionTag[] {
+    if (!normalized) return [];
+
+    return CONSUMPTION_TAGS.map((tag) => tag.key).filter((tag) =>
+      normalized.includes(tag),
+    );
+  }
+
+  function toggleConsumptionTag(tag: ConsumptionTag) {
+    const existing = getDayEntry(date);
+    const currentTags = getSelectedConsumptionTags(existing?.normalized);
+    const hasTag = currentTags.includes(tag);
+    const nextTags = hasTag
+      ? currentTags.filter((currentTag) => currentTag !== tag)
+      : [...currentTags, tag];
+    const otherSignals =
+      existing?.normalized?.filter(
+        (signal) =>
+          !CONSUMPTION_TAGS.some((consumptionTag) => consumptionTag.key === signal),
+      ) ?? [];
+
+    const entry: DayEntry = {
+      date,
+      moonPhase: existing?.moonPhase ?? getMoonPhase(parseLocalDate(date)),
+      note: existing?.note ?? "",
+      moments: existing?.moments ?? moments,
+      normalized: [...otherSignals, ...nextTags],
+      updatedAt: Date.now(),
+    };
+
+    saveDayEntry(entry);
+    setSelectedTags(nextTags);
+    setSavedAt(entry.updatedAt);
+    onSaved();
+  }
+
   return (
     <section className="lunar-card relative z-10 rounded-2xl p-4">
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-5 flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
             {t("quickEntry")}
@@ -118,7 +184,7 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
         </div>
       </div>
 
-      <div className="mb-5 grid grid-cols-3 gap-2">
+      <div className="mb-6 grid grid-cols-3 gap-2">
         {MOMENTS.map((moment) => (
           <button
             key={moment}
@@ -127,7 +193,7 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
             className={`min-h-12 rounded-xl border px-3 py-3 text-sm font-medium transition-colors ${
               activeMoment === moment
                 ? "border-cyan-300/30 bg-primary/15 text-(--color-primary)"
-                : "border-white/10 bg-white/[0.04] text-(--text-muted) hover:border-primary/25 hover:text-(--text-primary)"
+                : "border-border bg-muted text-(--text-muted) hover:border-primary/25 hover:text-(--text-primary)"
             }`}>
             {t(moment)}
           </button>
@@ -141,7 +207,7 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
           return (
             <label key={metric.key} className="flex flex-col gap-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="font-medium text-white/75">
+                <span className="font-medium text-foreground/75">
                   {t(metric.labelKey)}
                 </span>
                 <strong style={{ color: metric.color }}>{value}%</strong>
@@ -155,8 +221,36 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
                   setMetric(metric.key, Number(event.target.value))
                 }
                 className={`h-2 w-full cursor-pointer accent-current focus:outline-none ${metric.glow}`}
-                style={{ accentColor: metric.color }}
+                style={{
+                  accentColor: metric.color,
+                  background:
+                    metric.key === "consumption"
+                      ? "var(--slider-track)"
+                      : undefined,
+                }}
               />
+              {metric.key === "consumption" && (
+                <div className="mt-1 flex flex-wrap gap-2">
+                  {CONSUMPTION_TAGS.map((tag) => {
+                    const isSelected = selectedTags.includes(tag.key);
+
+                    return (
+                      <button
+                        key={tag.key}
+                        type="button"
+                        onClick={() => toggleConsumptionTag(tag.key)}
+                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          isSelected
+                            ? "border-[rgba(0,229,255,0.35)] bg-primary/10 text-(--color-primary) shadow-[0_0_12px_rgba(0,229,255,0.12)]"
+                            : "border-[rgba(244,190,160,0.22)] bg-bg-surface/80 text-(--text-muted) hover:border-primary/25 hover:text-(--text-primary)"
+                        }`}
+                        aria-pressed={isSelected}>
+                        {t(tag.labelKey)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </label>
           );
         })}
