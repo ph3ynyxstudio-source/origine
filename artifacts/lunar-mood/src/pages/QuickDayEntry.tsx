@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { useTranslation } from "@/lib/i18n";
 
 import { getMoonPhase } from "../data/moon";
 import { getDayEntry, saveDayEntry } from "../data/storage";
 import { parseLocalDate } from "../data/calendar";
+import { cn } from "../lib/utils";
 import type {
   DayEntry,
   MetricValue,
@@ -49,6 +50,14 @@ const CONSUMPTION_TAGS: { key: ConsumptionTag; labelKey: string }[] = [
   { key: "medication", labelKey: "tagMedication" },
 ];
 
+const PRIMARY_CONSUMPTION_TAGS = CONSUMPTION_TAGS.filter((tag) =>
+  ["caffeine", "sugar", "screen"].includes(tag.key),
+);
+
+const MORE_CONSUMPTION_TAGS = CONSUMPTION_TAGS.filter(
+  (tag) => !PRIMARY_CONSUMPTION_TAGS.some((primaryTag) => primaryTag.key === tag.key),
+);
+
 type MetricConfig = {
   key: keyof MomentEntry;
   labelKey: string;
@@ -82,6 +91,7 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
   const [activeMoment, setActiveMoment] = useState<MomentKey>("morning");
   const [moments, setMoments] = useState<DayEntry["moments"]>({});
   const [selectedTags, setSelectedTags] = useState<ConsumptionTag[]>([]);
+  const [showMoreConsumptionTags, setShowMoreConsumptionTags] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
@@ -90,6 +100,7 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
     setActiveMoment("morning");
     setMoments(existing?.moments ?? {});
     setSelectedTags(getSelectedConsumptionTags(existing?.normalized));
+    setShowMoreConsumptionTags(false);
     setSavedAt(null);
   }, [date, refreshKey]);
 
@@ -128,6 +139,26 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
     setMoments(nextMoments);
     setSavedAt(entry.updatedAt);
     onSaved();
+  }
+
+  function renderConsumptionChip(tag: { key: ConsumptionTag; labelKey: string }) {
+    const isSelected = selectedTags.includes(tag.key);
+
+    return (
+      <button
+        key={tag.key}
+        type="button"
+        onClick={() => toggleConsumptionTag(tag.key)}
+        className={cn(
+          "min-h-9 rounded-full border px-3 py-2 text-xs font-medium transition-colors",
+          isSelected
+            ? "border-[#A855F7]/45 bg-[#A855F7]/15 text-[#A855F7] shadow-[0_0_16px_rgba(168,85,247,0.14)]"
+            : "border-border bg-muted/55 text-muted-foreground hover:border-primary/30 hover:text-foreground",
+        )}
+        aria-pressed={isSelected}>
+        {isSelected ? "✓" : "+"} {t(tag.labelKey)}
+      </button>
+    );
   }
 
   function getSelectedConsumptionTags(
@@ -190,11 +221,12 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
             key={moment}
             type="button"
             onClick={() => setActiveMoment(moment)}
-            className={`min-h-12 rounded-xl border px-3 py-3 text-sm font-medium transition-colors ${
+            className={cn(
+              "min-h-12 rounded-xl border px-3 py-3 text-sm font-medium transition-colors",
               activeMoment === moment
                 ? "border-cyan-300/30 bg-primary/15 text-(--color-primary)"
-                : "border-border bg-muted text-(--text-muted) hover:border-primary/25 hover:text-(--text-primary)"
-            }`}>
+                : "border-border bg-muted text-(--text-muted) hover:border-primary/25 hover:text-(--text-primary)",
+            )}>
             {t(moment)}
           </button>
         ))}
@@ -220,35 +252,39 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
                 onChange={(event) =>
                   setMetric(metric.key, Number(event.target.value))
                 }
-                className={`h-2 w-full cursor-pointer accent-current focus:outline-none ${metric.glow}`}
+                className={`lunar-slider h-2 w-full cursor-pointer accent-current focus:outline-none ${metric.glow}`}
                 style={{
+                  "--slider-thumb-color": metric.color,
                   accentColor: metric.color,
-                  background:
-                    metric.key === "consumption"
-                      ? "var(--slider-track)"
-                      : undefined,
-                }}
+                  background: `linear-gradient(90deg, ${metric.color} 0%, ${metric.color} ${value}%, var(--slider-track) ${value}%, var(--slider-track) 100%)`,
+                } as CSSProperties}
               />
               {metric.key === "consumption" && (
-                <div className="mt-1 flex flex-wrap gap-2">
-                  {CONSUMPTION_TAGS.map((tag) => {
-                    const isSelected = selectedTags.includes(tag.key);
-
-                    return (
-                      <button
-                        key={tag.key}
-                        type="button"
-                        onClick={() => toggleConsumptionTag(tag.key)}
-                        className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                          isSelected
-                            ? "border-[rgba(0,229,255,0.35)] bg-primary/10 text-(--color-primary) shadow-[0_0_12px_rgba(0,229,255,0.12)]"
-                            : "border-[rgba(244,190,160,0.22)] bg-bg-surface/80 text-(--text-muted) hover:border-primary/25 hover:text-(--text-primary)"
-                        }`}
-                        aria-pressed={isSelected}>
-                        {t(tag.labelKey)}
-                      </button>
-                    );
-                  })}
+                <div className="mt-1 flex flex-col gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {PRIMARY_CONSUMPTION_TAGS.map(renderConsumptionChip)}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowMoreConsumptionTags((isVisible) => !isVisible)
+                      }
+                      className={cn(
+                        "min-h-9 rounded-full border px-3 py-2 text-xs font-medium transition-colors",
+                        showMoreConsumptionTags
+                          ? "border-[#22D3EE]/45 bg-[#22D3EE]/12 text-[#22D3EE] shadow-[0_0_16px_rgba(34,211,238,0.12)]"
+                          : "border-border bg-muted/55 text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                      )}
+                      aria-expanded={showMoreConsumptionTags}>
+                      + Add more
+                    </button>
+                  </div>
+                  {showMoreConsumptionTags && (
+                    <div className="flex flex-wrap gap-2">
+                      {MORE_CONSUMPTION_TAGS.map(renderConsumptionChip)}
+                    </div>
+                  )}
                 </div>
               )}
             </label>

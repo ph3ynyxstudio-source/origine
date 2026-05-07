@@ -228,9 +228,58 @@
   }
 
   .cosmic-gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary;
+    @apply bg-clip-text text-transparent bg-linear-to-r from-primary via-accent to-primary;
     background-size: 200% auto;
     animation: gradient 8s linear infinite;
+  }
+
+  .stats-table td,
+  .stats-table th {
+    padding: 12px;
+    text-align: center;
+  }
+
+  .lunar-slider {
+    appearance: none;
+    border-radius: 999px;
+  }
+
+  .lunar-slider::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .lunar-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: -4px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--slider-thumb-color);
+    cursor: pointer;
+  }
+
+  .lunar-slider::-moz-range-track {
+    height: 8px;
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .lunar-slider::-moz-range-progress {
+    height: 8px;
+    border-radius: 999px;
+    background: transparent;
+  }
+
+  .lunar-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--slider-thumb-color);
+    cursor: pointer;
   }
 }
 

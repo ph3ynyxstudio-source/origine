@@ -162,19 +162,19 @@ export default function Statistics() {
 
       <div className="lunar-card rounded-2xl p-5">
         <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-          <div className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-2">
+          <div className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-border bg-muted px-3 py-3 text-center">
             <span className="h-2.5 w-2.5 rounded-sm bg-[#EC4899]" />
             <span className="text-muted-foreground">{t("emotion")}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-2">
+          <div className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-border bg-muted px-3 py-3 text-center">
             <span className="h-0.5 w-4 rounded-full bg-[#22D3EE]" />
             <span className="text-muted-foreground">{t("energy")}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-2">
+          <div className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-border bg-muted px-3 py-3 text-center">
             <span className="h-0.5 w-4 rounded-full bg-[#A855F7]" />
             <span className="text-muted-foreground">{t("consumption")}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-2">
+          <div className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-border bg-muted px-3 py-3 text-center">
             <span className="h-0.5 w-4 rounded-full bg-foreground/70" />
             <span className="text-muted-foreground">{t("currentPhase")}</span>
           </div>
