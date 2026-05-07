@@ -1,12 +1,6 @@
-export type MoonPhase =
-  | "new_moon"
-  | "waxing_crescent"
-  | "first_quarter"
-  | "waxing_gibbous"
-  | "full_moon"
-  | "waning_gibbous"
-  | "last_quarter"
-  | "waning_crescent";
+import type { MoonPhase } from "../services/lunarEngine";
+
+export type { MoonPhase };
 
 export type MomentKey = "morning" | "midday" | "evening";
 
@@ -33,7 +27,8 @@ export type DayEntry = {
   date: string;
   // Snapshot historique de la phase au moment de la sauvegarde.
   // Le dashboard affiche la phase courante via getMoonPhase(date).
-  moonPhase: MoonPhase;
+  moonPhase?: MoonPhase;
+  moonIllumination?: number;
   moments: Partial<Record<MomentKey, MomentEntry>>;
   note: string;
   normalized?: NormalizedSignal[];

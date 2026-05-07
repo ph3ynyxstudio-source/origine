@@ -90,6 +90,15 @@ function normalizeConsumptionTags(value: unknown): NormalizedSignal[] {
   return tags.filter(isValidConsumptionTag);
 }
 
+function normalizeIllumination(value: unknown): number | undefined {
+  if (value === null || value === undefined) return undefined;
+
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return undefined;
+
+  return Math.min(100, Math.max(0, Math.round(numeric)));
+}
+
 export function clampScore(value: unknown): number {
   const numeric = Number(value);
   if (!Number.isFinite(numeric)) return 0;
@@ -115,11 +124,12 @@ export function validateDayEntry(entry: unknown): DayEntry {
   const data = isRecord(entry) ? entry : {};
   const moonPhase = isValidMoonPhase(data.moonPhase)
     ? data.moonPhase
-    : "new_moon";
+    : undefined;
 
   return {
     date: normalizeDate(data.date),
     moonPhase,
+    moonIllumination: normalizeIllumination(data.moonIllumination),
     moments: normalizeMoments(data.moments),
     note: typeof data.note === "string" ? data.note : "",
     normalized: normalizeConsumptionTags(data.normalized),

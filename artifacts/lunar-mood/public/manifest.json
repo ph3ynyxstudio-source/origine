@@ -1,0 +1,32 @@
+{
+  "short_name": "Lun4rMood",
+  "name": "Lun4rMood : Vos cycles décodés",
+  "description": "Suivez votre énergie au rythme de la lune. Votre rythme, votre clarté.",
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "scope": "/",
+  "orientation": "portrait",
+  "theme_color": "#070B18",
+  "background_color": "#070B18",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/splash/splash-icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ]
+}

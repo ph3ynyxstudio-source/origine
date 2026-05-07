@@ -1,5 +1,6 @@
 import { DayEntry } from "./day-entry.types";
 import { validateDayEntry } from "./validator";
+import { getMoonPhase } from "../services/lunarEngine";
 
 const PREFIX = "lun4rmood:day:";
 
@@ -15,8 +16,18 @@ export function getDayEntry(date: string): DayEntry | null {
 }
 
 export function saveDayEntry(entry: DayEntry): void {
-  const safeEntry = validateDayEntry(entry);
+  const lunarData = getMoonPhase(new Date(entry.date));
+  const entryWithMoon: DayEntry = {
+    ...entry,
+    moonPhase: entry.moonPhase ?? lunarData.phase,
+    moonIllumination: entry.moonIllumination ?? lunarData.illumination,
+  };
+  const safeEntry = validateDayEntry(entryWithMoon);
   localStorage.setItem(PREFIX + safeEntry.date, JSON.stringify(safeEntry));
+}
+
+export function deleteDayEntry(date: string): void {
+  localStorage.removeItem(PREFIX + date);
 }
 
 export function getEntriesForDates(
