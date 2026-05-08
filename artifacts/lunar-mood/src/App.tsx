@@ -4,7 +4,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "./components/ui/toaster";
 import { TooltipProvider } from "./components/ui/tooltip";
-import { I18nProvider } from "./lib/i18n";
+import { I18nProvider, useTranslation } from "./lib/i18n";
 import { ThemeProvider } from "./lib/theme";
 
 import Calendar from "./pages/Calendar";
@@ -15,6 +15,8 @@ import Settings from "./pages/Settings";
 const queryClient = new QueryClient();
 
 function WelcomeScreen({ onEnter }: { onEnter: () => void }) {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-[#03050F] px-6 text-foreground">
       <div className="mx-auto flex min-h-screen w-full max-w-sm flex-col items-center justify-center text-center">
@@ -39,7 +41,7 @@ function WelcomeScreen({ onEnter }: { onEnter: () => void }) {
         />
 
         <p className="mt-5 max-w-xs text-sm leading-relaxed text-(--text-muted)">
-          C’est ici que commence l’observation de tes cycles intérieurs.
+          {t("welcomeTagline")}
         </p>
 
         <button
@@ -47,14 +49,14 @@ function WelcomeScreen({ onEnter }: { onEnter: () => void }) {
           onClick={onEnter}
           className="mt-8 rounded-full border border-[rgba(244,190,160,0.26)] bg-linear-to-r from-primary/20 via-secondary/20 to-primary/20 px-10 py-3 text-sm font-semibold text-foreground shadow-[0_0_24px_rgba(34,211,238,0.16)] transition-colors hover:border-primary/35 hover:text-primary"
         >
-          Entrer
+          {t("welcomeEnter")}
         </button>
       </div>
     </div>
   );
 }
 
-function App() {
+function AppShell() {
   const [showWelcome, setShowWelcome] = useState(true);
 
   if (showWelcome) {
@@ -62,22 +64,30 @@ function App() {
   }
 
   return (
+    <>
+      <WouterRouter>
+        <AppLayout>
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/calendar" component={Calendar} />
+            <Route path="/statistics" component={Statistics} />
+            <Route path="/settings" component={Settings} />
+          </Switch>
+        </AppLayout>
+      </WouterRouter>
+      <Toaster />
+    </>
+  );
+}
+
+function App() {
+  return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ThemeProvider>
           <I18nProvider>
-            <WouterRouter>
-              <AppLayout>
-                <Switch>
-                  <Route path="/" component={Dashboard} />
-                  <Route path="/dashboard" component={Dashboard} />
-                  <Route path="/calendar" component={Calendar} />
-                  <Route path="/statistics" component={Statistics} />
-                  <Route path="/settings" component={Settings} />
-                </Switch>
-              </AppLayout>
-            </WouterRouter>
-            <Toaster />
+            <AppShell />
           </I18nProvider>
         </ThemeProvider>
       </TooltipProvider>

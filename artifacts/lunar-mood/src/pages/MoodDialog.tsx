@@ -49,8 +49,8 @@ export function MoodDialog({ date, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/55 p-4 backdrop-blur-md">
-      <div className="lunar-card pb-safe flex max-h-[85vh] w-full max-w-md flex-col gap-5 overflow-y-auto rounded-2xl border-primary/35 p-6 text-foreground shadow-[0_0_42px_rgba(34,211,238,0.18),0_24px_60px_rgba(0,0,0,0.28)]">
+    <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/55 p-4 backdrop-blur-md">
+      <div className="pointer-events-auto lunar-card flex max-h-[85vh] w-full max-w-md flex-col gap-5 overflow-y-auto rounded-2xl border-primary/35 px-6 pb-10 pt-6 text-foreground shadow-[0_0_42px_rgba(34,211,238,0.18),0_24px_60px_rgba(0,0,0,0.28)]">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">

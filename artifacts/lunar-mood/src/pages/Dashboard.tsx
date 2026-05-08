@@ -1,5 +1,6 @@
 import React from "react";
 import { useTranslation } from "@/lib/i18n";
+import { ChevronDown, Sparkles, X } from "lucide-react";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 
@@ -7,6 +8,7 @@ import { getDayEntry } from "../data/storage";
 import { formatDate, getLocalStartOfDay } from "../data/calendar";
 import { getMoonPhase } from "../data/moon";
 import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
+import { QuickDayEntry } from "./QuickDayEntry";
 import type { DayEntry, MomentEntry, MoonPhase } from "../data/day-entry.types";
 
 const MOON_PHASE_ASSETS: Record<MoonPhase, string> = {
@@ -22,14 +24,15 @@ const MOON_PHASE_ASSETS: Record<MoonPhase, string> = {
 
 function Moon({ phase }: { phase: MoonPhase }) {
   return (
-    <div className="relative flex h-40 w-40 items-center justify-center">
-      <div className="absolute inset-5 rounded-full bg-cyan-300/20 blur-2xl" />
+    <div className="relative flex h-36 w-36 items-center justify-center">
+      <div className="absolute inset-6 rounded-full bg-cyan-200/16 blur-3xl" />
+      <div className="absolute inset-9 rounded-full bg-violet-400/10 blur-[48px]" />
       <img
         src={MOON_PHASE_ASSETS[phase]}
         alt={phase}
-        width={160}
-        height={160}
-        className="relative h-40 w-40 object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.35)]"
+        width={144}
+        height={144}
+        className="relative h-36 w-36 object-contain drop-shadow-[0_0_28px_rgba(34,211,238,0.32)]"
         decoding="async"
       />
     </div>
@@ -105,6 +108,8 @@ function getFallbackInsightKey(mood: number | null, energy: number | null): stri
 // --- DASHBOARD ---
 export default function Dashboard() {
   const { t, language } = useTranslation();
+  const [quickEntryOpen, setQuickEntryOpen] = React.useState(false);
+  const [, setDashboardVersion] = React.useState(0);
   const today = getLocalStartOfDay();
   const locale = language === "fr" ? fr : enUS;
   const dateLabel = format(today, "EEEE d MMMM", { locale });
@@ -133,19 +138,65 @@ export default function Dashboard() {
       </header>
 
       {/* Carte Lune */}
-      <div className="lunar-card relative overflow-hidden rounded-[2.5rem] p-8 flex flex-col items-center">
+      <div className="lunar-card relative flex flex-col items-center overflow-hidden rounded-[2.5rem] px-8 pb-10 pt-7">
+        <div className="pointer-events-none absolute inset-x-10 top-10 h-24 rounded-full bg-cyan-200/6 blur-3xl" />
         <Moon phase={moonPhase} />
 
-        <div className="mt-8 text-center">
+        <div className="mt-5 text-center">
           <p className="text-[10px] uppercase tracking-widest text-(--text-muted) opacity-60">
             {t("currentPhase")}
           </p>
           <p className="text-3xl font-bold bg-linear-to-r from-(--color-primary) via-(--color-secondary) to-(--color-accent) bg-clip-text text-transparent">
             {moonPhaseLabel}
           </p>
-          <p className="mt-2 inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1 text-sm text-(--text-muted) shadow-[0_0_18px_rgba(34,211,238,0.16)]">
+          <p className="mt-3 inline-block rounded-full border border-primary/20 bg-primary/10 px-4 py-1 text-sm text-(--text-muted) shadow-[0_0_18px_rgba(34,211,238,0.16)]">
             {t("cycleDay")} {cycleDay}
           </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <button
+          type="button"
+          onClick={() => setQuickEntryOpen((isOpen) => !isOpen)}
+          aria-expanded={quickEntryOpen}
+          className="lunar-card flex w-full items-center justify-between rounded-[1.75rem] border border-cyan-300/30 bg-linear-to-r from-cyan-300/8 via-violet-400/8 to-transparent px-5 py-4 text-left shadow-[0_0_28px_rgba(34,211,238,0.12)] transition-all duration-300 hover:border-cyan-200/40 hover:shadow-[0_0_34px_rgba(34,211,238,0.16)]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.12)]">
+              <Sparkles className="h-[18px] w-[18px]" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.24em] text-(--text-muted)">
+                {t("quickCapture")}
+              </p>
+              <p className="mt-1 text-sm text-foreground/80">
+                {dateLabel}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-(--text-muted)">
+            {quickEntryOpen ? (
+              <X className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            )}
+          </div>
+        </button>
+
+        <div
+          className={`grid overflow-hidden transition-all duration-300 ease-out ${
+            quickEntryOpen
+              ? "grid-rows-[1fr] opacity-100"
+              : "pointer-events-none grid-rows-[0fr] opacity-0"
+          }`}>
+          <div className="min-h-0">
+            <QuickDayEntry
+              date={dateStr}
+              refreshKey={0}
+              onSaved={() => setDashboardVersion((value) => value + 1)}
+              className="rounded-[1.75rem] border border-cyan-300/16 shadow-[0_0_20px_rgba(34,211,238,0.08)]"
+            />
+          </div>
         </div>
       </div>
 

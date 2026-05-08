@@ -37,6 +37,8 @@ type SevenDayPoint = {
   moonPhaseScore: number;
 };
 
+const CONSUMPTION_COLOR = "#7C3AED";
+
 function getSevenDayDates(): Date[] {
   const today = getLocalStartOfDay();
 
@@ -156,90 +158,89 @@ export default function Statistics() {
   }
 
   return (
-    <div className="p-4 text-foreground">
+    <div className="mx-auto flex w-full max-w-md flex-col p-4 text-foreground">
       <h1 className="mb-1 text-2xl font-bold">{t("statistics")}</h1>
       <p className="mb-6 text-muted-foreground">{t("sevenDayReport")}</p>
 
       <div className="lunar-card rounded-2xl p-5">
         <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-          <div className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-border bg-muted px-3 py-3 text-center">
-            <span className="h-2.5 w-2.5 rounded-sm bg-[#EC4899]" />
-            <span className="text-muted-foreground">{t("emotion")}</span>
+          <div className="flex min-h-14 items-center justify-center rounded-full border border-[#EC4899]/30 bg-[#EC4899]/6 px-3 py-3 text-center shadow-[0_0_14px_rgba(236,72,153,0.12)]">
+            <span className="font-medium text-foreground/88">{t("emotion")}</span>
           </div>
-          <div className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-border bg-muted px-3 py-3 text-center">
-            <span className="h-0.5 w-4 rounded-full bg-[#22D3EE]" />
-            <span className="text-muted-foreground">{t("energy")}</span>
+          <div className="flex min-h-14 items-center justify-center rounded-full border border-[#22D3EE]/30 bg-[#22D3EE]/6 px-3 py-3 text-center shadow-[0_0_14px_rgba(34,211,238,0.12)]">
+            <span className="font-medium text-foreground/88">{t("energy")}</span>
           </div>
-          <div className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-border bg-muted px-3 py-3 text-center">
-            <span className="h-0.5 w-4 rounded-full bg-[#A855F7]" />
-            <span className="text-muted-foreground">{t("consumption")}</span>
+          <div className="flex min-h-14 items-center justify-center rounded-full border border-[#7C3AED]/32 bg-[#7C3AED]/10 px-3 py-3 text-center shadow-[0_0_14px_rgba(124,58,237,0.12)]">
+            <span className="font-medium text-[#C4B5FD]">{t("consumption")}</span>
           </div>
-          <div className="flex min-h-14 items-center justify-center gap-2 rounded-full border border-border bg-muted px-3 py-3 text-center">
-            <span className="h-0.5 w-4 rounded-full bg-foreground/70" />
-            <span className="text-muted-foreground">{t("currentPhase")}</span>
+          <div className="flex min-h-14 items-center justify-center rounded-full border border-foreground/20 bg-white/4 px-3 py-3 text-center shadow-[0_0_14px_rgba(226,232,240,0.1)]">
+            <span className="font-medium text-foreground/88">{t("currentPhase")}</span>
           </div>
         </div>
 
-        <ResponsiveContainer width="100%" height={260}>
-          <ComposedChart data={chartData}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="hsl(var(--border))"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="label"
-              stroke="hsl(var(--muted-foreground))"
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis
-              stroke="hsl(var(--muted-foreground))"
-              domain={[0, 100]}
-              tick={{ fontSize: 10 }}
-            />
-            <Tooltip
-              cursor={{ stroke: "hsl(var(--border))" }}
-              contentStyle={{
-                background: "hsl(var(--popover))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "12px",
-                color: "hsl(var(--popover-foreground))",
-              }}
-            />
-            <Bar
-              dataKey="emotion"
-              fill="#EC4899"
-              radius={[4, 4, 0, 0]}
-              name={t("emotion")}
-            />
-            <Line
-              type="monotone"
-              dataKey="energy"
-              stroke="#22D3EE"
-              strokeWidth={2}
-              dot={false}
-              connectNulls={false}
-              name={t("energy")}
-            />
-            <Line
-              type="monotone"
-              dataKey="consumption"
-              stroke="#A855F7"
-              strokeWidth={2}
-              dot={false}
-              connectNulls={false}
-              name={t("consumption")}
-            />
-            <Line
-              type="monotone"
-              dataKey="moonPhaseScore"
-              stroke="hsl(var(--muted-foreground))"
-              strokeWidth={1.5}
-              dot={false}
-              name={t("currentPhase")}
-            />
-          </ComposedChart>
-        </ResponsiveContainer>
+        <div className="mx-auto w-full max-w-[220px]">
+          <ResponsiveContainer width="100%" height={195}>
+            <ComposedChart data={chartData} margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="label"
+                stroke="hsl(var(--muted-foreground))"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis
+                stroke="hsl(var(--muted-foreground))"
+                domain={[0, 100]}
+                tick={{ fontSize: 10 }}
+                width={28}
+              />
+              <Tooltip
+                cursor={{ stroke: "hsl(var(--border))" }}
+                contentStyle={{
+                  background: "hsl(var(--popover))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "12px",
+                  color: "hsl(var(--popover-foreground))",
+                }}
+              />
+              <Bar
+                dataKey="emotion"
+                fill="#EC4899"
+                radius={[4, 4, 0, 0]}
+                name={t("emotion")}
+              />
+              <Line
+                type="monotone"
+                dataKey="energy"
+                stroke="#22D3EE"
+                strokeWidth={2}
+                dot={false}
+                connectNulls={false}
+                name={t("energy")}
+              />
+              <Line
+                type="monotone"
+                dataKey="consumption"
+                stroke={CONSUMPTION_COLOR}
+                strokeWidth={2}
+                dot={false}
+                connectNulls={false}
+                name={t("consumption")}
+              />
+              <Line
+                type="monotone"
+                dataKey="moonPhaseScore"
+                stroke="hsl(var(--muted-foreground))"
+                strokeWidth={1.5}
+                dot={false}
+                name={t("currentPhase")}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
 
         <div className="mt-5 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-xl border border-[#EC4899]/20 bg-[#EC4899]/10 p-3 shadow-[0_0_16px_rgba(236,72,153,0.08)]">
@@ -258,11 +259,11 @@ export default function Statistics() {
               {formatAverage(energyAverage)}
             </p>
           </div>
-          <div className="rounded-xl border border-[#A855F7]/20 bg-[#A855F7]/10 p-3 shadow-[0_0_16px_rgba(168,85,247,0.08)]">
+          <div className="rounded-xl border border-[#7C3AED]/24 bg-[#7C3AED]/10 p-3 shadow-[0_0_18px_rgba(124,58,237,0.1)]">
             <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
               {t("averageConsumption")}
             </p>
-            <p className="mt-1 text-lg font-bold text-[#A855F7]">
+            <p className="mt-1 text-lg font-bold text-[#C4B5FD]">
               {formatAverage(consumptionAverage)}
             </p>
           </div>

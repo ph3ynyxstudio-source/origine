@@ -1,10 +1,10 @@
 import { useTranslation } from "@/lib/i18n";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 import { CalendarGrid } from "../components/calendar/CalendarGrid";
 import { formatDate, getLocalStartOfDay } from "../data/calendar";
 import { MoodDialog } from "./MoodDialog";
-import { QuickDayEntry } from "./QuickDayEntry";
 
 export default function Calendar() {
   const { language } = useTranslation();
@@ -17,7 +17,6 @@ export default function Calendar() {
   );
   const [journalDate, setJournalDate] = useState<string | null>(null);
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
-  const [quickEntryRefreshKey, setQuickEntryRefreshKey] = useState(0);
 
   function prevMonth() {
     if (month === 0) {
@@ -54,7 +53,6 @@ export default function Calendar() {
 
   function refreshAfterJournalClose() {
     setCalendarRefreshKey((key) => key + 1);
-    setQuickEntryRefreshKey((key) => key + 1);
   }
 
   return (
@@ -63,9 +61,13 @@ export default function Calendar() {
         <button
           type="button"
           onClick={prevMonth}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted text-2xl leading-none text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
           aria-label="Mois precedent">
-          ‹
+          <ChevronLeft
+            className="h-[18px] w-[18px] shrink-0"
+            strokeWidth={2.35}
+            aria-hidden="true"
+          />
         </button>
 
         <span className="bg-linear-to-r from-(--color-primary) via-(--color-secondary) to-(--color-accent) bg-clip-text text-lg font-bold capitalize text-transparent">
@@ -75,9 +77,13 @@ export default function Calendar() {
         <button
           type="button"
           onClick={nextMonth}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted text-2xl leading-none text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-(--text-primary) transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-(--color-primary)"
           aria-label="Mois suivant">
-          ›
+          <ChevronRight
+            className="h-[18px] w-[18px] shrink-0"
+            strokeWidth={2.35}
+            aria-hidden="true"
+          />
         </button>
       </div>
 
@@ -93,12 +99,6 @@ export default function Calendar() {
           />
         </div>
       </div>
-
-      <QuickDayEntry
-        date={selectedDate}
-        refreshKey={quickEntryRefreshKey}
-        onSaved={refreshEntries}
-      />
 
       {journalDate && (
         <MoodDialog

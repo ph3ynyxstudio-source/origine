@@ -17,6 +17,8 @@ type Props = {
   date: string;
   refreshKey: number;
   onSaved: () => void;
+  className?: string;
+  showHeading?: boolean;
 };
 
 const MOMENTS: MomentKey[] = ["morning", "midday", "evening"];
@@ -26,6 +28,8 @@ const EMPTY_MOMENT: MomentEntry = {
   energy: null,
   consumption: null,
 };
+
+const CONSUMPTION_COLOR = "#7C3AED";
 
 type ConsumptionTag = Extract<
   NormalizedSignal,
@@ -81,12 +85,18 @@ const METRICS: MetricConfig[] = [
   {
     key: "consumption",
     labelKey: "consumption",
-    color: "#A855F7",
-    glow: "shadow-[0_0_18px_rgba(168,85,247,0.16)]",
+    color: CONSUMPTION_COLOR,
+    glow: "shadow-[0_0_18px_rgba(124,58,237,0.18)]",
   },
 ];
 
-export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
+export function QuickDayEntry({
+  date,
+  refreshKey,
+  onSaved,
+  className,
+  showHeading = true,
+}: Props) {
   const { t, language } = useTranslation();
   const [activeMoment, setActiveMoment] = useState<MomentKey>("morning");
   const [moments, setMoments] = useState<DayEntry["moments"]>({});
@@ -152,7 +162,7 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
         className={cn(
           "min-h-9 rounded-full border px-3 py-2 text-xs font-medium transition-colors",
           isSelected
-            ? "border-[#A855F7]/45 bg-[#A855F7]/15 text-[#A855F7] shadow-[0_0_16px_rgba(168,85,247,0.14)]"
+            ? "border-[#7C3AED]/45 bg-[#7C3AED]/15 text-[#A78BFA] shadow-[0_0_16px_rgba(124,58,237,0.16)]"
             : "border-border bg-muted/55 text-muted-foreground hover:border-primary/30 hover:text-foreground",
         )}
         aria-pressed={isSelected}>
@@ -200,20 +210,23 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
   }
 
   return (
-    <section className="lunar-card relative z-10 rounded-2xl p-4">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
-            {t("quickEntry")}
-          </p>
-          <h2 className="mt-1 text-lg font-bold capitalize text-(--text-primary)">
-            {dateLabel}
-          </h2>
+    <section
+      className={cn("lunar-card relative z-10 rounded-2xl p-4", className)}>
+      {showHeading && (
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
+              {t("quickCapture")}
+            </p>
+            <h2 className="mt-1 text-lg font-bold capitalize text-(--text-primary)">
+              {dateLabel}
+            </h2>
+          </div>
+          <div className="min-h-5 text-right text-xs text-(--text-muted)">
+            {savedAt ? t("saved") : ""}
+          </div>
         </div>
-        <div className="min-h-5 text-right text-xs text-(--text-muted)">
-          {savedAt ? t("saved") : ""}
-        </div>
-      </div>
+      )}
 
       <div className="mb-6 grid grid-cols-3 gap-2">
         {MOMENTS.map((moment) => (
@@ -277,7 +290,7 @@ export function QuickDayEntry({ date, refreshKey, onSaved }: Props) {
                           : "border-border bg-muted/55 text-muted-foreground hover:border-primary/30 hover:text-foreground",
                       )}
                       aria-expanded={showMoreConsumptionTags}>
-                      + Add more
+                      + {t("addMore")}
                     </button>
                   </div>
                   {showMoreConsumptionTags && (
