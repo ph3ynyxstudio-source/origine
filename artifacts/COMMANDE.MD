@@ -71,6 +71,18 @@ pnpm --filter @workspace/lunar-mood-mobile typecheck
 
 Le script `pnpm --filter @workspace/lunar-mood-mobile dev` existe, mais il est configure avec des variables Replit. Pour travailler localement sur Windows, utilise plutot les commandes `pnpm exec expo start` ci-dessus.
 
+## Build web Windows
+
+Build de l'app web :
+
+```powershell
+pnpm --filter @workspace/lunar-mood build
+```
+
+Regle pratique :
+
+Si `esbuild` retourne `spawn EPERM` dans Codex, lance le build directement dans PowerShell Windows local, hors sandbox Codex. Ne cherche pas un bug UI ou PWA dans ce cas : sur cette machine, c'est un probleme d'environnement d'execution du sandbox, pas du code de l'app.
+
 ## TODO Tree
 
 Hors JSX :

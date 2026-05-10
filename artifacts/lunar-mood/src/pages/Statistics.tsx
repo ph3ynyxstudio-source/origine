@@ -158,12 +158,12 @@ export default function Statistics() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col p-4 text-foreground">
-      <h1 className="mb-1 text-2xl font-bold">{t("statistics")}</h1>
-      <p className="mb-6 text-muted-foreground">{t("sevenDayReport")}</p>
+    <div className="mx-auto flex w-full max-w-md flex-col p-4 text-foreground md:max-w-4xl md:px-2 md:py-6 xl:max-w-5xl">
+      <h1 className="mb-1 text-2xl font-bold md:text-[2rem]">{t("statistics")}</h1>
+      <p className="mb-6 text-muted-foreground md:mb-7">{t("sevenDayReport")}</p>
 
-      <div className="lunar-card rounded-2xl p-5">
-        <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+      <div className="lunar-card w-full rounded-2xl p-5 md:p-6 xl:p-7">
+        <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 md:mb-6 md:gap-3">
           <div className="flex min-h-14 items-center justify-center rounded-full border border-[#EC4899]/30 bg-[#EC4899]/6 px-3 py-3 text-center shadow-[0_0_14px_rgba(236,72,153,0.12)]">
             <span className="font-medium text-foreground/88">{t("emotion")}</span>
           </div>
@@ -178,100 +178,108 @@ export default function Statistics() {
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-[220px]">
-          <ResponsiveContainer width="100%" height={195}>
-            <ComposedChart data={chartData} margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="label"
-                stroke="hsl(var(--muted-foreground))"
-                tick={{ fontSize: 12 }}
-              />
-              <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                domain={[0, 100]}
-                tick={{ fontSize: 10 }}
-                width={28}
-              />
-              <Tooltip
-                cursor={{ stroke: "hsl(var(--border))" }}
-                contentStyle={{
-                  background: "hsl(var(--popover))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "12px",
-                  color: "hsl(var(--popover-foreground))",
-                }}
-              />
-              <Bar
-                dataKey="emotion"
-                fill="#EC4899"
-                radius={[4, 4, 0, 0]}
-                name={t("emotion")}
-              />
-              <Line
-                type="monotone"
-                dataKey="energy"
-                stroke="#22D3EE"
-                strokeWidth={2}
-                dot={false}
-                connectNulls={false}
-                name={t("energy")}
-              />
-              <Line
-                type="monotone"
-                dataKey="consumption"
-                stroke={CONSUMPTION_COLOR}
-                strokeWidth={2}
-                dot={false}
-                connectNulls={false}
-                name={t("consumption")}
-              />
-              <Line
-                type="monotone"
-                dataKey="moonPhaseScore"
-                stroke="hsl(var(--muted-foreground))"
-                strokeWidth={1.5}
-                dot={false}
-                name={t("currentPhase")}
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
+        <div className="flex flex-col gap-5 md:gap-6 xl:grid xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.95fr)] xl:items-start xl:gap-6">
+          <div className="mx-auto w-full max-w-[220px] sm:max-w-[320px] md:max-w-none md:px-2 xl:mx-0 xl:px-0">
+            <div className="h-[195px] w-full md:h-[250px] lg:h-[280px] xl:h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart
+                  data={chartData}
+                  margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="hsl(var(--border))"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="label"
+                    stroke="hsl(var(--muted-foreground))"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis
+                    stroke="hsl(var(--muted-foreground))"
+                    domain={[0, 100]}
+                    tick={{ fontSize: 10 }}
+                    width={28}
+                  />
+                  <Tooltip
+                    cursor={{ stroke: "hsl(var(--border))" }}
+                    contentStyle={{
+                      background: "hsl(var(--popover))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "12px",
+                      color: "hsl(var(--popover-foreground))",
+                    }}
+                  />
+                  <Bar
+                    dataKey="emotion"
+                    fill="#EC4899"
+                    radius={[4, 4, 0, 0]}
+                    name={t("emotion")}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="energy"
+                    stroke="#22D3EE"
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={false}
+                    name={t("energy")}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="consumption"
+                    stroke={CONSUMPTION_COLOR}
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={false}
+                    name={t("consumption")}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="moonPhaseScore"
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeWidth={1.5}
+                    dot={false}
+                    name={t("currentPhase")}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-xl border border-[#EC4899]/20 bg-[#EC4899]/10 p-3 shadow-[0_0_16px_rgba(236,72,153,0.08)]">
-            <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
-              {t("averageMood")}
-            </p>
-            <p className="mt-1 text-lg font-bold text-[#EC4899]">
-              {formatAverage(moodAverage)}
-            </p>
-          </div>
-          <div className="rounded-xl border border-[#22D3EE]/20 bg-[#22D3EE]/10 p-3 shadow-[0_0_16px_rgba(34,211,238,0.08)]">
-            <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
-              {t("averageEnergy")}
-            </p>
-            <p className="mt-1 text-lg font-bold text-[#22D3EE]">
-              {formatAverage(energyAverage)}
-            </p>
-          </div>
-          <div className="rounded-xl border border-[#7C3AED]/24 bg-[#7C3AED]/10 p-3 shadow-[0_0_18px_rgba(124,58,237,0.1)]">
-            <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
-              {t("averageConsumption")}
-            </p>
-            <p className="mt-1 text-lg font-bold text-[#C4B5FD]">
-              {formatAverage(consumptionAverage)}
+          <div className="flex flex-col gap-4 md:gap-5 xl:min-h-full xl:justify-between">
+            <div className="grid grid-cols-3 gap-2 text-center md:gap-3 xl:grid-cols-1">
+              <div className="rounded-xl border border-[#EC4899]/20 bg-[#EC4899]/10 p-3 shadow-[0_0_16px_rgba(236,72,153,0.08)] md:p-4">
+                <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
+                  {t("averageMood")}
+                </p>
+                <p className="mt-1 text-lg font-bold text-[#EC4899] md:text-xl">
+                  {formatAverage(moodAverage)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[#22D3EE]/20 bg-[#22D3EE]/10 p-3 shadow-[0_0_16px_rgba(34,211,238,0.08)] md:p-4">
+                <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
+                  {t("averageEnergy")}
+                </p>
+                <p className="mt-1 text-lg font-bold text-[#22D3EE] md:text-xl">
+                  {formatAverage(energyAverage)}
+                </p>
+              </div>
+              <div className="rounded-xl border border-[#7C3AED]/24 bg-[#7C3AED]/10 p-3 shadow-[0_0_18px_rgba(124,58,237,0.1)] md:p-4">
+                <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
+                  {t("averageConsumption")}
+                </p>
+                <p className="mt-1 text-lg font-bold text-[#C4B5FD] md:text-xl">
+                  {formatAverage(consumptionAverage)}
+                </p>
+              </div>
+            </div>
+
+            <p className="rounded-xl border border-border bg-muted p-3 text-sm leading-relaxed text-foreground/80 md:p-4">
+              {t(trendKey)}
             </p>
           </div>
         </div>
-
-        <p className="mt-4 rounded-xl border border-border bg-muted p-3 text-sm leading-relaxed text-foreground/80">
-          {t(trendKey)}
-        </p>
       </div>
     </div>
   );
