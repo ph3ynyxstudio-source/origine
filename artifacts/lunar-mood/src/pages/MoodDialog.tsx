@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "@/lib/i18n";
+import { toast } from "@/hooks/use-toast";
 
 import { getDayEntry, saveDayEntry } from "../data/storage";
 import { getMoonPhase } from "../data/moon";
@@ -44,8 +45,15 @@ export function MoodDialog({ date, onClose }: Props) {
       updatedAt: Date.now(),
     };
 
-    saveDayEntry(entry);
-    onClose();
+    try {
+      saveDayEntry(entry);
+      onClose();
+    } catch {
+      toast({
+        title: t("somethingWentWrong"),
+        description: t("devStorageWriteFailureHint"),
+      });
+    }
   }
 
   return (

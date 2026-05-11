@@ -1,7 +1,9 @@
 import type { MoonPhase } from "./day-entry.types";
+import { isDevFallbackEnabled } from "./devFallbacks";
 import moonEvents from "./moonEvents.json";
 import { formatDate, getLocalStartOfDay, toLocalNoon } from "./calendar";
 import { getMoonPhase as getMoonPhaseData } from "../services/lunarEngine";
+import { isValidMoonPhase } from "./validator";
 
 type ExactMoonPhase = Extract<MoonPhase, "new_moon" | "full_moon">;
 
@@ -69,5 +71,10 @@ export function getMoonPhase(date: Date): MoonPhase {
     return exactPhase;
   }
 
-  return getMoonPhaseData(toLocalNoon(date)).phase;
+  const fallbackPhase = getMoonPhaseData(toLocalNoon(date)).phase;
+  const simulatedPhase = isDevFallbackEnabled("unknown_lunar_phase")
+    ? ("unknown_phase" as MoonPhase)
+    : fallbackPhase;
+
+  return isValidMoonPhase(simulatedPhase) ? simulatedPhase : fallbackPhase;
 }

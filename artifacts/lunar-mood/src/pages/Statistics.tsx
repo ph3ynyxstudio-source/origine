@@ -11,6 +11,7 @@ import {
 } from "recharts";
 
 import { formatDate, getLocalStartOfDay } from "../data/calendar";
+import { isDevFallbackEnabled } from "../data/devFallbacks";
 import { getExactMoonEventPhase, getMoonPhase } from "../data/moon";
 import { getEntriesForDates } from "../data/storage";
 import { useLocalDataVersion } from "../hooks/use-local-data-version";
@@ -137,6 +138,7 @@ export default function Statistics() {
   const { t, language } = useTranslation();
   useLocalDataVersion();
   const today = useToday();
+  const forceEmptyStatistics = isDevFallbackEnabled("empty_statistics");
   const locale = language === "fr" ? "fr-CA" : "en-US";
   const dates = getSevenDayDates(today);
   const dateKeys = dates.map(formatDate);
@@ -151,9 +153,15 @@ export default function Statistics() {
     return {
       date: dateKey,
       label: date.toLocaleDateString(locale, { weekday: "short" }),
-      emotion: getAverageMetric(entry?.moments, "emotion"),
-      energy: getAverageMetric(entry?.moments, "energy"),
-      consumption: getAverageMetric(entry?.moments, "consumption"),
+      emotion: forceEmptyStatistics
+        ? null
+        : getAverageMetric(entry?.moments, "emotion"),
+      energy: forceEmptyStatistics
+        ? null
+        : getAverageMetric(entry?.moments, "energy"),
+      consumption: forceEmptyStatistics
+        ? null
+        : getAverageMetric(entry?.moments, "consumption"),
       moonPhase,
       moonPhaseScore: Math.round((MOON_PHASE_INDEX[moonPhase] / 7) * 100),
     };

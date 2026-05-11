@@ -1,5 +1,6 @@
 import { DayEntry } from "./day-entry.types";
 import { parseLocalDate, toLocalNoon } from "./calendar";
+import { isDevFallbackEnabled } from "./devFallbacks";
 import { getMoonPhase as getDisplayMoonPhase } from "./moon";
 import { validateDayEntry } from "./validator";
 import { getMoonPhase } from "../services/lunarEngine";
@@ -7,23 +8,70 @@ import { getMoonPhase } from "../services/lunarEngine";
 const PREFIX = "lun4rmood:day:";
 export const LOCAL_DATA_UPDATED_EVENT = "lun4rmood:local-data-updated";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function logStorageFallback(
+  date: string,
+  reason: string,
+  error?: unknown,
+): void {
+  if (!import.meta.env.DEV) return;
+
+  console.warn(`[lun4rmood][storage] fallback for ${date}: ${reason}`, error);
+}
+
 function notifyLocalDataUpdated() {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(LOCAL_DATA_UPDATED_EVENT));
 }
 
 export function getDayEntry(date: string): DayEntry | null {
-  const raw = localStorage.getItem(PREFIX + date);
+  if (isDevFallbackEnabled("missing_local_data")) {
+    logStorageFallback(date, "DEV simulated missing local data");
+    return null;
+  }
+
+  if (isDevFallbackEnabled("corrupted_local_data")) {
+    logStorageFallback(date, "DEV simulated corrupted local data");
+    return null;
+  }
+
+  let raw: string | null = null;
+
+  try {
+    raw = localStorage.getItem(PREFIX + date);
+  } catch (error) {
+    logStorageFallback(date, "localStorage.getItem failed", error);
+    return null;
+  }
+
   if (!raw) return null;
 
   try {
-    return validateDayEntry(JSON.parse(raw));
-  } catch {
-    return validateDayEntry({ date });
+    const parsed = JSON.parse(raw) as unknown;
+
+    if (!isRecord(parsed)) {
+      logStorageFallback(date, "stored value is not an object");
+      return null;
+    }
+
+    return validateDayEntry({
+      ...parsed,
+      date,
+    });
+  } catch (error) {
+    logStorageFallback(date, "stored value could not be parsed", error);
+    return null;
   }
 }
 
 export function saveDayEntry(entry: DayEntry): void {
+  if (isDevFallbackEnabled("storage_write_failure")) {
+    throw new Error("DEV simulated localStorage write failure");
+  }
+
   const lunarData = getMoonPhase(toLocalNoon(parseLocalDate(entry.date)));
   const entryWithMoon: DayEntry = {
     ...entry,
@@ -31,12 +79,22 @@ export function saveDayEntry(entry: DayEntry): void {
     moonIllumination: entry.moonIllumination ?? lunarData.illumination,
   };
   const safeEntry = validateDayEntry(entryWithMoon);
-  localStorage.setItem(PREFIX + safeEntry.date, JSON.stringify(safeEntry));
+  try {
+    localStorage.setItem(PREFIX + safeEntry.date, JSON.stringify(safeEntry));
+  } catch (error) {
+    logStorageFallback(safeEntry.date, "localStorage.setItem failed", error);
+    throw error;
+  }
   notifyLocalDataUpdated();
 }
 
 export function deleteDayEntry(date: string): void {
-  localStorage.removeItem(PREFIX + date);
+  try {
+    localStorage.removeItem(PREFIX + date);
+  } catch (error) {
+    logStorageFallback(date, "localStorage.removeItem failed", error);
+    throw error;
+  }
   notifyLocalDataUpdated();
 }
 

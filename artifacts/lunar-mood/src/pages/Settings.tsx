@@ -1,7 +1,15 @@
 import { useTranslation } from "@/lib/i18n";
+import {
+  DEV_FALLBACK_KEYS,
+  getDevFallbackState,
+  resetDevFallbacks,
+  setDevFallback,
+  type DevFallbackKey,
+} from "@/data/devFallbacks";
 import { useThemeMode, type ThemeMode } from "@/lib/theme";
 import { toast } from "@/hooks/use-toast";
 import { clearDevSeedData, generateDevSeedData } from "@/data/devSeed";
+import { useLocalDataVersion } from "@/hooks/use-local-data-version";
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
   { value: "dark", label: "Dark" },
@@ -9,11 +17,20 @@ const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
 ];
 
 const LEGAL_URL = "https://ph3ynyxstudio-source.github.io/Legal/Index.html";
+const DEV_FALLBACK_LABELS: Record<DevFallbackKey, string> = {
+  unknown_lunar_phase: "devUnknownLunarPhase",
+  missing_local_data: "devMissingLocalData",
+  corrupted_local_data: "devCorruptedLocalData",
+  storage_write_failure: "devStorageWriteFailure",
+  empty_statistics: "devEmptyStatistics",
+};
 
 export default function Settings() {
   const { t, language, setLanguage } = useTranslation();
   const { themeMode, setThemeMode } = useThemeMode();
   const isDev = import.meta.env.DEV;
+  useLocalDataVersion();
+  const devFallbackState = getDevFallbackState();
 
   function handleGenerateDevData() {
     const result = generateDevSeedData();
@@ -31,6 +48,23 @@ export default function Settings() {
     toast({
       title: cleared > 0 ? t("devDataCleared") : t("devDataNothingToClear"),
       description: String(cleared),
+    });
+  }
+
+  function handleToggleDevFallback(key: DevFallbackKey) {
+    const nextEnabled = devFallbackState[key] !== true;
+    setDevFallback(key, nextEnabled);
+    toast({
+      title: t(nextEnabled ? "devFallbackEnabled" : "devFallbackDisabled"),
+      description: t(DEV_FALLBACK_LABELS[key]),
+    });
+  }
+
+  function handleResetDevFallbacks() {
+    resetDevFallbacks();
+    toast({
+      title: t("devFallbacksReset"),
+      description: t("devFallbacksHint"),
     });
   }
 
@@ -133,6 +167,42 @@ export default function Settings() {
               >
                 {t("clearDevData")}
               </button>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
+                {t("devFallbacks")}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t("devFallbacksHint")}
+              </p>
+              <div className="grid gap-2">
+                {DEV_FALLBACK_KEYS.map((key) => {
+                  const enabled = devFallbackState[key] === true;
+
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => handleToggleDevFallback(key)}
+                      className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                        enabled
+                          ? "border-cyan-300/30 bg-cyan-300/12 text-foreground"
+                          : "border-border bg-muted text-muted-foreground hover:border-primary/25 hover:text-foreground"
+                      }`}
+                    >
+                      {t(DEV_FALLBACK_LABELS[key])}
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={handleResetDevFallbacks}
+                  className="rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/25 hover:text-foreground"
+                >
+                  {t("devFallbacksReset")}
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useTranslation } from "@/lib/i18n";
+import { toast } from "@/hooks/use-toast";
 
 import { getMoonPhase } from "../data/moon";
 import { getDayEntry, saveDayEntry } from "../data/storage";
@@ -145,10 +146,17 @@ export function QuickDayEntry({
       updatedAt: Date.now(),
     };
 
-    saveDayEntry(entry);
-    setMoments(nextMoments);
-    setSavedAt(entry.updatedAt);
-    onSaved();
+    try {
+      saveDayEntry(entry);
+      setMoments(nextMoments);
+      setSavedAt(entry.updatedAt);
+      onSaved();
+    } catch {
+      toast({
+        title: t("somethingWentWrong"),
+        description: t("devStorageWriteFailureHint"),
+      });
+    }
   }
 
   function renderConsumptionChip(tag: { key: ConsumptionTag; labelKey: string }) {
@@ -203,10 +211,17 @@ export function QuickDayEntry({
       updatedAt: Date.now(),
     };
 
-    saveDayEntry(entry);
-    setSelectedTags(nextTags);
-    setSavedAt(entry.updatedAt);
-    onSaved();
+    try {
+      saveDayEntry(entry);
+      setSelectedTags(nextTags);
+      setSavedAt(entry.updatedAt);
+      onSaved();
+    } catch {
+      toast({
+        title: t("somethingWentWrong"),
+        description: t("devStorageWriteFailureHint"),
+      });
+    }
   }
 
   return (
