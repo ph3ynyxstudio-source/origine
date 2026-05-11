@@ -79,6 +79,8 @@ Build de l'app web :
 pnpm --filter @workspace/lunar-mood build
 ```
 
+Artefact | LunarMood : `pnpm --filter @workspace/lunar-mood build`
+
 Regle pratique :
 
 Si `esbuild` retourne `spawn EPERM` dans Codex, lance le build directement dans PowerShell Windows local, hors sandbox Codex. Ne cherche pas un bug UI ou PWA dans ce cas : sur cette machine, c'est un probleme d'environnement d'execution du sandbox, pas du code de l'app.

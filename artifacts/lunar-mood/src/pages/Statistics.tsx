@@ -13,6 +13,8 @@ import {
 import { formatDate, getLocalStartOfDay } from "../data/calendar";
 import { getMoonPhase } from "../data/moon";
 import { getEntriesForDates } from "../data/storage";
+import { useLocalDataVersion } from "../hooks/use-local-data-version";
+import { useToday } from "../hooks/use-today";
 import type { MomentEntry, MoonPhase } from "../data/day-entry.types";
 
 const MOON_PHASE_INDEX: Record<MoonPhase, number> = {
@@ -34,14 +36,23 @@ type SevenDayPoint = {
   emotion: number | null;
   energy: number | null;
   consumption: number | null;
+  moonPhase: MoonPhase;
   moonPhaseScore: number;
 };
 
 const CONSUMPTION_COLOR = "#7C3AED";
+const PHASE_LABEL_KEYS: Record<MoonPhase, string> = {
+  new_moon: "phaseNewMoon",
+  waxing_crescent: "phaseWaxingCrescent",
+  first_quarter: "phaseFirstQuarter",
+  waxing_gibbous: "phaseWaxingGibbous",
+  full_moon: "phaseFullMoon",
+  waning_gibbous: "phaseWaningGibbous",
+  last_quarter: "phaseLastQuarter",
+  waning_crescent: "phaseWaningCrescent",
+};
 
-function getSevenDayDates(): Date[] {
-  const today = getLocalStartOfDay();
-
+function getSevenDayDates(today: Date): Date[] {
   return Array.from({ length: 7 }, (_, index) => {
     const date = new Date(today);
     date.setDate(today.getDate() - (6 - index));
@@ -115,10 +126,19 @@ function formatAverage(value: number | null): string {
   return value === null ? "—" : `${value}%`;
 }
 
+function getMoonPhaseLabel(
+  t: (key: string) => string,
+  moonPhase: MoonPhase,
+): string {
+  return t(PHASE_LABEL_KEYS[moonPhase]);
+}
+
 export default function Statistics() {
   const { t, language } = useTranslation();
+  useLocalDataVersion();
+  const today = useToday();
   const locale = language === "fr" ? "fr-CA" : "en-US";
-  const dates = getSevenDayDates();
+  const dates = getSevenDayDates(today);
   const dateKeys = dates.map(formatDate);
   const entriesByDate = getEntriesForDates(dateKeys);
 
@@ -133,6 +153,7 @@ export default function Statistics() {
       emotion: getAverageMetric(entry?.moments, "emotion"),
       energy: getAverageMetric(entry?.moments, "energy"),
       consumption: getAverageMetric(entry?.moments, "consumption"),
+      moonPhase,
       moonPhaseScore: Math.round((MOON_PHASE_INDEX[moonPhase] / 7) * 100),
     };
   });
@@ -208,6 +229,16 @@ export default function Statistics() {
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "12px",
                       color: "hsl(var(--popover-foreground))",
+                    }}
+                    formatter={(value, name, item) => {
+                      if (item.dataKey === "moonPhaseScore") {
+                        return [
+                          getMoonPhaseLabel(t, item.payload.moonPhase),
+                          t("currentPhase"),
+                        ];
+                      }
+
+                      return [`${value}%`, name];
                     }}
                   />
                   <Bar

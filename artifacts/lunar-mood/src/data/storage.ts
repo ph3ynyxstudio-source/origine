@@ -3,6 +3,12 @@ import { validateDayEntry } from "./validator";
 import { getMoonPhase } from "../services/lunarEngine";
 
 const PREFIX = "lun4rmood:day:";
+export const LOCAL_DATA_UPDATED_EVENT = "lun4rmood:local-data-updated";
+
+function notifyLocalDataUpdated() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(LOCAL_DATA_UPDATED_EVENT));
+}
 
 export function getDayEntry(date: string): DayEntry | null {
   const raw = localStorage.getItem(PREFIX + date);
@@ -24,10 +30,12 @@ export function saveDayEntry(entry: DayEntry): void {
   };
   const safeEntry = validateDayEntry(entryWithMoon);
   localStorage.setItem(PREFIX + safeEntry.date, JSON.stringify(safeEntry));
+  notifyLocalDataUpdated();
 }
 
 export function deleteDayEntry(date: string): void {
   localStorage.removeItem(PREFIX + date);
+  notifyLocalDataUpdated();
 }
 
 export function getEntriesForDates(

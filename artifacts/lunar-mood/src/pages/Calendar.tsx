@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { CalendarGrid } from "../components/calendar/CalendarGrid";
 import { formatDate, getLocalStartOfDay } from "../data/calendar";
+import { useLocalDataVersion } from "../hooks/use-local-data-version";
 import { MoodDialog } from "./MoodDialog";
 
 export default function Calendar() {
@@ -17,6 +18,7 @@ export default function Calendar() {
   );
   const [journalDate, setJournalDate] = useState<string | null>(null);
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
+  const dataVersion = useLocalDataVersion();
 
   function prevMonth() {
     if (month === 0) {
@@ -91,7 +93,7 @@ export default function Calendar() {
         <div className="pointer-events-none absolute inset-0 rounded-full bg-violet-500/10 opacity-25 blur-3xl" />
         <div className="relative z-10">
           <CalendarGrid
-            key={calendarRefreshKey}
+            key={`${year}-${month}-${calendarRefreshKey}-${dataVersion}`}
             year={year}
             month={month}
             selectedDate={selectedDate}

@@ -8,6 +8,8 @@ import { getDayEntry } from "../data/storage";
 import { formatDate, getLocalStartOfDay } from "../data/calendar";
 import { getMoonPhase } from "../data/moon";
 import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
+import { useLocalDataVersion } from "../hooks/use-local-data-version";
+import { useToday } from "../hooks/use-today";
 import { QuickDayEntry } from "./QuickDayEntry";
 import type { DayEntry, MomentEntry, MoonPhase } from "../data/day-entry.types";
 
@@ -109,8 +111,8 @@ function getFallbackInsightKey(mood: number | null, energy: number | null): stri
 export default function Dashboard() {
   const { t, language } = useTranslation();
   const [quickEntryOpen, setQuickEntryOpen] = React.useState(false);
-  const [, setDashboardVersion] = React.useState(0);
-  const today = getLocalStartOfDay();
+  const dataVersion = useLocalDataVersion();
+  const today = useToday();
   const locale = language === "fr" ? fr : enUS;
   const dateLabel = format(today, "EEEE d MMMM", { locale });
   const dateStr = formatDate(today);
@@ -192,8 +194,8 @@ export default function Dashboard() {
           <div className="min-h-0">
             <QuickDayEntry
               date={dateStr}
-              refreshKey={0}
-              onSaved={() => setDashboardVersion((value) => value + 1)}
+              refreshKey={dataVersion}
+              onSaved={() => {}}
               className="rounded-[1.75rem] border border-cyan-300/16 shadow-[0_0_20px_rgba(34,211,238,0.08)]"
             />
           </div>

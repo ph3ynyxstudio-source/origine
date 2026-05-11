@@ -1,5 +1,7 @@
 import { useTranslation } from "@/lib/i18n";
 import { useThemeMode, type ThemeMode } from "@/lib/theme";
+import { toast } from "@/hooks/use-toast";
+import { clearDevSeedData, generateDevSeedData } from "@/data/devSeed";
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
   { value: "dark", label: "Dark" },
@@ -11,6 +13,26 @@ const LEGAL_URL = "https://ph3ynyxstudio-source.github.io/Legal/Index.html";
 export default function Settings() {
   const { t, language, setLanguage } = useTranslation();
   const { themeMode, setThemeMode } = useThemeMode();
+  const isDev = import.meta.env.DEV;
+
+  function handleGenerateDevData() {
+    const result = generateDevSeedData();
+    toast({
+      title: t("devDataCreated"),
+      description:
+        result.skipped > 0
+          ? `${result.created} | ${t("devDataSkipped")}: ${result.skipped}`
+          : String(result.created),
+    });
+  }
+
+  function handleClearDevData() {
+    const cleared = clearDevSeedData();
+    toast({
+      title: cleared > 0 ? t("devDataCleared") : t("devDataNothingToClear"),
+      description: String(cleared),
+    });
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 text-foreground">
@@ -84,6 +106,36 @@ export default function Settings() {
             </a>
           </div>
         </div>
+
+        {isDev && (
+          <div className="space-y-3 rounded-xl border border-cyan-300/20 bg-linear-to-r from-cyan-300/8 via-violet-400/8 to-transparent p-4 shadow-[0_0_22px_rgba(34,211,238,0.08)]">
+            <div className="space-y-1">
+              <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
+                {t("devTools")}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t("devDataHint")}
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <button
+                type="button"
+                onClick={handleGenerateDevData}
+                className="rounded-lg border border-cyan-300/28 bg-cyan-300/10 px-3 py-2 text-sm text-foreground transition-colors hover:border-cyan-200/40 hover:bg-cyan-300/14"
+              >
+                {t("generateDevData")}
+              </button>
+              <button
+                type="button"
+                onClick={handleClearDevData}
+                className="rounded-lg border border-violet-300/22 bg-violet-300/10 px-3 py-2 text-sm text-foreground transition-colors hover:border-violet-200/36 hover:bg-violet-300/14"
+              >
+                {t("clearDevData")}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* FOOTER */}
         <div className="text-center text-xs text-muted-foreground">
