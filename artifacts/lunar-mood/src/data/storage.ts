@@ -1,4 +1,6 @@
 import { DayEntry } from "./day-entry.types";
+import { parseLocalDate, toLocalNoon } from "./calendar";
+import { getMoonPhase as getDisplayMoonPhase } from "./moon";
 import { validateDayEntry } from "./validator";
 import { getMoonPhase } from "../services/lunarEngine";
 
@@ -22,10 +24,10 @@ export function getDayEntry(date: string): DayEntry | null {
 }
 
 export function saveDayEntry(entry: DayEntry): void {
-  const lunarData = getMoonPhase(new Date(entry.date));
+  const lunarData = getMoonPhase(toLocalNoon(parseLocalDate(entry.date)));
   const entryWithMoon: DayEntry = {
     ...entry,
-    moonPhase: entry.moonPhase ?? lunarData.phase,
+    moonPhase: entry.moonPhase ?? getDisplayMoonPhase(parseLocalDate(entry.date)),
     moonIllumination: entry.moonIllumination ?? lunarData.illumination,
   };
   const safeEntry = validateDayEntry(entryWithMoon);

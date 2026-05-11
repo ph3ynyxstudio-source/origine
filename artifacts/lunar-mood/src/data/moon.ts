@@ -1,17 +1,73 @@
-import { MoonPhase } from "./day-entry.types";
+import type { MoonPhase } from "./day-entry.types";
+import moonEvents from "./moonEvents.json";
+import { formatDate, getLocalStartOfDay, toLocalNoon } from "./calendar";
+import { getMoonPhase as getMoonPhaseData } from "../services/lunarEngine";
+
+type ExactMoonPhase = Extract<MoonPhase, "new_moon" | "full_moon">;
+
+type MoonEventRecord = {
+  type: MoonPhase;
+  dateUtc: string;
+};
+
+type ExactMoonEventRecord = {
+  phase: ExactMoonPhase;
+  timestamp: number;
+};
+
+function isExactMoonPhase(phase: MoonPhase): phase is ExactMoonPhase {
+  return phase === "new_moon" || phase === "full_moon";
+}
+
+function isExactMoonEvent(
+  event: MoonEventRecord,
+): event is MoonEventRecord & { type: ExactMoonPhase } {
+  return isExactMoonPhase(event.type);
+}
+
+const EXACT_MOON_EVENTS: ExactMoonEventRecord[] = (moonEvents.events as MoonEventRecord[])
+  .filter(isExactMoonEvent)
+  .map((event) => ({
+    phase: event.type,
+    timestamp: new Date(event.dateUtc).getTime(),
+  }));
+
+function getLocalDayEnd(date: Date): Date {
+  const nextDay = getLocalStartOfDay(date);
+  nextDay.setDate(nextDay.getDate() + 1);
+  return nextDay;
+}
+
+export function getExactMoonEventPhase(date: Date): ExactMoonPhase | null {
+  const dayStart = getLocalStartOfDay(date).getTime();
+  const dayEnd = getLocalDayEnd(date).getTime();
+
+  const matchingEvent = EXACT_MOON_EVENTS.find(
+    (event) => event.timestamp >= dayStart && event.timestamp < dayEnd,
+  );
+
+  return matchingEvent?.phase ?? null;
+}
+
+export function getExactMoonEventDates(
+  days: Date[],
+  phase: ExactMoonPhase,
+): Set<string> {
+  return days.reduce<Set<string>>((dates, day) => {
+    if (getExactMoonEventPhase(day) === phase) {
+      dates.add(formatDate(day));
+    }
+
+    return dates;
+  }, new Set<string>());
+}
 
 export function getMoonPhase(date: Date): MoonPhase {
-  const known = new Date(2000, 0, 6);
-  const cycle = 29.53058867;
-  const diff = (date.getTime() - known.getTime()) / (1000 * 60 * 60 * 24);
-  const position = ((diff % cycle) + cycle) % cycle;
+  const exactPhase = getExactMoonEventPhase(date);
 
-  if (position < 1.85) return "new_moon";
-  if (position < 7.38) return "waxing_crescent";
-  if (position < 9.22) return "first_quarter";
-  if (position < 14.77) return "waxing_gibbous";
-  if (position < 16.61) return "full_moon";
-  if (position < 22.15) return "waning_gibbous";
-  if (position < 23.99) return "last_quarter";
-  return "waning_crescent";
+  if (exactPhase) {
+    return exactPhase;
+  }
+
+  return getMoonPhaseData(toLocalNoon(date)).phase;
 }

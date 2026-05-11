@@ -5,8 +5,9 @@ import {
   isCurrentMonth,
   formatDate,
 } from "../../data/calendar";
-import { getMoonPhase } from "../../data/moon";
+import { getExactMoonEventDates, getExactMoonEventPhase, getMoonPhase } from "../../data/moon";
 import { getDayEntry } from "../../data/storage";
+import { getLunarCyclePosition, SYNODIC_MONTH } from "../../services/lunarEngine";
 import type { MoonPhase } from "../../data/day-entry.types";
 
 type Props = {
@@ -22,21 +23,16 @@ const PHASE_CENTERS: Partial<Record<MoonPhase, number>> = {
 };
 
 function getCyclePosition(date: Date): number {
-  const known = new Date(2000, 0, 6);
-  const cycle = 29.53058867;
-  const diff = (date.getTime() - known.getTime()) / (1000 * 60 * 60 * 24);
-
-  return ((diff % cycle) + cycle) % cycle;
+  return getLunarCyclePosition(date);
 }
 
 function getPhaseCenterDistance(date: Date, phase: MoonPhase): number {
-  const cycle = 29.53058867;
   const center = PHASE_CENTERS[phase];
 
   if (center === undefined) return Number.POSITIVE_INFINITY;
 
   const distance = Math.abs(getCyclePosition(date) - center);
-  return Math.min(distance, cycle - distance);
+  return Math.min(distance, SYNODIC_MONTH - distance);
 }
 
 function pickClusterMarkerDay(cluster: Date[], phase: MoonPhase): string {
@@ -53,6 +49,14 @@ function pickClusterMarkerDay(cluster: Date[], phase: MoonPhase): string {
 }
 
 function getPhaseMarkerDates(days: Date[], phase: MoonPhase): Set<string> {
+  if (phase === "new_moon" || phase === "full_moon") {
+    const exactMarkerDates = getExactMoonEventDates(days, phase);
+
+    if (exactMarkerDates.size > 0) {
+      return exactMarkerDates;
+    }
+  }
+
   const markerDates = new Set<string>();
   let cluster: Date[] = [];
 
@@ -98,7 +102,8 @@ export function CalendarGrid({ year, month, selectedDate, onDayOpen }: Props) {
         const localDate = getLocalStartOfDay(date);
         const dateStr = formatDate(localDate);
         const entry = getDayEntry(dateStr);
-        const moonPhase = getMoonPhase(localDate);
+        const exactMoonPhase = getExactMoonEventPhase(localDate);
+        const moonPhase = exactMoonPhase ?? entry?.moonPhase ?? getMoonPhase(localDate);
 
         return (
           <DayCell
@@ -107,7 +112,7 @@ export function CalendarGrid({ year, month, selectedDate, onDayOpen }: Props) {
             isSelected={dateStr === selectedDate}
             isToday={dateStr === todayStr}
             isCurrentMonth={isCurrentMonth(localDate, year, month)}
-            moonPhase={entry?.moonPhase ?? moonPhase}
+            moonPhase={moonPhase}
             showFullMoonMarker={fullMoonMarkerDates.has(dateStr)}
             showNewMoonMarker={newMoonMarkerDates.has(dateStr)}
             moments={entry?.moments}

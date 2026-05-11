@@ -18,6 +18,24 @@ export function getLocalStartOfDay(input?: Date): Date {
   );
 }
 
+export function toLocalNoon(input?: Date): Date {
+  const date = input ? new Date(input) : new Date();
+
+  if (isNaN(date.getTime())) {
+    return new Date();
+  }
+
+  return new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    12,
+    0,
+    0,
+    0,
+  );
+}
+
 export function formatDate(date: Date): string {
   const localDate = getLocalStartOfDay(date);
   const year = localDate.getFullYear();

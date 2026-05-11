@@ -5,11 +5,12 @@ import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 
 import { getDayEntry } from "../data/storage";
-import { formatDate, getLocalStartOfDay } from "../data/calendar";
+import { formatDate, getLocalStartOfDay, toLocalNoon } from "../data/calendar";
 import { getMoonPhase } from "../data/moon";
 import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
 import { useLocalDataVersion } from "../hooks/use-local-data-version";
 import { useToday } from "../hooks/use-today";
+import { getLunarCycleDay } from "../services/lunarEngine";
 import { QuickDayEntry } from "./QuickDayEntry";
 import type { DayEntry, MomentEntry, MoonPhase } from "../data/day-entry.types";
 
@@ -51,15 +52,6 @@ const PHASE_LABEL_KEYS: Record<MoonPhase, string> = {
   last_quarter: "phaseLastQuarter",
   waning_crescent: "phaseWaningCrescent",
 };
-
-function getLunarCycleDay(date: Date): number {
-  const known = new Date(2000, 0, 6);
-  const cycle = 29.53058867;
-  const diff = (date.getTime() - known.getTime()) / (1000 * 60 * 60 * 24);
-  const position = ((diff % cycle) + cycle) % cycle;
-
-  return Math.floor(position) + 1;
-}
 
 // --- UTILITAIRES ---
 function getAverageMetric(
@@ -119,7 +111,7 @@ export default function Dashboard() {
 
   const moonPhase = getMoonPhase(today);
   const moonPhaseLabel = t(PHASE_LABEL_KEYS[moonPhase]);
-  const cycleDay = getLunarCycleDay(today);
+  const cycleDay = getLunarCycleDay(toLocalNoon(today));
 
   const entry = getDayEntry(dateStr);
   const mood = getAverageMetric(entry, "emotion");

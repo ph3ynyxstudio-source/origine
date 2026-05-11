@@ -30,8 +30,8 @@ export const MOON_PHASE_ASSETS: Record<MoonPhase, string> = {
   waning_crescent: "/moons/moon_waning_crescent.webp",
 };
 
-const SYNODIC_MONTH = 29.53058867;
-const KNOWN_NEW_MOON = new Date("2000-01-06T18:14:00Z").getTime();
+export const SYNODIC_MONTH = 29.53058867;
+export const KNOWN_NEW_MOON_UTC = new Date("2000-01-06T18:14:00Z").getTime();
 
 const PHASE_NAMES: MoonPhase[] = [
   "new_moon",
@@ -45,10 +45,7 @@ const PHASE_NAMES: MoonPhase[] = [
 ];
 
 export const getMoonPhase = (date: Date = new Date()): MoonData => {
-  const diffInMs = date.getTime() - KNOWN_NEW_MOON;
-  const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-  const age = diffInDays % SYNODIC_MONTH;
-  const normalizedAge = age < 0 ? age + SYNODIC_MONTH : age;
+  const normalizedAge = getLunarCyclePosition(date);
 
   const illumination =
     ((1 -
@@ -66,3 +63,15 @@ export const getMoonPhase = (date: Date = new Date()): MoonData => {
     illumination: Number(illumination.toFixed(0)),
   };
 };
+
+export function getLunarCyclePosition(date: Date = new Date()): number {
+  const diffInMs = date.getTime() - KNOWN_NEW_MOON_UTC;
+  const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+  const age = diffInDays % SYNODIC_MONTH;
+
+  return age < 0 ? age + SYNODIC_MONTH : age;
+}
+
+export function getLunarCycleDay(date: Date = new Date()): number {
+  return Math.floor(getLunarCyclePosition(date)) + 1;
+}

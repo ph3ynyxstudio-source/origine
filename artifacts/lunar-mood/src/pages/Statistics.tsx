@@ -11,7 +11,7 @@ import {
 } from "recharts";
 
 import { formatDate, getLocalStartOfDay } from "../data/calendar";
-import { getMoonPhase } from "../data/moon";
+import { getExactMoonEventPhase, getMoonPhase } from "../data/moon";
 import { getEntriesForDates } from "../data/storage";
 import { useLocalDataVersion } from "../hooks/use-local-data-version";
 import { useToday } from "../hooks/use-today";
@@ -145,7 +145,8 @@ export default function Statistics() {
   const chartData: SevenDayPoint[] = dates.map((date) => {
     const dateKey = formatDate(date);
     const entry = entriesByDate[dateKey];
-    const moonPhase = entry?.moonPhase ?? getMoonPhase(date);
+    const moonPhase =
+      getExactMoonEventPhase(date) ?? entry?.moonPhase ?? getMoonPhase(date);
 
     return {
       date: dateKey,
