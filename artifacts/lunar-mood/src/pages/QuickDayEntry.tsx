@@ -106,13 +106,16 @@ export function QuickDayEntry({
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
-    const existing = getDayEntry(date);
-
     setActiveMoment("morning");
-    setMoments(existing?.moments ?? {});
-    setSelectedTags(getSelectedConsumptionTags(existing?.normalized));
     setShowMoreConsumptionTags(false);
     setSavedAt(null);
+  }, [date]);
+
+  useEffect(() => {
+    const existing = getDayEntry(date);
+
+    setMoments(existing?.moments ?? {});
+    setSelectedTags(getSelectedConsumptionTags(existing?.normalized));
   }, [date, refreshKey]);
 
   const current = moments[activeMoment] ?? EMPTY_MOMENT;
