@@ -68,7 +68,11 @@ export function getDayEntry(date: string): DayEntry | null {
 }
 
 export function saveDayEntry(entry: DayEntry): void {
-  if (isDevFallbackEnabled("storage_write_failure")) {
+  if (
+    isDevFallbackEnabled("storage_write_failure") ||
+    isDevFallbackEnabled("missing_local_data") ||
+    isDevFallbackEnabled("corrupted_local_data")
+  ) {
     throw new Error("DEV simulated localStorage write failure");
   }
 
