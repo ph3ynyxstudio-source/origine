@@ -1,6 +1,5 @@
 import { useTranslation } from "@/lib/i18n";
 import {
-  Bar,
   CartesianGrid,
   ComposedChart,
   Line,
@@ -18,17 +17,6 @@ import { useLocalDataVersion } from "../hooks/use-local-data-version";
 import { useToday } from "../hooks/use-today";
 import type { MomentEntry, MoonPhase } from "../data/day-entry.types";
 
-const MOON_PHASE_INDEX: Record<MoonPhase, number> = {
-  new_moon: 0,
-  waxing_crescent: 1,
-  first_quarter: 2,
-  waxing_gibbous: 3,
-  full_moon: 4,
-  waning_gibbous: 5,
-  last_quarter: 6,
-  waning_crescent: 7,
-};
-
 type ChartMetric = keyof MomentEntry;
 
 type SevenDayPoint = {
@@ -38,10 +26,19 @@ type SevenDayPoint = {
   energy: number | null;
   consumption: number | null;
   moonPhase: MoonPhase;
-  moonPhaseScore: number;
 };
 
 const CONSUMPTION_COLOR = "#7C3AED";
+const MOON_PHASE_ASSETS: Record<MoonPhase, string> = {
+  new_moon: "/moons/moon_new.webp",
+  waxing_crescent: "/moons/moon_waxing_crescent.webp",
+  first_quarter: "/moons/moon_first_quarter.webp",
+  waxing_gibbous: "/moons/moon_waxing_gibbous.webp",
+  full_moon: "/moons/moon_full.webp",
+  waning_gibbous: "/moons/moon_waning_gibbous.webp",
+  last_quarter: "/moons/moon_last_quarter.webp",
+  waning_crescent: "/moons/moon_waning_crescent.webp",
+};
 const PHASE_LABEL_KEYS: Record<MoonPhase, string> = {
   new_moon: "phaseNewMoon",
   waxing_crescent: "phaseWaxingCrescent",
@@ -134,6 +131,51 @@ function getMoonPhaseLabel(
   return t(PHASE_LABEL_KEYS[moonPhase]);
 }
 
+type LunarAxisTickProps = {
+  x?: number;
+  y?: number;
+  payload?: {
+    value?: string;
+  };
+  data: SevenDayPoint[];
+  getPhaseLabel: (moonPhase: MoonPhase) => string;
+};
+
+function LunarAxisTick({
+  x = 0,
+  y = 0,
+  payload,
+  data,
+  getPhaseLabel,
+}: LunarAxisTickProps) {
+  const point = data.find((item) => item.date === payload?.value);
+
+  if (!point) return null;
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={10}
+        textAnchor="middle"
+        fill="hsl(var(--muted-foreground))"
+        fontSize={11}>
+        {point.label}
+      </text>
+      <image
+        href={MOON_PHASE_ASSETS[point.moonPhase]}
+        x={-7}
+        y={16}
+        width={14}
+        height={14}
+        opacity={0.9}>
+        <title>{getPhaseLabel(point.moonPhase)}</title>
+      </image>
+    </g>
+  );
+}
+
 export default function Statistics() {
   const { t, language } = useTranslation();
   useLocalDataVersion();
@@ -163,7 +205,6 @@ export default function Statistics() {
         ? null
         : getAverageMetric(entry?.moments, "consumption"),
       moonPhase,
-      moonPhaseScore: Math.round((MOON_PHASE_INDEX[moonPhase] / 7) * 100),
     };
   });
 
@@ -214,16 +255,26 @@ export default function Statistics() {
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={chartData}
-                  margin={{ top: 8, right: 6, bottom: 0, left: 0 }}>
+                  margin={{ top: 8, right: 6, bottom: 18, left: 0 }}>
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke="hsl(var(--border))"
                     vertical={false}
                   />
                   <XAxis
-                    dataKey="label"
+                    dataKey="date"
                     stroke="hsl(var(--muted-foreground))"
-                    tick={{ fontSize: 12 }}
+                    height={44}
+                    interval={0}
+                    tick={
+                      <LunarAxisTick
+                        data={chartData}
+                        getPhaseLabel={(moonPhase) =>
+                          getMoonPhaseLabel(t, moonPhase)
+                        }
+                      />
+                    }
+                    tickLine={false}
                   />
                   <YAxis
                     stroke="hsl(var(--muted-foreground))"
@@ -240,20 +291,22 @@ export default function Statistics() {
                       color: "hsl(var(--popover-foreground))",
                     }}
                     formatter={(value, name, item) => {
-                      if (item.dataKey === "moonPhaseScore") {
-                        return [
-                          getMoonPhaseLabel(t, item.payload.moonPhase),
-                          t("currentPhase"),
-                        ];
-                      }
-
                       return [`${value}%`, name];
                     }}
+                    labelFormatter={(dateKey) => {
+                      const point = chartData.find((item) => item.date === dateKey);
+                      return point
+                        ? `${point.label} · ${getMoonPhaseLabel(t, point.moonPhase)}`
+                        : dateKey;
+                    }}
                   />
-                  <Bar
+                  <Line
+                    type="monotone"
                     dataKey="emotion"
-                    fill="#EC4899"
-                    radius={[4, 4, 0, 0]}
+                    stroke="#EC4899"
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={false}
                     name={t("emotion")}
                   />
                   <Line
@@ -273,14 +326,6 @@ export default function Statistics() {
                     dot={false}
                     connectNulls={false}
                     name={t("consumption")}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="moonPhaseScore"
-                    stroke="hsl(var(--muted-foreground))"
-                    strokeWidth={1.5}
-                    dot={false}
-                    name={t("currentPhase")}
                   />
                 </ComposedChart>
               </ResponsiveContainer>
