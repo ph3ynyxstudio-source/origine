@@ -6,7 +6,7 @@ import { fr, enUS } from "date-fns/locale";
 
 import { getDayEntry } from "../data/storage";
 import { formatDate, getLocalStartOfDay, toLocalNoon } from "../data/calendar";
-import { getDisplayMoonPhase } from "../data/moon";
+import { getCurrentMoonPhase } from "../data/moon";
 import { METRIC_COLORS, formatMetricPercent } from "../data/metricTheme";
 import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
 import { useLocalDataVersion } from "../hooks/use-local-data-version";
@@ -99,7 +99,8 @@ export default function Dashboard() {
   const dateLabel = format(today, "EEEE d MMMM", { locale });
   const dateStr = formatDate(today);
 
-  const moonPhase = getDisplayMoonPhase(today);
+  // Dashboard shows the current phase; Calendar/Statistics keep exact event markers.
+  const moonPhase = getCurrentMoonPhase(today);
   const moonPhaseLabel = t(PHASE_LABEL_KEYS[moonPhase]);
   const cycleDay = getLunarCycleDay(toLocalNoon(today));
 

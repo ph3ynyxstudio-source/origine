@@ -104,19 +104,43 @@ export function getExactMoonEventDates(
   }, new Set<string>());
 }
 
-export function getMoonPhase(date: Date): MoonPhase {
-  const exactPhase = getExactMoonEventPhase(date);
-
-  if (exactPhase) {
-    return exactPhase;
-  }
-
+function getCalculatedMoonPhase(date: Date): MoonPhase {
   const fallbackPhase = getMoonPhaseData(toLocalNoon(date)).phase;
   const simulatedPhase = isDevFallbackEnabled("unknown_lunar_phase")
     ? ("unknown_phase" as MoonPhase)
     : fallbackPhase;
 
   return isValidMoonPhase(simulatedPhase) ? simulatedPhase : fallbackPhase;
+}
+
+export function getMoonPhase(date: Date): MoonPhase {
+  const exactPhase = getExactMoonEventPhase(date);
+
+  return exactPhase ?? getCalculatedMoonPhase(date);
+}
+
+export function getCurrentMoonPhase(date: Date): MoonPhase {
+  const exactPhase = getExactMoonEventPhase(date);
+
+  if (exactPhase) {
+    return exactPhase;
+  }
+
+  const calculatedPhase = getCalculatedMoonPhase(date);
+
+  if (calculatedPhase === "new_moon") {
+    return getLunarCyclePosition(toLocalNoon(date)) < SYNODIC_MONTH / 2
+      ? "waxing_crescent"
+      : "waning_crescent";
+  }
+
+  if (calculatedPhase === "full_moon") {
+    return getLunarCyclePosition(toLocalNoon(date)) < SYNODIC_MONTH / 2
+      ? "waxing_gibbous"
+      : "waning_gibbous";
+  }
+
+  return calculatedPhase;
 }
 
 export function getDisplayMoonPhase(
