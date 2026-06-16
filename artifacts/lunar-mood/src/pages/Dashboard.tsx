@@ -7,7 +7,7 @@ import { fr, enUS } from "date-fns/locale";
 import { getDayEntry } from "../data/storage";
 import { formatDate, getLocalStartOfDay, toLocalNoon } from "../data/calendar";
 import { getDisplayMoonPhase } from "../data/moon";
-import { METRIC_COLORS } from "../data/metricTheme";
+import { METRIC_COLORS, formatMetricPercent } from "../data/metricTheme";
 import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
 import { useLocalDataVersion } from "../hooks/use-local-data-version";
 import { useToday } from "../hooks/use-today";
@@ -193,7 +193,7 @@ export default function Dashboard() {
           <p
             className="text-2xl font-bold"
             style={{ color: METRIC_COLORS.emotion }}>
-            {mood !== null ? `${mood}%` : "—"}
+            {formatMetricPercent(mood)}
           </p>
         </div>
         <div className="lunar-card rounded-2xl p-5">
@@ -203,7 +203,7 @@ export default function Dashboard() {
           <p
             className="text-2xl font-bold"
             style={{ color: METRIC_COLORS.energy }}>
-            {energy !== null ? `${energy}%` : "—"}{" "}
+            {formatMetricPercent(energy)}
           </p>
         </div>
       </div>

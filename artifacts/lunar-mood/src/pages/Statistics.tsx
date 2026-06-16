@@ -14,16 +14,25 @@ import { isDevFallbackEnabled } from "../data/devFallbacks";
 import { getDisplayMoonPhase, getMoonPhaseChangeDates } from "../data/moon";
 import {
   METRIC_COLORS,
+  formatMetricPercent,
+  formatMetricScore,
+  formatMetricScoreValue,
   metricColorWithAlpha,
+  toMetricScore,
   type MetricKey,
 } from "../data/metricTheme";
 import { getEntriesForDates } from "../data/storage";
 import { useLocalDataVersion } from "../hooks/use-local-data-version";
 import { useToday } from "../hooks/use-today";
 import { MOON_PHASE_ASSETS } from "../services/lunarEngine";
-import type { MomentEntry, MoonPhase } from "../data/day-entry.types";
+import type {
+  DayEntry,
+  MomentEntry,
+  MoonPhase,
+  NormalizedSignal,
+} from "../data/day-entry.types";
 
-type ChartMetric = keyof MomentEntry;
+type ChartMetric = MetricKey;
 
 type SevenDayPoint = {
   date: string;
@@ -31,6 +40,7 @@ type SevenDayPoint = {
   emotion: number | null;
   energy: number | null;
   consumption: number | null;
+  consumptionScore: number | null;
   moonPhase: MoonPhase;
   showMoonMarker: boolean;
 };
@@ -44,6 +54,17 @@ const PHASE_LABEL_KEYS: Record<MoonPhase, string> = {
   waning_gibbous: "phaseWaningGibbous",
   last_quarter: "phaseLastQuarter",
   waning_crescent: "phaseWaningCrescent",
+};
+
+const CONSUMPTION_TAG_LABEL_KEYS: Partial<Record<NormalizedSignal, string>> = {
+  caffeine: "tagCaffeine",
+  sugar: "tagSugar",
+  alcohol: "tagAlcohol",
+  fast_food: "tagFastFood",
+  water: "tagWater",
+  screen: "tagScreen",
+  exercise: "tagExercise",
+  medication: "tagMedication",
 };
 
 function getSevenDayDates(today: Date): Date[] {
@@ -82,6 +103,34 @@ function getMetricAverage(
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 }
 
+function getDominantConsumptionTag(
+  entries: Array<DayEntry | null>,
+): NormalizedSignal | null {
+  const counts = entries.reduce<Partial<Record<NormalizedSignal, number>>>(
+    (totals, entry) => {
+      entry?.normalized?.forEach((signal) => {
+        if (!CONSUMPTION_TAG_LABEL_KEYS[signal]) return;
+
+        totals[signal] = (totals[signal] ?? 0) + 1;
+      });
+
+      return totals;
+    },
+    {},
+  );
+
+  return Object.entries(counts).reduce<NormalizedSignal | null>(
+    (dominantTag, [tag, count]) => {
+      if (!dominantTag) return tag as NormalizedSignal;
+
+      return count > (counts[dominantTag] ?? 0)
+        ? (tag as NormalizedSignal)
+        : dominantTag;
+    },
+    null,
+  );
+}
+
 function getDailyComposite(point: SevenDayPoint): number | null {
   const values = [point.emotion, point.energy, point.consumption].filter(
     (value): value is number => value !== null,
@@ -114,10 +163,6 @@ function getTrendKey(data: SevenDayPoint[]): string {
   if (difference >= 5) return "trendRising";
   if (difference <= -5) return "trendFalling";
   return "trendStable";
-}
-
-function formatAverage(value: number | null): string {
-  return value === null ? "—" : `${value}%`;
 }
 
 function getMoonPhaseLabel(
@@ -202,19 +247,23 @@ export default function Statistics() {
     const dateKey = formatDate(date);
     const entry = entriesByDate[dateKey];
     const moonPhase = getDisplayMoonPhase(date, entry);
+    const emotion = forceEmptyStatistics
+      ? null
+      : getAverageMetric(entry?.moments, "emotion");
+    const energy = forceEmptyStatistics
+      ? null
+      : getAverageMetric(entry?.moments, "energy");
+    const consumption = forceEmptyStatistics
+      ? null
+      : getAverageMetric(entry?.moments, "consumption");
 
     return {
       date: dateKey,
       label: date.toLocaleDateString(locale, { weekday: "short" }),
-      emotion: forceEmptyStatistics
-        ? null
-        : getAverageMetric(entry?.moments, "emotion"),
-      energy: forceEmptyStatistics
-        ? null
-        : getAverageMetric(entry?.moments, "energy"),
-      consumption: forceEmptyStatistics
-        ? null
-        : getAverageMetric(entry?.moments, "consumption"),
+      emotion,
+      energy,
+      consumption,
+      consumptionScore: toMetricScore(consumption),
       moonPhase,
       showMoonMarker: moonPhaseChangeDates.has(dateKey),
     };
@@ -229,6 +278,12 @@ export default function Statistics() {
   const moodAverage = getMetricAverage(chartData, "emotion");
   const energyAverage = getMetricAverage(chartData, "energy");
   const consumptionAverage = getMetricAverage(chartData, "consumption");
+  const dominantConsumptionTag = getDominantConsumptionTag(
+    dateKeys.map((dateKey) => entriesByDate[dateKey]),
+  );
+  const dominantConsumptionLabel = dominantConsumptionTag
+    ? t(CONSUMPTION_TAG_LABEL_KEYS[dominantConsumptionTag] ?? "")
+    : "—";
   const trendKey = getTrendKey(chartData);
 
   if (!hasData) {
@@ -296,11 +351,14 @@ export default function Statistics() {
                     tickLine={false}
                   />
                   <YAxis
+                    yAxisId="percent"
                     stroke="hsl(var(--muted-foreground))"
                     domain={[0, 100]}
+                    ticks={[0, 20, 40, 60, 80, 100]}
                     tick={{ fontSize: 10 }}
                     width={28}
                   />
+                  <YAxis yAxisId="score" domain={[0, 10]} hide />
                   <Tooltip
                     cursor={{ stroke: "hsl(var(--border))" }}
                     contentStyle={{
@@ -310,7 +368,14 @@ export default function Statistics() {
                       color: "hsl(var(--popover-foreground))",
                     }}
                     formatter={(value, name, item) => {
-                      return [`${value}%`, name];
+                      const numericValue =
+                        typeof value === "number" ? value : Number(value);
+                      const formattedValue =
+                        item.dataKey === "consumptionScore"
+                          ? formatMetricScoreValue(numericValue)
+                          : formatMetricPercent(numericValue);
+
+                      return [formattedValue, name];
                     }}
                     labelFormatter={(dateKey) => {
                       const point = chartData.find((item) => item.date === dateKey);
@@ -320,6 +385,7 @@ export default function Statistics() {
                     }}
                   />
                   <Line
+                    yAxisId="percent"
                     type="monotone"
                     dataKey="emotion"
                     stroke={METRIC_COLORS.emotion}
@@ -329,6 +395,7 @@ export default function Statistics() {
                     name={t("emotion")}
                   />
                   <Line
+                    yAxisId="percent"
                     type="monotone"
                     dataKey="energy"
                     stroke={METRIC_COLORS.energy}
@@ -338,8 +405,9 @@ export default function Statistics() {
                     name={t("energy")}
                   />
                   <Line
+                    yAxisId="score"
                     type="monotone"
-                    dataKey="consumption"
+                    dataKey="consumptionScore"
                     stroke={METRIC_COLORS.consumption}
                     strokeWidth={2}
                     dot={false}
@@ -362,7 +430,7 @@ export default function Statistics() {
                 <p
                   className="mt-1 text-lg font-bold md:text-xl"
                   style={{ color: METRIC_COLORS.emotion }}>
-                  {formatAverage(moodAverage)}
+                  {formatMetricPercent(moodAverage)}
                 </p>
               </div>
               <div
@@ -374,7 +442,7 @@ export default function Statistics() {
                 <p
                   className="mt-1 text-lg font-bold md:text-xl"
                   style={{ color: METRIC_COLORS.energy }}>
-                  {formatAverage(energyAverage)}
+                  {formatMetricPercent(energyAverage)}
                 </p>
               </div>
               <div
@@ -386,7 +454,10 @@ export default function Statistics() {
                 <p
                   className="mt-1 text-lg font-bold md:text-xl"
                   style={{ color: METRIC_COLORS.consumption }}>
-                  {formatAverage(consumptionAverage)}
+                  {formatMetricScore(consumptionAverage)}
+                </p>
+                <p className="mt-2 text-[11px] font-medium text-muted-foreground">
+                  {t("dominantConsumption")} : {dominantConsumptionLabel}
                 </p>
               </div>
             </div>

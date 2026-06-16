@@ -5,7 +5,11 @@ import { toast } from "@/hooks/use-toast";
 import { getMoonPhase } from "../data/moon";
 import { getDayEntry, saveDayEntry } from "../data/storage";
 import { parseLocalDate } from "../data/calendar";
-import { METRIC_COLORS, METRIC_GLOW_CLASSES } from "../data/metricTheme";
+import {
+  METRIC_COLORS,
+  METRIC_GLOW_CLASSES,
+  formatMetricScore,
+} from "../data/metricTheme";
 import { cn } from "../lib/utils";
 import type {
   DayEntry,
@@ -272,7 +276,9 @@ export function QuickDayEntry({
                 <span className="font-medium text-foreground/75">
                   {t(metric.labelKey)}
                 </span>
-                <strong style={{ color: metric.color }}>{value}%</strong>
+                <strong style={{ color: metric.color }}>
+                  {formatMetricScore(value)}
+                </strong>
               </div>
               <input
                 type="range"
