@@ -6,24 +6,14 @@ import { fr, enUS } from "date-fns/locale";
 
 import { getDayEntry } from "../data/storage";
 import { formatDate, getLocalStartOfDay, toLocalNoon } from "../data/calendar";
-import { getMoonPhase } from "../data/moon";
+import { getDisplayMoonPhase } from "../data/moon";
+import { METRIC_COLORS } from "../data/metricTheme";
 import { analyzeHistory } from "@/core/Core/crystaph3y/engine";
 import { useLocalDataVersion } from "../hooks/use-local-data-version";
 import { useToday } from "../hooks/use-today";
-import { getLunarCycleDay } from "../services/lunarEngine";
+import { getLunarCycleDay, MOON_PHASE_ASSETS } from "../services/lunarEngine";
 import { QuickDayEntry } from "./QuickDayEntry";
 import type { DayEntry, MomentEntry, MoonPhase } from "../data/day-entry.types";
-
-const MOON_PHASE_ASSETS: Record<MoonPhase, string> = {
-  new_moon: "/moons/moon_new.webp",
-  waxing_crescent: "/moons/moon_waxing_crescent.webp",
-  first_quarter: "/moons/moon_first_quarter.webp",
-  waxing_gibbous: "/moons/moon_waxing_gibbous.webp",
-  full_moon: "/moons/moon_full.webp",
-  waning_gibbous: "/moons/moon_waning_gibbous.webp",
-  last_quarter: "/moons/moon_last_quarter.webp",
-  waning_crescent: "/moons/moon_waning_crescent.webp",
-};
 
 function Moon({ phase }: { phase: MoonPhase }) {
   return (
@@ -109,7 +99,7 @@ export default function Dashboard() {
   const dateLabel = format(today, "EEEE d MMMM", { locale });
   const dateStr = formatDate(today);
 
-  const moonPhase = getMoonPhase(today);
+  const moonPhase = getDisplayMoonPhase(today);
   const moonPhaseLabel = t(PHASE_LABEL_KEYS[moonPhase]);
   const cycleDay = getLunarCycleDay(toLocalNoon(today));
 
@@ -200,7 +190,9 @@ export default function Dashboard() {
           <p className="text-xs uppercase tracking-wider text-(--text-muted) mb-1">
             {t("todayMood")}
           </p>
-          <p className="text-2xl font-bold text-(--color-primary)">
+          <p
+            className="text-2xl font-bold"
+            style={{ color: METRIC_COLORS.emotion }}>
             {mood !== null ? `${mood}%` : "—"}
           </p>
         </div>
@@ -208,7 +200,9 @@ export default function Dashboard() {
           <p className="text-xs uppercase tracking-wider text-(--text-muted) mb-1">
             {t("energy")}
           </p>
-          <p className="text-2xl font-bold text-(--color-secondary)">
+          <p
+            className="text-2xl font-bold"
+            style={{ color: METRIC_COLORS.energy }}>
             {energy !== null ? `${energy}%` : "—"}{" "}
           </p>
         </div>

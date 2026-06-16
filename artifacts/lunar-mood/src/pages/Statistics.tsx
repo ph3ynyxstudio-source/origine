@@ -11,10 +11,16 @@ import {
 
 import { formatDate, getLocalStartOfDay } from "../data/calendar";
 import { isDevFallbackEnabled } from "../data/devFallbacks";
-import { getExactMoonEventPhase, getMoonPhase } from "../data/moon";
+import { getDisplayMoonPhase, getMoonPhaseChangeDates } from "../data/moon";
+import {
+  METRIC_COLORS,
+  metricColorWithAlpha,
+  type MetricKey,
+} from "../data/metricTheme";
 import { getEntriesForDates } from "../data/storage";
 import { useLocalDataVersion } from "../hooks/use-local-data-version";
 import { useToday } from "../hooks/use-today";
+import { MOON_PHASE_ASSETS } from "../services/lunarEngine";
 import type { MomentEntry, MoonPhase } from "../data/day-entry.types";
 
 type ChartMetric = keyof MomentEntry;
@@ -26,19 +32,9 @@ type SevenDayPoint = {
   energy: number | null;
   consumption: number | null;
   moonPhase: MoonPhase;
+  showMoonMarker: boolean;
 };
 
-const CONSUMPTION_COLOR = "#7C3AED";
-const MOON_PHASE_ASSETS: Record<MoonPhase, string> = {
-  new_moon: "/moons/moon_new.webp",
-  waxing_crescent: "/moons/moon_waxing_crescent.webp",
-  first_quarter: "/moons/moon_first_quarter.webp",
-  waxing_gibbous: "/moons/moon_waxing_gibbous.webp",
-  full_moon: "/moons/moon_full.webp",
-  waning_gibbous: "/moons/moon_waning_gibbous.webp",
-  last_quarter: "/moons/moon_last_quarter.webp",
-  waning_crescent: "/moons/moon_waning_crescent.webp",
-};
 const PHASE_LABEL_KEYS: Record<MoonPhase, string> = {
   new_moon: "phaseNewMoon",
   waxing_crescent: "phaseWaxingCrescent",
@@ -131,6 +127,19 @@ function getMoonPhaseLabel(
   return t(PHASE_LABEL_KEYS[moonPhase]);
 }
 
+function metricCardStyle(
+  metric: MetricKey,
+  borderAlpha: number,
+  backgroundAlpha: number,
+  shadowAlpha: number,
+) {
+  return {
+    borderColor: metricColorWithAlpha(metric, borderAlpha),
+    backgroundColor: metricColorWithAlpha(metric, backgroundAlpha),
+    boxShadow: `0 0 16px ${metricColorWithAlpha(metric, shadowAlpha)}`,
+  };
+}
+
 type LunarAxisTickProps = {
   x?: number;
   y?: number;
@@ -163,15 +172,17 @@ function LunarAxisTick({
         fontSize={11}>
         {point.label}
       </text>
-      <image
-        href={MOON_PHASE_ASSETS[point.moonPhase]}
-        x={-7}
-        y={16}
-        width={14}
-        height={14}
-        opacity={0.9}>
-        <title>{getPhaseLabel(point.moonPhase)}</title>
-      </image>
+      {point.showMoonMarker && (
+        <image
+          href={MOON_PHASE_ASSETS[point.moonPhase]}
+          x={-7}
+          y={16}
+          width={14}
+          height={14}
+          opacity={0.9}>
+          <title>{getPhaseLabel(point.moonPhase)}</title>
+        </image>
+      )}
     </g>
   );
 }
@@ -185,12 +196,12 @@ export default function Statistics() {
   const dates = getSevenDayDates(today);
   const dateKeys = dates.map(formatDate);
   const entriesByDate = getEntriesForDates(dateKeys);
+  const moonPhaseChangeDates = getMoonPhaseChangeDates(dates);
 
   const chartData: SevenDayPoint[] = dates.map((date) => {
     const dateKey = formatDate(date);
     const entry = entriesByDate[dateKey];
-    const moonPhase =
-      getExactMoonEventPhase(date) ?? entry?.moonPhase ?? getMoonPhase(date);
+    const moonPhase = getDisplayMoonPhase(date, entry);
 
     return {
       date: dateKey,
@@ -205,6 +216,7 @@ export default function Statistics() {
         ? null
         : getAverageMetric(entry?.moments, "consumption"),
       moonPhase,
+      showMoonMarker: moonPhaseChangeDates.has(dateKey),
     };
   });
 
@@ -234,24 +246,31 @@ export default function Statistics() {
       <p className="mb-6 text-muted-foreground md:mb-7">{t("sevenDayReport")}</p>
 
       <div className="lunar-card w-full rounded-2xl p-5 md:p-6 xl:p-7">
-        <div className="mb-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4 md:mb-6 md:gap-3">
-          <div className="flex min-h-14 items-center justify-center rounded-full border border-[#EC4899]/30 bg-[#EC4899]/6 px-3 py-3 text-center shadow-[0_0_14px_rgba(236,72,153,0.12)]">
+        <div className="mb-4 grid grid-cols-3 gap-2 text-xs md:mb-6 md:gap-3">
+          <div
+            className="flex min-h-14 items-center justify-center rounded-full border px-3 py-3 text-center"
+            style={metricCardStyle("emotion", 0.3, 0.06, 0.12)}>
             <span className="font-medium text-foreground/88">{t("emotion")}</span>
           </div>
-          <div className="flex min-h-14 items-center justify-center rounded-full border border-[#22D3EE]/30 bg-[#22D3EE]/6 px-3 py-3 text-center shadow-[0_0_14px_rgba(34,211,238,0.12)]">
+          <div
+            className="flex min-h-14 items-center justify-center rounded-full border px-3 py-3 text-center"
+            style={metricCardStyle("energy", 0.3, 0.06, 0.12)}>
             <span className="font-medium text-foreground/88">{t("energy")}</span>
           </div>
-          <div className="flex min-h-14 items-center justify-center rounded-full border border-[#7C3AED]/32 bg-[#7C3AED]/10 px-3 py-3 text-center shadow-[0_0_14px_rgba(124,58,237,0.12)]">
-            <span className="font-medium text-[#C4B5FD]">{t("consumption")}</span>
-          </div>
-          <div className="flex min-h-14 items-center justify-center rounded-full border border-foreground/20 bg-white/4 px-3 py-3 text-center shadow-[0_0_14px_rgba(226,232,240,0.1)]">
-            <span className="font-medium text-foreground/88">{t("currentPhase")}</span>
+          <div
+            className="flex min-h-14 items-center justify-center rounded-full border px-3 py-3 text-center"
+            style={metricCardStyle("consumption", 0.32, 0.1, 0.12)}>
+            <span
+              className="font-medium"
+              style={{ color: METRIC_COLORS.consumption }}>
+              {t("consumption")}
+            </span>
           </div>
         </div>
 
-        <div className="flex flex-col gap-5 md:gap-6 xl:grid xl:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.95fr)] xl:items-start xl:gap-6">
-          <div className="mx-auto w-full max-w-[220px] sm:max-w-[320px] md:max-w-none md:px-2 xl:mx-0 xl:px-0">
-            <div className="h-[195px] w-full md:h-[250px] lg:h-[280px] xl:h-[300px]">
+        <div className="flex flex-col gap-5 md:gap-6 xl:grid xl:grid-cols-[minmax(0,1.8fr)_minmax(260px,0.85fr)] xl:items-start xl:gap-6">
+          <div className="w-full md:px-1 xl:px-0">
+            <div className="h-[220px] w-full md:h-[270px] lg:h-[300px] xl:h-[320px]">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart
                   data={chartData}
@@ -303,7 +322,7 @@ export default function Statistics() {
                   <Line
                     type="monotone"
                     dataKey="emotion"
-                    stroke="#EC4899"
+                    stroke={METRIC_COLORS.emotion}
                     strokeWidth={2}
                     dot={false}
                     connectNulls={false}
@@ -312,7 +331,7 @@ export default function Statistics() {
                   <Line
                     type="monotone"
                     dataKey="energy"
-                    stroke="#22D3EE"
+                    stroke={METRIC_COLORS.energy}
                     strokeWidth={2}
                     dot={false}
                     connectNulls={false}
@@ -321,7 +340,7 @@ export default function Statistics() {
                   <Line
                     type="monotone"
                     dataKey="consumption"
-                    stroke={CONSUMPTION_COLOR}
+                    stroke={METRIC_COLORS.consumption}
                     strokeWidth={2}
                     dot={false}
                     connectNulls={false}
@@ -334,27 +353,39 @@ export default function Statistics() {
 
           <div className="flex flex-col gap-4 md:gap-5 xl:min-h-full xl:justify-between">
             <div className="grid grid-cols-3 gap-2 text-center md:gap-3 xl:grid-cols-1">
-              <div className="rounded-xl border border-[#EC4899]/20 bg-[#EC4899]/10 p-3 shadow-[0_0_16px_rgba(236,72,153,0.08)] md:p-4">
+              <div
+                className="rounded-xl border p-3 md:p-4"
+                style={metricCardStyle("emotion", 0.2, 0.1, 0.08)}>
                 <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
                   {t("averageMood")}
                 </p>
-                <p className="mt-1 text-lg font-bold text-[#EC4899] md:text-xl">
+                <p
+                  className="mt-1 text-lg font-bold md:text-xl"
+                  style={{ color: METRIC_COLORS.emotion }}>
                   {formatAverage(moodAverage)}
                 </p>
               </div>
-              <div className="rounded-xl border border-[#22D3EE]/20 bg-[#22D3EE]/10 p-3 shadow-[0_0_16px_rgba(34,211,238,0.08)] md:p-4">
+              <div
+                className="rounded-xl border p-3 md:p-4"
+                style={metricCardStyle("energy", 0.2, 0.1, 0.08)}>
                 <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
                   {t("averageEnergy")}
                 </p>
-                <p className="mt-1 text-lg font-bold text-[#22D3EE] md:text-xl">
+                <p
+                  className="mt-1 text-lg font-bold md:text-xl"
+                  style={{ color: METRIC_COLORS.energy }}>
                   {formatAverage(energyAverage)}
                 </p>
               </div>
-              <div className="rounded-xl border border-[#7C3AED]/24 bg-[#7C3AED]/10 p-3 shadow-[0_0_18px_rgba(124,58,237,0.1)] md:p-4">
+              <div
+                className="rounded-xl border p-3 md:p-4"
+                style={metricCardStyle("consumption", 0.24, 0.1, 0.1)}>
                 <p className="text-[10px] uppercase tracking-widest text-(--text-muted)">
                   {t("averageConsumption")}
                 </p>
-                <p className="mt-1 text-lg font-bold text-[#C4B5FD] md:text-xl">
+                <p
+                  className="mt-1 text-lg font-bold md:text-xl"
+                  style={{ color: METRIC_COLORS.consumption }}>
                   {formatAverage(consumptionAverage)}
                 </p>
               </div>

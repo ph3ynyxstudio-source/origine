@@ -5,6 +5,7 @@ import { toast } from "@/hooks/use-toast";
 import { getMoonPhase } from "../data/moon";
 import { getDayEntry, saveDayEntry } from "../data/storage";
 import { parseLocalDate } from "../data/calendar";
+import { METRIC_COLORS, METRIC_GLOW_CLASSES } from "../data/metricTheme";
 import { cn } from "../lib/utils";
 import type {
   DayEntry,
@@ -29,8 +30,6 @@ const EMPTY_MOMENT: MomentEntry = {
   energy: null,
   consumption: null,
 };
-
-const CONSUMPTION_COLOR = "#7C3AED";
 
 type ConsumptionTag = Extract<
   NormalizedSignal,
@@ -74,20 +73,20 @@ const METRICS: MetricConfig[] = [
   {
     key: "emotion",
     labelKey: "emotion",
-    color: "#EC4899",
-    glow: "shadow-[0_0_18px_rgba(236,72,153,0.16)]",
+    color: METRIC_COLORS.emotion,
+    glow: METRIC_GLOW_CLASSES.emotion,
   },
   {
     key: "energy",
     labelKey: "energy",
-    color: "#22D3EE",
-    glow: "shadow-[0_0_18px_rgba(34,211,238,0.16)]",
+    color: METRIC_COLORS.energy,
+    glow: METRIC_GLOW_CLASSES.energy,
   },
   {
     key: "consumption",
     labelKey: "consumption",
-    color: CONSUMPTION_COLOR,
-    glow: "shadow-[0_0_18px_rgba(124,58,237,0.18)]",
+    color: METRIC_COLORS.consumption,
+    glow: METRIC_GLOW_CLASSES.consumption,
   },
 ];
 

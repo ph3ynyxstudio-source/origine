@@ -1,7 +1,7 @@
 import { DayEntry } from "./day-entry.types";
 import { parseLocalDate, toLocalNoon } from "./calendar";
 import { isDevFallbackEnabled } from "./devFallbacks";
-import { getMoonPhase as getDisplayMoonPhase } from "./moon";
+import { getDisplayMoonPhase } from "./moon";
 import { validateDayEntry } from "./validator";
 import { getMoonPhase } from "../services/lunarEngine";
 

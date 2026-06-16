@@ -1,5 +1,5 @@
 import { MoonPhase, MomentEntry } from "../../data/day-entry.types";
-import { MOON_PHASE_EMOJI_ASSETS } from "./moonPhaseEmojiAssets";
+import { MOON_PHASE_ASSETS } from "../../services/lunarEngine";
 
 export type DayCellProps = {
   date: Date;
@@ -7,8 +7,7 @@ export type DayCellProps = {
   isToday: boolean;
   isCurrentMonth: boolean;
   moonPhase: MoonPhase;
-  showFullMoonMarker: boolean;
-  showNewMoonMarker: boolean;
+  showMoonMarker: boolean;
   moments?: {
     morning?: MomentEntry;
     midday?: MomentEntry;
@@ -31,25 +30,13 @@ function getPresenceDotColor(hasEntry: boolean): string {
   return hasEntry ? "var(--text-primary)" : "hsl(var(--border))";
 }
 
-function shouldShowCalendarMoon(
-  phase: MoonPhase,
-  showFullMoonMarker: boolean,
-  showNewMoonMarker: boolean,
-): boolean {
-  if (phase === "full_moon") return showFullMoonMarker;
-  if (phase === "new_moon") return showNewMoonMarker;
-
-  return false;
-}
-
 export function DayCell({
   date,
   isSelected,
   isToday,
   isCurrentMonth,
   moonPhase,
-  showFullMoonMarker,
-  showNewMoonMarker,
+  showMoonMarker,
   moments,
   onOpen,
 }: DayCellProps) {
@@ -76,13 +63,9 @@ export function DayCell({
         }`}>
         {date.getDate()}
       </span>
-      {shouldShowCalendarMoon(
-        moonPhase,
-        showFullMoonMarker,
-        showNewMoonMarker,
-      ) ? (
+      {showMoonMarker ? (
         <img
-          src={MOON_PHASE_EMOJI_ASSETS[moonPhase]}
+          src={MOON_PHASE_ASSETS[moonPhase]}
           alt={moonPhase}
           width={20}
           height={20}
